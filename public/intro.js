@@ -122,11 +122,12 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch("http://localhost:5000/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username, email, password, collegeYear }),
-    });
+const res = await fetch("https://openark2-0.onrender.com/signup", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ username, email, password, collegeYear }),
+});
+
 
     const data = await res.json();
     showPopup(data.message || data.error, res.ok ? "success" : "error");
