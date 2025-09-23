@@ -103,11 +103,10 @@ app.get("/profile", (req, res) => {
 // ===============================
 app.use(express.static(path.join(__dirname, "public")));
 
-// Catch-all route (so refresh works on frontend)
-app.get("/*", (req, res) => {
+// Catch-all for frontend routes
+app.get(/.*/, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "intro.html"));
 });
-
 
 // ===============================
 // Start Server
