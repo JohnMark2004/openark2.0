@@ -5,20 +5,23 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// MongoDB Atlas connection
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-})
-.then(() => console.log("✅ MongoDB Connected"))
-.catch(err => console.error("❌ MongoDB Error:", err));
+// ===============================
+// MongoDB Connection
+// ===============================
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.error("❌ MongoDB Error:", err));
 
+// ===============================
 // User Schema
+// ===============================
 const userSchema = new mongoose.Schema({
   username: String,
   email: { type: String, unique: true },
@@ -28,21 +31,20 @@ const userSchema = new mongoose.Schema({
 
 const User = mongoose.model("User", userSchema);
 
-// Signup Route
+// ===============================
+// API Routes
+// ===============================
 app.post("/signup", async (req, res) => {
   try {
     const { username, email, password, collegeYear } = req.body;
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ error: "Email already registered" });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Save new user
     const newUser = new User({
       username,
       email,
@@ -58,22 +60,18 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Login Route
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Find user
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
-    // Compare passwords
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    // Generate JWT
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
@@ -87,7 +85,6 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Example protected route
 app.get("/profile", (req, res) => {
   const authHeader = req.headers.authorization;
   if (!authHeader) return res.status(401).json({ error: "Missing token" });
@@ -101,5 +98,18 @@ app.get("/profile", (req, res) => {
   }
 });
 
+// ===============================
+// Serve Frontend (intro.html + css + js)
+// ===============================
+app.use(express.static(path.join(__dirname, "public")));
+
+// Catch-all route (so refresh works on frontend)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "intro.html"));
+});
+
+// ===============================
+// Start Server
+// ===============================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
