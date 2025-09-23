@@ -149,7 +149,7 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
   const password = e.target[1].value;
 
   try {
-    const res = await fetch("http://openark2-0.onrender.com/login", {
+    const res = await fetch("https://openark2-0.onrender.com/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
