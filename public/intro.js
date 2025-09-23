@@ -25,7 +25,7 @@ function typeAnimation() {
   const currentPhrase = phrases[phraseIndex];
 
   if (!deleting) {
-    input.setAttribute("placeholder", currentPhrase.substring(0, charIndex + 1));
+    input.value = currentPhrase.substring(0, charIndex + 1);
     charIndex++;
     if (charIndex === currentPhrase.length) {
       deleting = true;
