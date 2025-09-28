@@ -64,21 +64,42 @@ app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // --- Check if librarian ---
+    if (email === "forlibrarianuse@gmail.com" && password === "librarian12345") {
+      const token = jwt.sign(
+        { role: "librarian", email },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+      return res.json({
+        message: "Login successful",
+        token,
+        role: "librarian",
+        email,
+      });
+    }
+
+    // --- Otherwise, check student in DB ---
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
     const validPassword = await bcrypt.compare(password, user.password);
-    if (!validPassword) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
+    if (!validPassword) return res.status(401).json({ error: "Invalid credentials" });
 
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: "student" },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    res.json({ message: "Login successful", token });
+    res.json({
+      message: "Login successful",
+      token,
+      role: "student",
+      email: user.email,
+      username: user.username,
+      collegeYear: user.collegeYear,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Login failed" });

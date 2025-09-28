@@ -5,6 +5,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
 
+  // --- Role-based UI ---
+  const role = localStorage.getItem("role") || "student";
+  const conversionLink = document.querySelector('nav a:nth-child(2)');
+  if (role !== "librarian" && conversionLink) {
+    conversionLink.style.display = "none";
+  }
+
   // --- Logout functionality ---
   document.getElementById('logoutBtn').addEventListener('click', () => {
     sessionStorage.removeItem('token');
@@ -18,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   profileLink.addEventListener('click', (e) => {
     e.preventDefault();
-    // TODO: Replace with real API call to /profile using token
     document.getElementById('profile-username').textContent = localStorage.getItem('username') || 'User';
     document.getElementById('profile-email').textContent = localStorage.getItem('email') || 'user@email.com';
     document.getElementById('profile-year').textContent = localStorage.getItem('collegeYear') || 'N/A';
@@ -29,7 +35,6 @@ document.addEventListener('DOMContentLoaded', () => {
     profileModal.classList.add('hidden');
   });
 
-  // Close modal when clicking outside container
   profileModal.addEventListener('click', (e) => {
     const container = profileModal.querySelector('.profile-container');
     if (!container.contains(e.target)) {
