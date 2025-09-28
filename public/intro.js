@@ -1,31 +1,27 @@
-// ===============================
-// TYPEWRITER EFFECT FOR SEARCH BAR
-// ===============================
+window.showPopup = function (message, type = "success") {
+  const popup = document.getElementById("popup");
+  popup.textContent = message;
+  popup.className = `popup ${type} show`;
+
+  setTimeout(() => {
+    popup.classList.remove("show");
+  }, 3000);
+};
+
+// API BASE URL
+const API_URL = window.location.origin.includes("5500")
+  ? "http://localhost:5000"
+  : window.location.origin;
+
+// --- Typewriter Effect (placeholder only) ---
 const input = document.getElementById("searchInput");
-
-const phrases = [
-  "Novels",
-  "Mangas",
-  "Comics",
-  "Textbooks",
-  "Magazines",
-  "Research Papers",
-  "Biographies",
-  "Science Fiction",
-  "Fantasy",
-  "Mystery",
-  "Romance",
-];
-
-let phraseIndex = 0;
-let charIndex = 0;
-let deleting = false;
+const phrases = ["Novels","Mangas","Comics","Textbooks","Magazines","Research Papers","Biographies","Science Fiction","Fantasy","Mystery","Romance"];
+let phraseIndex = 0, charIndex = 0, deleting = false;
 
 function typeAnimation() {
   const currentPhrase = phrases[phraseIndex];
-
   if (!deleting) {
-    input.value = currentPhrase.substring(0, charIndex + 1);
+    input.setAttribute("placeholder", currentPhrase.substring(0, charIndex + 1));
     charIndex++;
     if (charIndex === currentPhrase.length) {
       deleting = true;
@@ -42,22 +38,7 @@ function typeAnimation() {
   }
   setTimeout(typeAnimation, deleting ? 60 : 100);
 }
-
 typeAnimation();
-
-// ===============================
-// POPUP NOTIFICATIONS
-// ===============================
-function showPopup(message, type = "success") {
-  const popup = document.getElementById("popup");
-  popup.textContent = message;
-  popup.className = `popup ${type} show`;
-
-  // Auto-hide after 3 seconds
-  setTimeout(() => {
-    popup.classList.remove("show");
-  }, 3000);
-}
 
 // ===============================
 // MODAL LOGIC (Login / Signup)
@@ -69,45 +50,44 @@ const toSignupLink = loginModal.querySelector(".signup-link a");
 const toLoginLink = signupModal.querySelector(".login-link a");
 
 function openModal(modal) {
-  modal.classList.remove("hidden");
+modal.classList.remove("hidden");
 }
 
 function closeModal(modal) {
-  modal.classList.add("hidden");
+modal.classList.add("hidden");
 }
 
 getStartedBtn.addEventListener("click", (e) => {
-  e.preventDefault();
-  openModal(loginModal);
+e.preventDefault();
+openModal(loginModal);
 });
 
 toSignupLink.addEventListener("click", (e) => {
-  e.preventDefault();
-  closeModal(loginModal);
-  openModal(signupModal);
+e.preventDefault();
+closeModal(loginModal);
+openModal(signupModal);
 });
 
 toLoginLink.addEventListener("click", (e) => {
-  e.preventDefault();
-  closeModal(signupModal);
-  openModal(loginModal);
+e.preventDefault();
+closeModal(signupModal);
+openModal(loginModal);
 });
 
 // Close modal when clicking outside container
 [loginModal, signupModal].forEach((modal) => {
-  modal.addEventListener("click", (e) => {
-    const container = modal.querySelector(".login-container, .signup-container");
-    if (!container.contains(e.target)) {
-      closeModal(modal);
-    }
-  });
+modal.addEventListener("click", (e) => {
+const container = modal.querySelector(".login-container, .signup-container");
+if (!container.contains(e.target)) {
+closeModal(modal);
+}
+});
 });
 
 // ===============================
 // FORM HANDLING (Signup / Login)
 // ===============================
 
-// Signup
 // Signup
 document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -123,7 +103,7 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch("https://openark2-0.onrender.com/signup", {
+    const res = await fetch(`${API_URL}/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password, collegeYear }),
@@ -133,20 +113,19 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
     showPopup(data.message || data.error, res.ok ? "success" : "error");
 
     if (res.ok) {
-      // Save user info for later use
-      localStorage.setItem("username", data.username || username);
-      localStorage.setItem("email", data.email || email);
-      localStorage.setItem("collegeYear", data.collegeYear || collegeYear);
+      localStorage.setItem("username", username);
+      localStorage.setItem("email", email);
+      localStorage.setItem("collegeYear", collegeYear);
+      localStorage.setItem("role", "student");
 
       closeModal(signupModal);
-      openModal(loginModal); // Go to login after signup
+      openModal(loginModal);
     }
   } catch (err) {
     console.error("Signup failed:", err);
     showPopup("Signup request failed", "error");
   }
 });
-
 
 // Login
 document.querySelector(".login-form").addEventListener("submit", async (e) => {
@@ -155,7 +134,7 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
   const password = e.target[1].value;
 
   try {
-    const res = await fetch("https://openark2-0.onrender.com/login", {
+    const res = await fetch(`${API_URL}/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -165,13 +144,11 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
     showPopup(data.message || data.error, res.ok ? "success" : "error");
 
     if (res.ok) {
-      // Save JWT token in session storage
       sessionStorage.setItem("token", data.token);
-
-      // Save user info (fallback to localStorage if API doesn’t send it)
-      localStorage.setItem("username", data.username || localStorage.getItem("username") || "User");
+      localStorage.setItem("role", data.role || "student");
+      localStorage.setItem("username", data.username || "User");
       localStorage.setItem("email", data.email || email);
-      localStorage.setItem("collegeYear", data.collegeYear || localStorage.getItem("collegeYear") || "N/A");
+      localStorage.setItem("collegeYear", data.collegeYear || "N/A");
 
       closeModal(loginModal);
       window.location.href = "dashboard.html";
@@ -183,29 +160,26 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
 });
 
 
-
 // ===============================
 // POPULATE INTRO SLIDESHOW
 // ===============================
 const bookTrack = document.getElementById("introBookTrack");
-if (bookTrack && typeof books !== "undefined") {
-  // First set
-  books.forEach((book) => {
-    const img = document.createElement("img");
-    img.src = book.img;
-    img.alt = book.title;
-    img.className = "book";
-    bookTrack.appendChild(img);
-  });
 
-  // Duplicate set for seamless loop
+if (bookTrack && typeof books !== "undefined") {
   books.forEach((book) => {
-    const img = document.createElement("img");
-    img.src = book.img;
-    img.alt = book.title;
-    img.className = "book";
-    bookTrack.appendChild(img);
-  });
+  const img = document.createElement("img");
+  img.src = book.img;
+  img.alt = book.title;
+  img.className = "book";
+  bookTrack.appendChild(img);
+});
+  books.forEach((book) => {
+  const img = document.createElement("img");
+  img.src = book.img;
+  img.alt = book.title;
+  img.className = "book";
+  bookTrack.appendChild(img);
+});
 }
 
 // ===============================
@@ -213,16 +187,15 @@ if (bookTrack && typeof books !== "undefined") {
 // ===============================
 const bookCountElement = document.getElementById("bookCount");
 if (bookCountElement && typeof books !== "undefined") {
-  bookCountElement.textContent = `Available Books: ${books.length}`;
+bookCountElement.textContent = `Available Books: ${books.length}`;
 }
-
 
 // ===============================
 // CHECK LOGIN STATUS (optional)
 // ===============================
 (function checkAuth() {
-  const token = sessionStorage.getItem("token");
-  if (token) {
-    console.log("✅ User already logged in, JWT found in sessionStorage");
-  }
+const token = sessionStorage.getItem("token");
+if (token) {
+console.log("✅ User already logged in, JWT found in sessionStorage");
+}
 })();
