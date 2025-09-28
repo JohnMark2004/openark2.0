@@ -108,6 +108,7 @@ toLoginLink.addEventListener("click", (e) => {
 // ===============================
 
 // Signup
+// Signup
 document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const username = e.target[0].value;
@@ -122,17 +123,21 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   }
 
   try {
-const res = await fetch("https://openark2-0.onrender.com/signup", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ username, email, password, collegeYear }),
-});
-
+    const res = await fetch("https://openark2-0.onrender.com/signup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, email, password, collegeYear }),
+    });
 
     const data = await res.json();
     showPopup(data.message || data.error, res.ok ? "success" : "error");
 
     if (res.ok) {
+      // Save user info for later use
+      localStorage.setItem("username", data.username || username);
+      localStorage.setItem("email", data.email || email);
+      localStorage.setItem("collegeYear", data.collegeYear || collegeYear);
+
       closeModal(signupModal);
       openModal(loginModal); // Go to login after signup
     }
@@ -141,6 +146,7 @@ const res = await fetch("https://openark2-0.onrender.com/signup", {
     showPopup("Signup request failed", "error");
   }
 });
+
 
 // Login
 document.querySelector(".login-form").addEventListener("submit", async (e) => {
@@ -159,12 +165,16 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
     showPopup(data.message || data.error, res.ok ? "success" : "error");
 
     if (res.ok) {
-      // Save JWT token
-      localStorage.setItem("token", data.token);
+      // Save JWT token in session storage
+      sessionStorage.setItem("token", data.token);
+
+      // Save user info (fallback to localStorage if API doesn’t send it)
+      localStorage.setItem("username", data.username || localStorage.getItem("username") || "User");
+      localStorage.setItem("email", data.email || email);
+      localStorage.setItem("collegeYear", data.collegeYear || localStorage.getItem("collegeYear") || "N/A");
 
       closeModal(loginModal);
-      // Redirect to dashboard
-      window.location.href = "/dashboard.html";
+      window.location.href = "dashboard.html";
     }
   } catch (err) {
     console.error("Login failed:", err);
@@ -172,12 +182,47 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
   }
 });
 
+
+
+// ===============================
+// POPULATE INTRO SLIDESHOW
+// ===============================
+const bookTrack = document.getElementById("introBookTrack");
+if (bookTrack && typeof books !== "undefined") {
+  // First set
+  books.forEach((book) => {
+    const img = document.createElement("img");
+    img.src = book.img;
+    img.alt = book.title;
+    img.className = "book";
+    bookTrack.appendChild(img);
+  });
+
+  // Duplicate set for seamless loop
+  books.forEach((book) => {
+    const img = document.createElement("img");
+    img.src = book.img;
+    img.alt = book.title;
+    img.className = "book";
+    bookTrack.appendChild(img);
+  });
+}
+
+// ===============================
+// SHOW AVAILABLE BOOK COUNT
+// ===============================
+const bookCountElement = document.getElementById("bookCount");
+if (bookCountElement && typeof books !== "undefined") {
+  bookCountElement.textContent = `Available Books: ${books.length}`;
+}
+
+
 // ===============================
 // CHECK LOGIN STATUS (optional)
 // ===============================
 (function checkAuth() {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
   if (token) {
-    console.log("✅ User already logged in, JWT found");
+    console.log("✅ User already logged in, JWT found in sessionStorage");
   }
 })();

@@ -1,140 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to OpenArk</title>
-    <link rel="stylesheet" href="intro.css">
-    <link rel="icon" type="image/png" href="/public/img/logo.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to OpenArk</title>
+  <link rel="stylesheet" href="intro.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 </head>
 <body>
-    <div class="container">
-        <header data-aos="fade-down"    data-aos-duration="1000">
-            <img data-aos="fade-zoom-in"
-     data-aos-easing="ease-in-back"
-     data-aos-delay="300"
-     data-aos-offset="0"
-     data-aos-duration="1100" class="logo-image" src="img/logo.png" alt="logo">
+  <div class="container">
+    <header data-aos="fade-down" data-aos-duration="1000">
+      <img data-aos="fade-zoom-in"
+           data-aos-easing="ease-in-back"
+           data-aos-delay="300"
+           data-aos-offset="0"
+           data-aos-duration="1100"
+           class="logo-image"
+           src="img/logo.png"
+           alt="logo">
 
-            <h1 data-aos="fade-zoom-in"
-     data-aos-easing="ease-in-back"
-     data-aos-delay="300"
-     data-aos-offset="0"
-     data-aos-duration="1100" class="name">OpenArk</h1>
-        </header>
+      <h1 data-aos="fade-zoom-in"
+          data-aos-easing="ease-in-back"
+          data-aos-delay="300"
+          data-aos-offset="0"
+          data-aos-duration="1100"
+          class="name">OpenArk</h1>
+    </header>
 
-        <main>
-            <div class="content">
-                <div class="search" data-aos="flip-left"
-     data-aos-easing="ease-out-cubic"
-     data-aos-duration="2000">
-    <input type="text" id="searchInput" placeholder="">
-    <svg viewBox="0 0 24 24">
-      <path d="M21 20l-5.8-5.8a7 7 0 10-1.4 1.4L20 21l1-1zM10 16a6 6 0 110-12 6 6 0 010 12z"/>
-    </svg>
-  </div>
-                
-                <h1 data-aos="fade-zoom-in"
-     data-aos-easing="ease-in-back"
-     data-aos-delay="300"
-     data-aos-offset="0"
-     data-aos-duration="2000">For <br>Students</h1>
+    <main>
+      <div class="content">
+        <div class="search" data-aos="flip-left"
+             data-aos-easing="ease-out-cubic"
+             data-aos-duration="2000">
+          <input type="text" id="searchInput" placeholder="">
+          <svg viewBox="0 0 24 24">
+            <path d="M21 20l-5.8-5.8a7 7 0 10-1.4 1.4L20 21l1-1zM10 16a6 6 0 110-12 6 6 0 010 12z"/>
+          </svg>
+        </div>
+        
+        <h1 data-aos="fade-zoom-in"
+            data-aos-easing="ease-in-back"
+            data-aos-delay="300"
+            data-aos-offset="0"
+            data-aos-duration="2000">For <br>Students</h1>
 
-                <p data-aos="fade-zoom-in"
-     data-aos-easing="ease-in-back"
-     data-aos-delay="300"
-     data-aos-offset="0"
-     data-aos-duration="2500" class="description">
-                    OpenArk is an online library that provides students with access to a wide range of educational resources, including textbooks, research papers, and study guides. Our mission is to make learning more accessible and convenient for students around the world.
-                </p>
-                
-                <div data-aos="fade-zoom-in"
-     data-aos-easing="ease-in-back"
-     data-aos-delay="300"
-     data-aos-offset="0"
-     data-aos-duration="3000" class="buttons">
-                    <a href="#" class="btn-login">Get Started &gt;</a>
-                </div>
-            </div>
-
-                <!-- Book Slideshow on Right -->
-<div data-aos="fade-zoom-in"
-     data-aos-easing="ease-in-back"
-     data-aos-delay="300"
-     data-aos-offset="0"
-     data-aos-duration="3000" class="slideshow-wrapper">
-    <!-- Book Slideshow -->
-    <div class="book-slideshow">
-      <div class="book-track">
-        <!-- First set -->
-        <img src="https://picsum.photos/110/160?random=1" alt="Book 1" class="book">
-        <img src="https://picsum.photos/110/160?random=2" alt="Book 2" class="book">
-        <img src="https://picsum.photos/110/160?random=3" alt="Book 3" class="book">
-        <img src="https://picsum.photos/110/160?random=4" alt="Book 4" class="book">
-        <img src="https://picsum.photos/110/160?random=5" alt="Book 5" class="book">
-
-        <!-- Duplicate set for seamless loop -->
-        <img src="https://picsum.photos/110/160?random=1" alt="Book 1" class="book">
-        <img src="https://picsum.photos/110/160?random=2" alt="Book 2" class="book">
-        <img src="https://picsum.photos/110/160?random=3" alt="Book 3" class="book">
-        <img src="https://picsum.photos/110/160?random=4" alt="Book 4" class="book">
-        <img src="https://picsum.photos/110/160?random=5" alt="Book 5" class="book">
+        <p data-aos="fade-zoom-in"
+           data-aos-easing="ease-in-back"
+           data-aos-delay="300"
+           data-aos-offset="0"
+           data-aos-duration="2500"
+           class="description">
+          OpenArk is an online library that provides students with access to a wide range of educational resources, including textbooks, research papers, and study guides. Our mission is to make learning more accessible and convenient for students around the world.
+        </p>
+        
+        <div data-aos="fade-zoom-in"
+             data-aos-easing="ease-in-back"
+             data-aos-delay="300"
+             data-aos-offset="0"
+             data-aos-duration="3000"
+             class="buttons">
+          <a href="#" class="btn-login">Get Started &gt;</a>
+        </div>
       </div>
+
+      <!-- Book Slideshow on Right -->
+      <div data-aos="fade-zoom-in"
+           data-aos-easing="ease-in-back"
+           data-aos-delay="300"
+           data-aos-offset="0"
+           data-aos-duration="3000"
+           class="slideshow-wrapper">
+        <div class="book-slideshow">
+          <div class="book-track" id="introBookTrack"></div>
+        </div>
+              <!-- Book count styled like a button -->
+<div class="book-count-wrapper">
+  <span id="bookCount" class="book-count-btn"></span>
+</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal hidden">
+    <div class="login-container">
+      <form class="login-form">
+        <div class="login-header">
+          <img src="img/logo.png" alt="Logo" class="login-logo">
+          <h2>Log In</h2>
+        </div>
+        <input type="text" placeholder="Email" required>
+        <input type="password" placeholder="Password" required>
+        <button class="button" type="submit">Log In</button>
+        <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
+      </form>
     </div>
-</div>
-        </main>
+  </div>
+
+  <!-- Signup Modal -->
+  <div id="signupModal" class="modal hidden">
+    <div class="signup-container">
+      <form class="signup-form">
+        <div class="signup-header">
+          <img src="img/logo.png" alt="Logo" class="signup-logo">
+          <h2>Sign Up</h2>
+        </div>
+        <input type="text" placeholder="Username" required>
+        <input type="email" placeholder="Email" required>
+        <input type="password" placeholder="Password" required>
+        <input type="password" placeholder="Confirm Password" required>
+        <select class="college-year" required>
+          <option value="" disabled selected>Select College Year</option>
+          <option value="freshman">Freshman (1st year)</option>
+          <option value="sophomore">Sophomore (2nd year)</option>
+          <option value="junior">Junior (3rd year)</option>
+          <option value="senior">Senior (4th year)</option>
+        </select>
+        <button class="button" type="submit">Sign Up</button>
+        <p class="login-link">Already have an account? <a href="#">Log In</a></p>
+      </form>
     </div>
-
-    <div id="loginModal" class="modal hidden">
-  <div class="login-container">
-    <form class="login-form">
-      <div class="login-header">
-        <img src="img/logo.png" alt="Logo" class="login-logo">
-        <h2>Log In</h2>
-      </div>
-      <input type="text" placeholder="Email" required>
-      <input type="password" placeholder="Password" required>
-      <button class="button" type="submit">Log In</button>
-      <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
-    </form>
   </div>
-</div>
 
-<div id="signupModal" class="modal hidden">
-  <div class="signup-container">
-    <form class="signup-form">
-      <div class="signup-header">
-        <img src=img/logo.png alt="Logo" class="signup-logo">
-        <h2>Sign Up</h2>
-      </div>
-      <input type="text" placeholder="Username" required>
-      <input type="email" placeholder="Email" required>
-      <input type="password" placeholder="Password" required>
-      <input type="password" placeholder="Confirm Password" required>
-      <select class="college-year" required>
-        <option value="" disabled selected>Select College Year</option>
-        <option value="freshman">Freshman (1st year)</option>
-        <option value="sophomore">Sophomore (2nd year)</option>
-        <option value="junior">Junior (3rd year)</option>
-        <option value="senior">Senior (4th year)</option>
-      </select>
-      <button class="button" type="submit">Sign Up</button>
-      <p class="login-link">Already have an account? <a href="#">Log In</a></p>
-    </form>
-  </div>
-</div>
+  <div id="popup" class="popup hidden"></div>
 
-<div id="popup" class="popup hidden"></div>
+  <!-- AOS -->
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>AOS.init();</script>
 
-      <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
-  <script>
-    AOS.init();
-  </script>
+  <!-- Shared Books -->
+  <script src="book.js"></script>
 
+  <!-- Page Logic -->
   <script src="intro.js"></script>
 </body>
 </html>
