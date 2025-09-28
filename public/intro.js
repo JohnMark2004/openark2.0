@@ -9,9 +9,7 @@ window.showPopup = function (message, type = "success") {
 };
 
 // API BASE URL
-const API_URL = window.location.origin.includes("5500")
-  ? "http://localhost:5000"
-  : window.location.origin;
+const API_URL = "https://openark2-0.onrender.com";
 
 // --- Typewriter Effect (placeholder only) ---
 const input = document.getElementById("searchInput");
