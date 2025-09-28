@@ -1,0 +1,372 @@
+/* Color palette and style to match intro.css */
+:root {
+  --pink-bg: #e7e7e7;
+  --beige: #e4cea2;
+  --white: #fff;
+  --dusty: #2E2E2E;
+  --rose: #E7BFC4;
+  --gray: #F5F5F5;
+  --text-main: #2E2E2E;
+  --text-secondary: #555555;
+}
+
+/* Soft neutral background */
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--pink-bg);
+  color: var(--text-main);
+  margin: 0;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 5rem;
+  background: var(--beige);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(212,165,165,0.07);
+}
+
+.topbar .left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.topbar .logo {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 8px var(--rose);
+}
+
+.topbar h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.1rem;
+  color: var(--dusty);
+  cursor: pointer;
+}
+
+.topbar nav a {
+  margin: 0 1rem;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: color 0.2s;
+}
+
+.topbar nav a:hover {
+  color: var(--dusty);
+}
+
+.topbar .right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar .right a {
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.topbar .right a:hover {
+  color: var(--white);
+}
+
+.btn {
+  padding: 0.75rem 2rem;
+  border-radius: 50px;
+  box-shadow: 0 0 15px rgba(156, 149, 149, 0.3);
+  background-color: #e4dac5;
+  color: var(--dusty);
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn:hover {
+  background-color: var(--dusty);
+  color: #e4dac5;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Layout */
+.dashboard {
+  padding: 2rem 5rem;
+}
+
+/* Weekly Main Section */
+.weekly-main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+.weekly-book h2,
+.meet h2,
+.weekly-featured h2 {
+  margin-bottom: 1rem;
+  color: var(--dusty);
+  font-weight: 700;
+  letter-spacing: 0.03rem;
+}
+
+.book-feature {
+  display: flex;
+  gap: 1.5rem;
+  background: var(--white);
+  padding: 1rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px var(--rose);
+}
+
+.book-feature img {
+  width: 250px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px var(--rose);
+}
+
+.book-feature .info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.book-feature h3 {
+  color: var(--dusty);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.book-feature p {
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+/* Meet section */
+.meet .meet-card {
+  background: var(--beige);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--rose);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Weekly Featured */
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2rem;
+  justify-items: center;
+  align-items: end;
+  margin-bottom: 2rem;
+  max-width: 100%;
+}
+
+@media (max-width: 1200px) {
+  .featured-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .featured-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .featured-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+
+.featured-grid .book {
+  width: 150px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  background: var(--white);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px var(--rose);
+  padding: 0 0 1rem 0;
+  transition: transform 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.featured-grid .book:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px var(--dusty);
+}
+
+.featured-grid img {
+  width: 150px;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 8px 8px 0 0;
+  box-shadow: 0 2px 8px var(--rose);
+  margin-bottom: 0;
+}
+
+.featured-grid p {
+  margin-top: 0.5rem;
+  color: var(--dusty);
+  font-weight: 600;
+  font-size: 1rem;
+  background: var(--white);
+  width: 100%;
+  text-align: center;
+  border-radius: 0 0 8px 8px;
+  padding-bottom: 0.3rem;
+}
+
+
+/* Modal (same style as intro modals) */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.hidden {
+  display: none;
+}
+
+.profile-container {
+  background: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(255, 255, 255, 0.3);
+  min-width: 320px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.profile-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2E2E2E;
+}
+
+.profile-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.profile-details p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #555;
+}
+
+.closeProfileBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  cursor: pointer;
+  color: #555;
+}
+
+/* Add this at the bottom of your existing CSS */
+
+/* Fade effect for slideshow */
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.book-feature img,
+.book-feature h3,
+.book-feature p {
+  transition: opacity 0.5s ease;
+}
+
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .dashboard {
+    padding: 2rem;
+  }
+  .weekly-main {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  .topbar h1 {
+    font-size: 1.5rem;
+  }
+  .dashboard {
+    padding: 1rem;
+  }
+  .book-feature img {
+    width: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0.5rem;
+  }
+  .topbar .logo {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+  .dashboard {
+    padding: 0.5rem;
+  }
+  .book-feature img {
+    width: 90px;
+  }
+  .featured-grid img {
+    width: 80px;
+    height: 120px;
+  }
+}

@@ -1,19 +1,4 @@
-/*Soft Pink (primary background / accents): #FDEFF2 → very light, pastel pink.
-
-Muted Rose (secondary / buttons): #E7BFC4 → gentle rose, not too saturated.
-
-Dusty Pink (headers, key elements): #D4A5A5 → slightly deeper for contrast.
-
-Neutral White: #FFFFFF → body background, cards.
-
-Warm Gray: #F5F5F5 → alternate section backgrounds.
-
-Text Primary (titles): #2E2E2E → deep charcoal, keeps readability.
-
-Text Secondary: #555555 → for paragraphs.
-
-Optional Accent Beige: #EDE0D4 → gives a “book page” vibe, good for cards or footer.*/
-
+/* GLOBAL STYLES */
 *{
     margin: 0;
     padding: 0;
@@ -216,9 +201,11 @@ main {
   width: 50%;
   max-width: 700px;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  flex-direction: column;   /* ✅ stack vertically always */
+  align-items: center;      /* ✅ center children */
+  justify-content: flex-start;
 }
+
 
 /* Book Slideshow */
 .book-slideshow {
@@ -621,6 +608,26 @@ body, html {
   background: #E74C3C;
 }
 
+.book-count-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.book-count-btn {
+  display: inline-block;
+  padding: 0.6rem 1.5rem;
+  border-radius: 50px;
+  background-color: #e4dac5;
+  color: #2E2E2E;
+  font-weight: 600;
+  letter-spacing: 0.05rem;
+  box-shadow: 0 0 10px rgba(156, 149, 149, 0.3);
+  cursor: default; /* looks like a button but not clickable */
+  user-select: none; /* prevent text selection */
+}
+
+
 /* ===============================
    RESPONSIVE DESIGN
    =============================== */
@@ -640,10 +647,8 @@ body, html {
     margin: 0 auto;
   }
 
-  .slideshow-wrapper {
-    width: 100%;
-    max-width: 500px;
-  }
+
+
 }
 
 /* Tablets */

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | OpenArk</title>
+  <link rel="stylesheet" href="dashboard.css"/>
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+</head>
+<body>
+  <header class="topbar" data-aos="fade-down" data-aos-duration="1000">
+    <div class="left" data-aos="fade-right" data-aos-duration="1200">
+      <img src="img/logo.png" class="logo" alt="Logo">
+      <h1>OpenArk</h1>
+    </div>
+    <nav data-aos="fade-down" data-aos-duration="1200">
+      <a href="#">IDK</a>
+      <a href="#">IDK</a>
+      <a href="#">IDK</a>
+      <a href="#">IDK</a>
+    </nav>
+    <div class="right" data-aos="fade-left" data-aos-duration="1200">
+      <a href="#" id="profileBtn">Profile</a>
+      <button id="logoutBtn" class="btn">Logout</button>
+    </div>
+  </header>
+
+  <!-- Profile Modal -->
+  <div id="profileModal" class="modal hidden">
+    <div class="profile-container">
+      <div class="profile-header">
+        <img src="img/logo.png" alt="Logo" class="profile-logo">
+        <h2>My Profile</h2>
+      </div>
+      <div class="profile-details">
+        <p><strong>Username:</strong> <span id="profile-username">User</span></p>
+        <p><strong>Email:</strong> <span id="profile-email">user@email.com</span></p>
+        <p><strong>College Year:</strong> <span id="profile-year">N/A</span></p>
+      </div>
+      <button id="closeProfileBtn" class="btn">Close</button>
+    </div>
+  </div>
+
+  <main class="dashboard">
+    <!-- Weekly Book + Meet Section -->
+    <section class="weekly-main">
+      <div class="weekly-book" data-aos="zoom-in-right" data-aos-duration="1500">
+        <h2>Available Books</h2>
+        <div class="book-feature" id="featuredBook">
+          <!-- Will be populated dynamically -->
+        </div>
+      </div>
+
+      <div class="meet" data-aos="zoom-in-left" data-aos-duration="1500">
+        <h2>Meet OpenArk</h2>
+        <div class="meet-card">🌟 Join OpenArk Awards 2025 — Win $50,000!</div>
+        <div class="meet-card">📖 Author Benefits — Start your writing journey with us!</div>
+        <div class="meet-card">🎁 More Books & Bonus — Download the app for rewards!</div>
+      </div>
+    </section>
+
+    <!-- Weekly Featured -->
+    <section class="weekly-featured" data-aos="fade-up" data-aos-duration="1500">
+      <h2>All Books</h2>
+      <div class="featured-grid" id="dashboardBooks">
+        <!-- Will be populated dynamically -->
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>AOS.init();</script>
+
+  <!-- Shared Books -->
+  <script src="book.js"></script>
+  <!-- Dashboard Logic -->
+  <script src="dashboard.js"></script>
+</body>
+</html>
