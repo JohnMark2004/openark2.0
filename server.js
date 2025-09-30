@@ -141,12 +141,21 @@ app.get("/profile", (req, res) => {
 
 app.post("/api/books", async (req, res) => {
   try {
-    console.log("📥 Incoming req.body:", req.body);
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.role !== "librarian") {
+      return res.status(403).json({ error: "Forbidden: Only librarians can add books" });
+    }
 
     const { title, author, publisher, year, category } = req.body;
 
+    // Validate all required fields
     if (!title || !author || !publisher || !year || !category) {
-      return res.status(400).json({ error: "All fields are required" });
+      return res.status(400).json({ error: "All fields including description are required" });
     }
 
     const newBook = new Book({
@@ -157,19 +166,17 @@ app.post("/api/books", async (req, res) => {
       category: category.trim(),
     });
 
-    console.log("💾 Book object to save:", newBook);
+    
+console.log("💾 Book object to save:", newBook);
 
-    const savedBook = await newBook.save();
+    await newBook.save();
 
-    console.log("✅ Saved book:", savedBook);
-
-    res.status(201).json(savedBook);
+    res.status(201).json(newBook);
   } catch (err) {
     console.error("❌ Error creating book:", err);
     res.status(500).json({ error: "Failed to create book: " + err.message });
   }
 });
-
 
 // Get all books
 app.get("/api/books", async (req, res) => {
