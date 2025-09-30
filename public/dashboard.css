@@ -425,6 +425,43 @@ body {
   box-shadow: 0 0 6px rgba(46, 46, 46, 0.2);
 }
 
+.profile-container form textarea {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-top: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.profile-container form textarea:focus {
+  border-color: var(--dusty);
+  box-shadow: 0 0 6px rgba(46, 46, 46, 0.2);
+}
+
+.book h4 {
+  font-size: 1rem;
+  margin: 0.5rem 0 0.3rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.book p.desc {
+  font-size: 0.85rem;
+  color: #555;
+  text-align: center;
+  margin: 0.3rem 0;
+  line-height: 1.2em;
+  max-height: 2.4em; /* 2 lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
 
 /* On very small devices */
 @media (max-width: 480px) {
