@@ -83,6 +83,27 @@
   </div>
 </section>
 
+<!-- Book Details Section -->
+<section id="bookDetailsSection" class="hidden">
+  <button id="backToHomeBtn" class="btn">← Back</button>
+  <div class="book-details">
+    <div class="book-meta">
+      <img id="detailCover" src="" alt="Book Cover">
+      <h2 id="detailTitle"></h2>
+      <p><strong>Author:</strong> <span id="detailAuthor"></span></p>
+      <p><strong>Publisher:</strong> <span id="detailPublisher"></span></p>
+      <p><strong>Year:</strong> <span id="detailYear"></span></p>
+      <p><strong>Category:</strong> <span id="detailCategory"></span></p>
+    </div>
+
+    <div class="book-viewer">
+      <h3>Scanned Pages</h3>
+      <div id="pageContainer"></div>
+    </div>
+  </div>
+</section>
+
+
 <!-- Add Book Modal -->
 <div id="addBookModal" class="modal hidden">
   <div class="profile-container">
@@ -158,8 +179,6 @@
   <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
   <script>AOS.init();</script>
 
-  <!-- Shared Books -->
-  <script src="book.js"></script>
   <!-- Dashboard Logic -->
   <script src="dashboard.js"></script>
 </body>

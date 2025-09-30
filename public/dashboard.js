@@ -65,15 +65,26 @@
 addBookForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const formData = new FormData(addBookForm);
+  
+  // Get description directly from the form element
+  // const description = document.getElementById("description").value;
+  
   const newBook = {
-    title: formData.get("title")?.trim(),
-    author: formData.get("author")?.trim(),
-    publisher: formData.get("publisher")?.trim(),
+    title: formData.get("title"),
+    author: formData.get("author"),
+    publisher: formData.get("publisher"),
     year: Number(formData.get("year")),
-    category: formData.get("category")?.trim(),
+    category: formData.get("category"),
   };
 
-  console.log("📤 Sending book data:", newBook); // DEBUG
+  // Add validation for required fields
+  if (!newBook.title || !newBook.author || !newBook.publisher || !newBook.year || !newBook.category) {
+    alert("❌ Please fill in all required fields");
+    return;
+  }
+
+  // Debug: log what we're about to send
+  console.log("Sending book data:", newBook);
 
   try {
     const token = sessionStorage.getItem("token");
@@ -92,6 +103,7 @@ addBookForm.addEventListener("submit", async (e) => {
     addBookForm.reset();
     addBookModal.classList.add("hidden");
 
+    // Refresh both sections so new book shows up instantly
     loadBooks();
     loadConversionBooks();
 
@@ -100,7 +112,6 @@ addBookForm.addEventListener("submit", async (e) => {
     alert("❌ " + err.message);
   }
 });
-
 
 
   }
@@ -153,6 +164,7 @@ async function loadBooks() {
       function showBook(index) {
         const img = featuredBookContainer.querySelector("img");
         const title = featuredBookContainer.querySelector("h3");
+        const desc = featuredBookContainer.querySelector("p:last-child");
 
         img.classList.add("fade-out");
         title.classList.add("fade-out");
@@ -162,6 +174,7 @@ async function loadBooks() {
           img.src = books[index].img;
           img.alt = books[index].title;
           title.textContent = books[index].title;
+          desc.textContent = books[index].description || "No description available.";
 
           img.classList.remove("fade-out");
           title.classList.remove("fade-out");
