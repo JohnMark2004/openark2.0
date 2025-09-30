@@ -34,13 +34,14 @@ const User = mongoose.model("User", userSchema);
 // ===============================
 // Book Schema
 // ===============================
+// Book Schema
 const bookSchema = new mongoose.Schema({
-  title: String,
-  author: String,
-  publisher: String,
-  year: Number,
-  category: String,
-  img: { type: String, default: "img/default-book.png" }, // fallback cover
+  title: { type: String, required: true },
+  author: { type: String, required: true },
+  publisher: { type: String, required: true },
+  year: { type: Number, required: true },
+  category: { type: String, required: true },
+  img: { type: String, default: "img/default-book.png" },
 });
 
 const Book = mongoose.model("Book", bookSchema);
@@ -138,33 +139,37 @@ app.get("/profile", (req, res) => {
 // Book API Routes
 // ===============================
 
-// Create new book (librarian only)
 app.post("/api/books", async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    if (decoded.role !== "librarian") {
-      return res.status(403).json({ error: "Forbidden: Only librarians can add books" });
-    }
+    console.log("📥 Incoming req.body:", req.body);
 
     const { title, author, publisher, year, category } = req.body;
+
     if (!title || !author || !publisher || !year || !category) {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const newBook = new Book({ title, author, publisher, year, category });
-    await newBook.save();
+    const newBook = new Book({
+      title: title.trim(),
+      author: author.trim(),
+      publisher: publisher.trim(),
+      year: Number(year),
+      category: category.trim(),
+    });
 
-    res.status(201).json(newBook);
+    console.log("💾 Book object to save:", newBook);
+
+    const savedBook = await newBook.save();
+
+    console.log("✅ Saved book:", savedBook);
+
+    res.status(201).json(savedBook);
   } catch (err) {
-    console.error("Error creating book:", err);
-    res.status(500).json({ error: "Failed to create book" });
+    console.error("❌ Error creating book:", err);
+    res.status(500).json({ error: "Failed to create book: " + err.message });
   }
 });
+
 
 // Get all books
 app.get("/api/books", async (req, res) => {
@@ -175,6 +180,7 @@ app.get("/api/books", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch books" });
   }
 });
+
 
 
 // ===============================

@@ -157,36 +157,44 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
   }
 });
 
-
 // ===============================
-// POPULATE INTRO SLIDESHOW
+// POPULATE INTRO SLIDESHOW & COUNT (from DB)
 // ===============================
-const bookTrack = document.getElementById("introBookTrack");
+async function loadIntroBooks() {
+  try {
+    const res = await fetch(`${API_URL}/api/books`);
+    if (!res.ok) throw new Error("Failed to fetch books");
+    const books = await res.json();
 
-if (bookTrack && typeof books !== "undefined") {
-  books.forEach((book) => {
-  const img = document.createElement("img");
-  img.src = book.img;
-  img.alt = book.title;
-  img.className = "book";
-  bookTrack.appendChild(img);
-});
-  books.forEach((book) => {
-  const img = document.createElement("img");
-  img.src = book.img;
-  img.alt = book.title;
-  img.className = "book";
-  bookTrack.appendChild(img);
-});
+    // Populate slideshow track
+    const bookTrack = document.getElementById("introBookTrack");
+    if (bookTrack) {
+      bookTrack.innerHTML = ""; // clear any static
+      // loop twice for infinite scroll effect
+      for (let i = 0; i < 1; i++) {
+        books.forEach((book) => {
+          const img = document.createElement("img");
+          img.src = book.img;
+          img.alt = book.title;
+          img.className = "book";
+          bookTrack.appendChild(img);
+        });
+      }
+    }
+
+    // Show available book count
+    const bookCountElement = document.getElementById("bookCount");
+    if (bookCountElement) {
+      bookCountElement.textContent = `Available Books: ${books.length}`;
+    }
+  } catch (err) {
+    console.error("❌ Error loading intro books:", err);
+  }
 }
 
-// ===============================
-// SHOW AVAILABLE BOOK COUNT
-// ===============================
-const bookCountElement = document.getElementById("bookCount");
-if (bookCountElement && typeof books !== "undefined") {
-bookCountElement.textContent = `Available Books: ${books.length}`;
-}
+// Run on load
+document.addEventListener("DOMContentLoaded", loadIntroBooks);
+
 
 // ===============================
 // CHECK LOGIN STATUS (optional)
