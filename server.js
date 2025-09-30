@@ -32,6 +32,21 @@ const userSchema = new mongoose.Schema({
 const User = mongoose.model("User", userSchema);
 
 // ===============================
+// Book Schema
+// ===============================
+const bookSchema = new mongoose.Schema({
+  title: String,
+  author: String,
+  publisher: String,
+  year: Number,
+  category: String,
+  img: { type: String, default: "img/default-book.png" }, // fallback cover
+});
+
+const Book = mongoose.model("Book", bookSchema);
+
+
+// ===============================
 // API Routes
 // ===============================
 app.post("/signup", async (req, res) => {
@@ -118,6 +133,49 @@ app.get("/profile", (req, res) => {
     res.status(401).json({ error: "Invalid or expired token" });
   }
 });
+
+// ===============================
+// Book API Routes
+// ===============================
+
+// Create new book (librarian only)
+app.post("/api/books", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    if (decoded.role !== "librarian") {
+      return res.status(403).json({ error: "Forbidden: Only librarians can add books" });
+    }
+
+    const { title, author, publisher, year, category } = req.body;
+    if (!title || !author || !publisher || !year || !category) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    const newBook = new Book({ title, author, publisher, year, category });
+    await newBook.save();
+
+    res.status(201).json(newBook);
+  } catch (err) {
+    console.error("Error creating book:", err);
+    res.status(500).json({ error: "Failed to create book" });
+  }
+});
+
+// Get all books
+app.get("/api/books", async (req, res) => {
+  try {
+    const books = await Book.find();
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch books" });
+  }
+});
+
 
 // ===============================
 // Serve Frontend (intro.html + css + js)
