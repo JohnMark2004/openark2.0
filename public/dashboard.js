@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+  // API BASE URL
+const API_URL = "https://openark2-0.onrender.com";
+
   // --- Auth Check ---
   if (!sessionStorage.getItem('token')) {
     window.location.href = 'intro.html';
