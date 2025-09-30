@@ -18,6 +18,89 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = 'intro.html';
   });
 
+  const homeTab = document.getElementById("homeTab");
+  const conversionTab = document.getElementById("conversionTab");
+  const homeSection = document.getElementById("homeSection");
+  const conversionSection = document.getElementById("conversionSection");
+  const addBookBtn = document.getElementById("addBookBtn");
+  const addBookModal = document.getElementById("addBookModal");
+  const closeAddBookBtn = document.getElementById("closeAddBookBtn");
+  const addBookForm = document.getElementById("addBookForm");
+  const conversionBooks = document.getElementById("conversionBooks");
+
+  if (homeTab && conversionTab && homeSection && conversionSection) {
+    homeTab.addEventListener("click", (e) => {
+      e.preventDefault();
+      homeSection.classList.remove("hidden");
+      conversionSection.classList.add("hidden");
+    });
+
+    conversionTab.addEventListener("click", (e) => {
+      e.preventDefault();
+      conversionSection.classList.remove("hidden");
+      homeSection.classList.add("hidden");
+    });
+      }
+
+      if (addBookBtn && addBookModal && closeAddBookBtn && addBookForm) {
+  addBookBtn.addEventListener("click", () => {
+    addBookModal.classList.remove("hidden");
+  });
+
+  closeAddBookBtn.addEventListener("click", () => {
+    addBookModal.classList.add("hidden");
+  });
+
+  addBookModal.addEventListener("click", (e) => {
+    const container = addBookModal.querySelector(".profile-container");
+    if (!container.contains(e.target)) {
+      addBookModal.classList.add("hidden");
+    }
+  });
+
+  addBookForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(addBookForm);
+    const newBook = {
+      title: formData.get("title"),
+      author: formData.get("author"),
+      publisher: formData.get("publisher"),
+      year: formData.get("year"),
+      category: formData.get("category")
+    };
+
+    // --- Add to backend (API) ---
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/books`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(newBook)
+      });
+      if (!res.ok) throw new Error("Failed to add book");
+
+      // --- Add to UI ---
+      const div = document.createElement("div");
+      div.className = "book";
+      div.innerHTML = `
+        <img src="img/default-book.png" alt="${newBook.title}">
+        <p>${newBook.title}</p>
+      `;
+      conversionBooks.insertBefore(div, addBookBtn);
+
+      addBookForm.reset();
+      addBookModal.classList.add("hidden");
+      alert("✅ Book added successfully!");
+    } catch (err) {
+      alert("❌ " + err.message);
+    }
+  });
+}
+
+
   // --- Profile Modal ---
   const profileLink = document.getElementById('profileBtn');
   const profileModal = document.getElementById('profileModal');
