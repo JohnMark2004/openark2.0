@@ -25,9 +25,11 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // uploade
 app.use(express.static(path.join(__dirname, "public"))); // frontend (HTML/CSS/JS)
 
 // Default route → intro.html
-app.get("/", (req, res) => {
+// Catch-all for frontend routes, but exclude /api/*
+app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "intro.html"));
 });
+
 
 // ===============================
 // MongoDB Setup
