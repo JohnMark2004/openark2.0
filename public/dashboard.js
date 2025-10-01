@@ -362,73 +362,51 @@ document.getElementById("backToConversion").addEventListener("click", () => {
 document.getElementById("publishBookBtn").addEventListener("click", async () => {
   try {
     const token = sessionStorage.getItem("token");
-    if (!token) {
-      alert("❌ Not authorized");
-      return;
-    }
+    const fd = new FormData();
 
-    // --- Build FormData
-    const formData = new FormData();
-    formData.append("title", bookData.title || "");
-    formData.append("author", bookData.author || "");
-    formData.append("publisher", bookData.publisher || "");
-    formData.append("year", bookData.year || "");
-    formData.append("category", bookData.category || "");
-    formData.append("description", bookData.description || "");
+    // metadata
+    fd.append("title", bookData.title);
+    fd.append("author", bookData.author);
+    fd.append("publisher", bookData.publisher);
+    fd.append("year", bookData.year);
+    fd.append("category", bookData.category);
+    fd.append("description", bookData.description);
 
-    // ✅ Cover file
+    // cover file
     const coverFile = document.getElementById("coverUpload").files[0];
-    if (coverFile) {
-      formData.append("cover", coverFile);
-    }
+    if (coverFile) fd.append("cover", coverFile);
 
-    // ✅ Page files
-    bookData.pageFiles.forEach((file) => {
-      formData.append("pages", file);
+    // pages (files + OCR text)
+    bookData.pageFiles.forEach((file) => fd.append("pages", file));
+    fd.append("pageTexts", JSON.stringify(bookData.pages.map((p) => p.text)));
+
+    const res = await fetch(`${API_URL}/api/books`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`
+      },
+      body: fd
     });
 
-    // ✅ OCR texts
-    formData.append("pageTexts", JSON.stringify(bookData.pages.map(p => p.text)));
-
-    // --- Debugging: See what’s being sent
-    for (let [key, value] of formData.entries()) {
-      console.log("⬆️ Sending:", key, value);
+    // ✅ improved error handling
+    if (!res.ok) {
+      let message;
+      try {
+        const errJson = await res.json();
+        message = errJson.error || JSON.stringify(errJson);
+      } catch {
+        const text = await res.text();
+        message = "Server returned non-JSON: " + text.slice(0, 100);
+      }
+      throw new Error(message);
     }
 
-    // --- Send request
-// --- Send request
-const res = await fetch(`${API_URL}/api/books`, {
-  method: "POST",
-  headers: { "Authorization": `Bearer ${token}` }, // ✅ keep only auth
-  body: formData,
-});
-
-// ✅ Safe parse
-let data;
-const contentType = res.headers.get("content-type");
-if (contentType && contentType.includes("application/json")) {
-  data = await res.json();
-} else {
-  const text = await res.text();
-  throw new Error("Server returned non-JSON: " + text.slice(0, 100));
-}
-
-if (!res.ok) throw new Error(data.error || "Upload failed");
-
-alert("✅ Book published successfully!");
-console.log("✅ Book saved:", data);
-
-// Reset wizard after success
-document.getElementById("bookCreationSection").classList.add("hidden");
-document.getElementById("conversionSection").classList.remove("hidden");
-loadConversionBooks();
-
+    alert("✅ Book published successfully!");
+    window.location.reload();
   } catch (err) {
-    console.error("❌ Failed to publish book:", err);
     alert("❌ Failed to publish book: " + err.message);
   }
 });
-
 
   // Run on page load
   loadBooks();

@@ -165,7 +165,10 @@ app.post("/api/login", async (req, res) => {
 // Add book (librarian only, requires token)
 app.post(
   "/api/books",
-  upload.fields([{ name: "cover", maxCount: 1 }, { name: "pages" }]),
+  upload.fields([
+    { name: "cover", maxCount: 1 },
+    { name: "pages" }
+  ]),
   async (req, res) => {
     try {
       const authHeader = req.headers.authorization;
@@ -176,6 +179,9 @@ app.post(
       if (decoded.role !== "librarian") {
         return res.status(403).json({ error: "Forbidden: Only librarians can add books" });
       }
+
+      console.log("📥 req.body:", req.body);
+      console.log("📥 req.files:", req.files);
 
       const title = req.body?.title || "";
       const author = req.body?.author || "";
@@ -201,7 +207,7 @@ app.post(
 
       const pages = pageFiles.map((file, idx) => ({
         img: `/uploads/${file.filename}`,
-        text: texts[idx] || "",
+        text: texts[idx] || ""
       }));
 
       const newBook = new Book({
@@ -212,13 +218,15 @@ app.post(
         category: category.trim(),
         description: description.trim(),
         img: coverFile ? `/uploads/${coverFile.filename}` : undefined,
-        pages,
+        pages
       });
 
       await newBook.save();
       res.status(201).json(newBook);
+
     } catch (err) {
       console.error("❌ Error creating book:", err);
+      // ✅ Always send JSON instead of HTML
       res.status(500).json({ error: "Failed to create book: " + err.message });
     }
   }
