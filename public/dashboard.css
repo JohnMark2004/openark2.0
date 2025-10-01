@@ -551,3 +551,238 @@ body {
     height: 120px;
   }
 }
+
+.book-overview {
+  margin-top: 1.5rem;
+  background: var(--white);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px var(--rose);
+}
+
+.book-overview h3 {
+  margin-bottom: 0.8rem;
+  color: var(--dusty);
+  font-weight: 700;
+}
+
+.book-overview p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+/* ===============================
+   BOOK CREATION WIZARD
+   =============================== */
+#bookCreationSection {
+  background: var(--white);
+  padding: 2rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 16px var(--rose);
+  margin: 2rem auto;          /* center it */
+  max-width: 700px;           /* limit width */
+  width: 90%;                 /* responsive */
+}
+
+#bookCreationSection h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--dusty);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.creation-step {
+  display: none;
+}
+
+.creation-step:not(.hidden) {
+  display: block;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.creation-step h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--dusty);
+  border-left: 4px solid var(--rose);
+  padding-left: 0.6rem;
+}
+
+#bookMetaForm p {
+  margin: 1rem 0;
+}
+
+#bookMetaForm input,
+#bookMetaForm textarea {
+  width: 90%;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+#bookMetaForm input:focus,
+#bookMetaForm textarea:focus {
+  border-color: var(--dusty);
+  box-shadow: 0 0 6px rgba(46, 46, 46, 0.2);
+}
+
+#pageList {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--gray);
+  border-radius: 12px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+}
+
+#pageList p {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  background: var(--white);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ======= Custom dropdown styling (compact wizard) ======= */
+.select-wrapper {
+  position: relative;
+  width: 90%;
+  max-width: 100%;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+/* core select styling */
+.select-wrapper select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  padding: 0.78rem 1rem;            /* comfortable tap target */
+  padding-right: 3rem;             /* space for arrow */
+  border-radius: 10px;
+  border: 1px solid rgba(46,46,46,0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #fbf8f2 100%);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(231,191,196,0.06);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+
+/* arrow using an inline SVG so no external asset required */
+.select-wrapper::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path fill='%232E2E2E' d='M5.23 7.21l4.77 4.5 4.77-4.5 1.28 1.21-6.05 5.71L3.95 8.42z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.85;
+}
+
+/* focus state */
+.select-wrapper select:focus {
+  outline: none;
+  border-color: var(--dusty);
+  box-shadow: 0 10px 30px rgba(46,46,46,0.08);
+}
+
+/* disabled / placeholder visual */
+.select-wrapper select:invalid { /* when using <option value="" disabled selected> */
+  color: #9b9b9b;
+}
+
+/* small compact variant (useful if you want a narrower select) */
+.select-wrapper.compact {
+  max-width: 420px;
+}
+
+/* Optgroup labels are browser-native and have limited styling support.
+   We add a tiny spacing tweak by targeting the select itself when open on modern browsers */
+@media (min-width: 320px) {
+  /* make select taller on mobile for easier tapping */
+  .select-wrapper select { padding: 0.9rem 1rem; padding-right: 3rem; }
+}
+
+/* NOTES:
+   - Browser-native option list (the dropdown that appears) is controlled by the OS/browser;
+     you cannot reliably style options across all browsers. The visible select control
+     itself is styled consistently above.
+*/
+
+
+/* ===============================
+   Custom File Input Styling
+   =============================== */
+.file-input-wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--dusty);
+  color: var(--white);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.7rem 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 4px 10px rgba(46,46,46,0.15);
+}
+
+.file-input-wrapper:hover {
+  background: var(--rose);
+}
+
+.file-input-wrapper:active {
+  transform: scale(0.97);
+}
+
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+  height: 100%;
+  width: 100%;
+}
+
+.file-input-wrapper .file-label {
+  pointer-events: none; /* click goes to input */
+}
+
+/* ===============================
+   File Input Label + Filename
+   =============================== */
+.file-name {
+  margin-left: 0.8rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}

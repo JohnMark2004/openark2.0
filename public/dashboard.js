@@ -26,95 +26,54 @@
     const conversionTab = document.getElementById("conversionTab");
     const homeSection = document.getElementById("homeSection");
     const conversionSection = document.getElementById("conversionSection");
-    const addBookBtn = document.getElementById("addBookBtn");
-    const addBookModal = document.getElementById("addBookModal");
-    const closeAddBookBtn = document.getElementById("closeAddBookBtn");
-    const addBookForm = document.getElementById("addBookForm");
-    const conversionBooks = document.getElementById("conversionBooks");
+    const bookCreationSection = document.getElementById("bookCreationSection");
 
     if (homeTab && conversionTab && homeSection && conversionSection) {
-      homeTab.addEventListener("click", (e) => {
-        e.preventDefault();
-        homeSection.classList.remove("hidden");
-        conversionSection.classList.add("hidden");
-      });
-
-      conversionTab.addEventListener("click", (e) => {
-        e.preventDefault();
-        conversionSection.classList.remove("hidden");
-        homeSection.classList.add("hidden");
-      });
-        }
-
-        if (addBookBtn && addBookModal && closeAddBookBtn && addBookForm) {
-    addBookBtn.addEventListener("click", () => {
-      addBookModal.classList.remove("hidden");
-    });
-
-    closeAddBookBtn.addEventListener("click", () => {
-      addBookModal.classList.add("hidden");
-    });
-
-    addBookModal.addEventListener("click", (e) => {
-      const container = addBookModal.querySelector(".profile-container");
-      if (!container.contains(e.target)) {
-        addBookModal.classList.add("hidden");
-      }
-    });
-
-addBookForm.addEventListener("submit", async (e) => {
+homeTab.addEventListener("click", (e) => {
   e.preventDefault();
-  const formData = new FormData(addBookForm);
-  
-  // Get description directly from the form element
-  // const description = document.getElementById("description").value;
-  
-  const newBook = {
-    title: formData.get("title"),
-    author: formData.get("author"),
-    publisher: formData.get("publisher"),
-    year: Number(formData.get("year")),
-    category: formData.get("category"),
-  };
+  homeSection.classList.remove("hidden");
+  conversionSection.classList.add("hidden");
 
-  // Add validation for required fields
-  if (!newBook.title || !newBook.author || !newBook.publisher || !newBook.year || !newBook.category) {
-    alert("❌ Please fill in all required fields");
-    return;
-  }
+  // ✅ Hide wizard if it was open
+  document.getElementById("bookCreationSection").classList.add("hidden");
 
-  // Debug: log what we're about to send
-  console.log("Sending book data:", newBook);
-
-  try {
-    const token = sessionStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/books`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`
-      },
-      body: JSON.stringify(newBook)
-    });
-
-    if (!res.ok) throw new Error("Failed to add book");
-    await res.json();
-
-    addBookForm.reset();
-    addBookModal.classList.add("hidden");
-
-    // Refresh both sections so new book shows up instantly
-    loadBooks();
-    loadConversionBooks();
-
-    alert("✅ Book added successfully!");
-  } catch (err) {
-    alert("❌ " + err.message);
-  }
+  // ✅ Reset wizard to step 1
+  document.getElementById("step1").classList.remove("hidden");
+  document.getElementById("step2").classList.add("hidden");
+  document.getElementById("step3").classList.add("hidden");
 });
 
 
-  }
+conversionTab.addEventListener("click", (e) => {
+  e.preventDefault();
+  // Show conversion section
+  conversionSection.classList.remove("hidden");
+  homeSection.classList.add("hidden");
+
+  // ✅ Hide wizard if it was open
+  document.getElementById("bookCreationSection").classList.add("hidden");
+
+  // ✅ Reset wizard to step 1
+  document.getElementById("step1").classList.remove("hidden");
+  document.getElementById("step2").classList.add("hidden");
+  document.getElementById("step3").classList.add("hidden");
+});
+
+// Show selected file name for Cover
+document.getElementById("coverUpload").addEventListener("change", function () {
+  const fileName = this.files.length > 0 ? this.files[0].name : "No file chosen";
+  document.getElementById("coverFileName").textContent = fileName;
+});
+
+// Show selected file name for Page
+document.getElementById("pageUpload").addEventListener("change", function () {
+  const fileName = this.files.length > 0 ? this.files[0].name : "No file chosen";
+  document.getElementById("pageFileName").textContent = fileName;
+});
+
+
+        }
+
 
 
     // --- Profile Modal ---
@@ -188,20 +147,65 @@ async function loadBooks() {
       }, 5000);
     }
 
-    // --- Populate All Books Grid ---
-    const dashboardBooks = document.getElementById("dashboardBooks");
-    if (dashboardBooks) {
-      dashboardBooks.innerHTML = "";
-      books.forEach((book) => {
-        const div = document.createElement("div");
-        div.className = "book";
-        div.innerHTML = `
-          <img src="${book.img}" alt="${book.title}">
-          <h4>${book.title}</h4>
-        `;
-        dashboardBooks.appendChild(div);
-      });
-    }
+// --- Populate All Books Grid ---
+const dashboardBooks = document.getElementById("dashboardBooks");
+if (dashboardBooks) {
+  dashboardBooks.innerHTML = "";
+  books.forEach((book) => {
+    const div = document.createElement("div");
+    div.className = "book";
+    div.innerHTML = `
+      <img src="${book.img}" alt="${book.title}">
+      <h4>${book.title}</h4>
+    `;
+    
+    // ✅ Click handler to open details view
+div.addEventListener("click", () => {
+  document.getElementById("homeSection").classList.add("hidden");
+  document.getElementById("bookDetailsSection").classList.remove("hidden");
+
+  document.getElementById("detailCover").src = book.img;
+  document.getElementById("detailTitle").textContent = book.title;
+  document.getElementById("detailAuthor").textContent = book.author;
+  document.getElementById("detailPublisher").textContent = book.publisher;
+  document.getElementById("detailYear").textContent = book.year;
+  document.getElementById("detailCategory").textContent = book.category;
+  document.getElementById("detailDescription").textContent =
+    book.description || "No description available.";
+
+  // ✅ Show OCR pages
+  const pageContainer = document.getElementById("pageContainer");
+  pageContainer.innerHTML = "";
+  if (book.pages && book.pages.length > 0) {
+    book.pages.forEach((page, idx) => {
+      const div = document.createElement("div");
+      div.className = "page";
+      div.innerHTML = `
+        <img src="${page.img}" alt="Page ${idx+1}">
+        <div class="ocr-text">${page.text || "No text detected."}</div>
+      `;
+      pageContainer.appendChild(div);
+    });
+  } else {
+    pageContainer.innerHTML = "<p>No pages available.</p>";
+  }
+});
+
+    dashboardBooks.appendChild(div);
+  });
+}
+
+document.getElementById("backToConversion").addEventListener("click", () => {
+  document.getElementById("bookCreationSection").classList.add("hidden");
+  document.getElementById("conversionSection").classList.remove("hidden");
+});
+
+
+// ✅ Back button handler
+document.getElementById("backToHomeBtn").addEventListener("click", () => {
+  document.getElementById("bookDetailsSection").classList.add("hidden");
+  document.getElementById("homeSection").classList.remove("hidden");
+});
 
   } catch (err) {
     console.error("❌ Error loading books:", err);
@@ -242,16 +246,180 @@ async function loadConversionBooks() {
 
       // Re-bind Add Book button
       const addBookBtn = document.getElementById("addBookBtn");
-      if (addBookBtn) {
-        addBookBtn.addEventListener("click", () => {
-          document.getElementById("addBookModal").classList.remove("hidden");
-        });
-      }
+if (addBookBtn) {
+  addBookBtn.addEventListener("click", () => {
+    conversionSection.classList.add("hidden");
+    bookCreationSection.classList.remove("hidden");
+  });
+}
+
     }
   } catch (err) {
     console.error("❌ Error loading conversion books:", err);
   }
 }
+
+// ===============================
+// 📚 Book Creation Wizard Logic (Multer version)
+// ===============================
+let bookData = { pages: [], pageFiles: [] };
+
+// Show selected file name for Cover
+const coverUploadEl = document.getElementById("coverUpload");
+if (coverUploadEl) {
+  coverUploadEl.addEventListener("change", function () {
+    const file = this.files[0];
+    document.getElementById("coverFileName").textContent = file ? file.name : "No file chosen";
+  });
+}
+
+// Show selected file name for Page
+document.getElementById("pageUpload").addEventListener("change", function () {
+  const fileName = this.files.length > 0 ? this.files[0].name : "No file chosen";
+  document.getElementById("pageFileName").textContent = fileName;
+});
+
+// Open Book Creation
+document.addEventListener("click", (e) => {
+  if (e.target.id === "addBookBtn") {
+    conversionSection.classList.add("hidden");
+    bookCreationSection.classList.remove("hidden");
+  }
+});
+
+// Step 1 -> Step 2
+document.getElementById("nextToStep2").addEventListener("click", () => {
+  const form = document.getElementById("bookMetaForm");
+  const fd = new FormData(form);
+
+  bookData = {
+    title: fd.get("title"),
+    author: fd.get("author"),
+    publisher: fd.get("publisher"),
+    year: Number(fd.get("year")),
+    category: fd.get("category"),
+    description: fd.get("description"),
+    pages: [],
+    pageFiles: []
+  };
+
+  document.getElementById("step1").classList.add("hidden");
+  document.getElementById("step2").classList.remove("hidden");
+});
+
+// Step 2 -> Add Page + OCR
+document.getElementById("addPageBtn").addEventListener("click", () => {
+  const fileInput = document.getElementById("pageUpload");
+  if (!fileInput.files[0]) return;
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const imgData = reader.result;
+
+    const result = await Tesseract.recognize(imgData, "eng");
+    const text = result.data.text;
+
+    bookData.pageFiles.push(file);   // ✅ keep file for Multer
+    bookData.pages.push({ text });   // ✅ store OCR text
+
+    const div = document.createElement("div");
+    div.innerHTML = `<p>📄 Page ${bookData.pages.length} added: ${file.name}</p>`;
+    document.getElementById("pageList").appendChild(div);
+
+    // reset input
+    fileInput.value = "";
+    document.getElementById("pageFileName").textContent = "No file chosen";
+  };
+  reader.readAsDataURL(file);
+});
+
+
+// Navigation
+document.getElementById("nextToStep3").addEventListener("click", () => {
+  document.getElementById("step2").classList.add("hidden");
+  document.getElementById("step3").classList.remove("hidden");
+});
+document.getElementById("backToStep1").addEventListener("click", () => {
+  document.getElementById("step2").classList.add("hidden");
+  document.getElementById("step1").classList.remove("hidden");
+});
+document.getElementById("backToStep2").addEventListener("click", () => {
+  document.getElementById("step3").classList.add("hidden");
+  document.getElementById("step2").classList.remove("hidden");
+});
+document.getElementById("backToConversion").addEventListener("click", () => {
+  bookCreationSection.classList.add("hidden");
+  conversionSection.classList.remove("hidden");
+});
+
+// ===============================
+// 📤 Publish (send with Multer)
+// ===============================
+// ===============================
+// 📚 Publish Book (Final Step)
+// ===============================
+document.getElementById("publishBookBtn").addEventListener("click", async () => {
+  try {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      alert("❌ Not authorized");
+      return;
+    }
+
+    // --- Build FormData
+    const formData = new FormData();
+    formData.append("title", bookData.title || "");
+    formData.append("author", bookData.author || "");
+    formData.append("publisher", bookData.publisher || "");
+    formData.append("year", bookData.year || "");
+    formData.append("category", bookData.category || "");
+    formData.append("description", bookData.description || "");
+
+    // ✅ Cover file
+    const coverFile = document.getElementById("coverUpload").files[0];
+    if (coverFile) {
+      formData.append("cover", coverFile);
+    }
+
+    // ✅ Page files
+    bookData.pageFiles.forEach((file) => {
+      formData.append("pages", file);
+    });
+
+    // ✅ OCR texts
+    formData.append("pageTexts", JSON.stringify(bookData.pages.map(p => p.text)));
+
+    // --- Debugging: See what’s being sent
+    for (let [key, value] of formData.entries()) {
+      console.log("⬆️ Sending:", key, value);
+    }
+
+    // --- Send request
+    const res = await fetch(`${API_URL}/api/books`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${token}` }, // no Content-Type
+      body: formData,
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Upload failed");
+
+    alert("✅ Book published successfully!");
+    console.log("✅ Book saved:", data);
+
+    // Reset wizard after success
+    document.getElementById("bookCreationSection").classList.add("hidden");
+    document.getElementById("conversionSection").classList.remove("hidden");
+    loadConversionBooks(); // reload updated book list
+
+  } catch (err) {
+    console.error("❌ Failed to publish book:", err);
+    alert("❌ Failed to publish book: " + err.message);
+  }
+});
+
+
   // Run on page load
   loadBooks();
   loadConversionBooks();
