@@ -41,8 +41,27 @@ homeTab.addEventListener("click", (e) => {
   document.getElementById("step1").classList.remove("hidden");
   document.getElementById("step2").classList.add("hidden");
   document.getElementById("step3").classList.add("hidden");
+
+  // ✅ Hide book details
+  document.getElementById("bookDetailsSection").classList.add("hidden");
 });
 
+conversionTab.addEventListener("click", (e) => {
+  e.preventDefault();
+  conversionSection.classList.remove("hidden");
+  homeSection.classList.add("hidden");
+
+  // ✅ Hide wizard if it was open
+  document.getElementById("bookCreationSection").classList.add("hidden");
+
+  // ✅ Reset wizard to step 1
+  document.getElementById("step1").classList.remove("hidden");
+  document.getElementById("step2").classList.add("hidden");
+  document.getElementById("step3").classList.add("hidden");
+
+  // ✅ Hide book details
+  document.getElementById("bookDetailsSection").classList.add("hidden");
+});
 
 conversionTab.addEventListener("click", (e) => {
   e.preventDefault();
