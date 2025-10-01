@@ -396,22 +396,32 @@ document.getElementById("publishBookBtn").addEventListener("click", async () => 
     }
 
     // --- Send request
-    const res = await fetch(`${API_URL}/api/books`, {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${token}` }, // no Content-Type
-      body: formData,
-    });
+// --- Send request
+const res = await fetch(`${API_URL}/api/books`, {
+  method: "POST",
+  headers: { "Authorization": `Bearer ${token}` }, // ✅ keep only auth
+  body: formData,
+});
 
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Upload failed");
+// ✅ Safe parse
+let data;
+const contentType = res.headers.get("content-type");
+if (contentType && contentType.includes("application/json")) {
+  data = await res.json();
+} else {
+  const text = await res.text();
+  throw new Error("Server returned non-JSON: " + text.slice(0, 100));
+}
 
-    alert("✅ Book published successfully!");
-    console.log("✅ Book saved:", data);
+if (!res.ok) throw new Error(data.error || "Upload failed");
 
-    // Reset wizard after success
-    document.getElementById("bookCreationSection").classList.add("hidden");
-    document.getElementById("conversionSection").classList.remove("hidden");
-    loadConversionBooks(); // reload updated book list
+alert("✅ Book published successfully!");
+console.log("✅ Book saved:", data);
+
+// Reset wizard after success
+document.getElementById("bookCreationSection").classList.add("hidden");
+document.getElementById("conversionSection").classList.remove("hidden");
+loadConversionBooks();
 
   } catch (err) {
     console.error("❌ Failed to publish book:", err);
