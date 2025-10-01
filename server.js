@@ -17,8 +17,20 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Serve uploaded files
+// ===============================
+// Serve static files
+// ===============================
+
+// Serve uploaded files from multer
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Serve frontend files (HTML, CSS, JS) from /public
+app.use(express.static(path.join(__dirname, "public")));
+
+// Default route → open dashboard.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "intro.html"));
+});
 
 // ===============================
 // MongoDB Setup
