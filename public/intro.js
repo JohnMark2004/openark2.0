@@ -101,7 +101,7 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   }
 
   try {
-    const res = await fetch(`${API_URL}/signup`, {
+    const res = await fetch(`${API_URL}/api/signup`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ username, email, password, collegeYear }),
@@ -132,7 +132,7 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
   const password = e.target[1].value;
 
   try {
-    const res = await fetch(`${API_URL}/login`, {
+    const res = await fetch(`${API_URL}/api/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
