@@ -248,9 +248,11 @@ app.get("/api/books", async (req, res) => {
 // ===============================
 // API Fallback (must come after all /api routes)
 // ===============================
-app.use("/api/*", (req, res) => {
+// Option 1: Regex (recommended, works in v4 & v5)
+app.use(/^\/api(\/|$)/, (req, res) => {
   res.status(404).json({ error: "API route not found" });
 });
+
 
 // ===============================
 // Frontend Routes (catch-all)
