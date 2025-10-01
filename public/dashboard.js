@@ -362,48 +362,50 @@ document.getElementById("backToConversion").addEventListener("click", () => {
 document.getElementById("publishBookBtn").addEventListener("click", async () => {
   try {
     const token = sessionStorage.getItem("token");
+    if (!token) {
+      alert("❌ Not authorized");
+      return;
+    }
+
     const fd = new FormData();
+    fd.append("title", bookData.title || "");
+    fd.append("author", bookData.author || "");
+    fd.append("publisher", bookData.publisher || "");
+    fd.append("year", bookData.year || "");
+    fd.append("category", bookData.category || "");
+    fd.append("description", bookData.description || "");
 
-    // metadata
-    fd.append("title", bookData.title);
-    fd.append("author", bookData.author);
-    fd.append("publisher", bookData.publisher);
-    fd.append("year", bookData.year);
-    fd.append("category", bookData.category);
-    fd.append("description", bookData.description);
-
-    // cover file
     const coverFile = document.getElementById("coverUpload").files[0];
     if (coverFile) fd.append("cover", coverFile);
 
-    // pages (files + OCR text)
     bookData.pageFiles.forEach((file) => fd.append("pages", file));
     fd.append("pageTexts", JSON.stringify(bookData.pages.map((p) => p.text)));
 
     const res = await fetch(`${API_URL}/api/books`, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`
-      },
+      headers: { Authorization: `Bearer ${token}` },
       body: fd
     });
 
-    // ✅ improved error handling
+    // ✅ only parse once
+    const contentType = res.headers.get("content-type") || "";
+    let data;
+    if (contentType.includes("application/json")) {
+      data = await res.json();
+    } else {
+      const text = await res.text();
+      throw new Error("Server returned non-JSON: " + text.slice(0, 100));
+    }
+
     if (!res.ok) {
-      let message;
-      try {
-        const errJson = await res.json();
-        message = errJson.error || JSON.stringify(errJson);
-      } catch {
-        const text = await res.text();
-        message = "Server returned non-JSON: " + text.slice(0, 100);
-      }
-      throw new Error(message);
+      throw new Error(data.error || `Upload failed (HTTP ${res.status})`);
     }
 
     alert("✅ Book published successfully!");
+    console.log("✅ Book saved:", data);
     window.location.reload();
   } catch (err) {
+    console.error("❌ Failed to publish book:", err);
     alert("❌ Failed to publish book: " + err.message);
   }
 });
