@@ -96,6 +96,12 @@
       <p><strong>Category:</strong> <span id="detailCategory"></span></p>
     </div>
 
+    <!-- ✅ Overview Section -->
+    <div class="book-overview">
+      <h3>Overview</h3>
+      <p id="detailDescription">No description available.</p>
+    </div>
+
     <div class="book-viewer">
       <h3>Scanned Pages</h3>
       <div id="pageContainer"></div>
@@ -104,80 +110,131 @@
 </section>
 
 
+
 <!-- Add Book Modal -->
-<div id="addBookModal" class="modal hidden">
-  <div class="profile-container">
-    <div class="profile-header">
-      <h2>Add New Book</h2>
-    </div>
-    <form id="addBookForm">
+<!-- Book Creation Wizard -->
+<section id="bookCreationSection" class="hidden">
+  <h2>📚 Book Creation</h2>
+
+  <!-- Step 1: Metadata -->
+  <div class="creation-step" id="step1">
+    <h3>Step 1: Book Information</h3>
+    <form id="bookMetaForm">
       <p><label>Book Title:<br><input type="text" name="title" required></label></p>
       <p><label>Author:<br><input type="text" name="author" required></label></p>
       <p><label>Publisher:<br><input type="text" name="publisher" required></label></p>
-      <p><label>Year Published:<br><input type="number" name="year" required></label></p>
+      <p><label>Year:<br><input type="number" name="year" required></label></p>
 <p>
   <label>Category:<br>
-    <select name="category" required>
-      <optgroup label="Subjects (Academic Focus)">
-        <option value="Mathematics">Mathematics</option>
-        <option value="Science">Science (Physics, Chemistry, Biology, Earth Science)</option>
-        <option value="Computer Science / Technology">Computer Science / Technology</option>
-        <option value="Engineering">Engineering</option>
-        <option value="Medicine / Health Sciences">Medicine / Health Sciences</option>
-        <option value="Social Studies">Social Studies</option>
-        <option value="History">History</option>
-        <option value="Geography">Geography</option>
-        <option value="Political Science">Political Science</option>
-        <option value="Economics">Economics</option>
-        <option value="Business / Management">Business / Management</option>
-        <option value="Law">Law</option>
-        <option value="Psychology">Psychology</option>
-        <option value="Philosophy">Philosophy</option>
-        <option value="Religion / Theology">Religion / Theology</option>
-        <option value="Literature">Literature (English, World Literature)</option>
-        <option value="Language & Linguistics">Language & Linguistics</option>
-        <option value="Arts">Arts (Music, Visual Arts, Performing Arts)</option>
-        <option value="Education">Education</option>
-        <option value="Reference">Reference (Dictionaries, Encyclopedias, Atlases)</option>
-      </optgroup>
-      <optgroup label="Genres (Story / Literary Focus)">
-        <option value="Romance">Romance</option>
-        <option value="Mystery / Detective">Mystery / Detective</option>
-        <option value="Fantasy">Fantasy</option>
-        <option value="Science Fiction">Science Fiction (Sci-Fi)</option>
-        <option value="Horror">Horror</option>
-        <option value="Thriller / Suspense">Thriller / Suspense</option>
-        <option value="Adventure">Adventure</option>
-        <option value="Drama">Drama</option>
-        <option value="Historical Fiction">Historical Fiction</option>
-        <option value="Comedy / Humor">Comedy / Humor</option>
-        <option value="Slice of Life">Slice of Life</option>
-        <option value="Action">Action</option>
-        <option value="Supernatural / Paranormal">Supernatural / Paranormal</option>
-        <option value="Biography / Autobiography">Biography / Autobiography</option>
-        <option value="Memoir">Memoir</option>
-        <option value="Poetry">Poetry</option>
-        <option value="Graphic Novels / Comics">Graphic Novels / Comics</option>
-        <option value="Young Adult">Young Adult (YA)</option>
-        <option value="Children’s Literature">Children’s Literature / Fairy Tales</option>
-        <option value="Non-fiction">Non-fiction (self-help, true crime, travel, etc.)</option>
-      </optgroup>
-    </select>
+    <div class="select-wrapper">
+      <select name="category" required>
+        <option value="" disabled selected>Select a category</option>
+
+        <optgroup label="📘 Subjects (Academic Focus)">
+          <option value="Mathematics">Mathematics</option>
+          <option value="Science">Science</option>
+          <option value="Computer Science">Computer Science</option>
+          <option value="Engineering">Engineering</option>
+          <option value="Medicine">Medicine / Health Sciences</option>
+          <option value="Social Studies">Social Studies</option>
+          <option value="History">History</option>
+          <option value="Geography">Geography</option>
+          <option value="Political Science">Political Science</option>
+          <option value="Economics">Economics</option>
+          <option value="Business">Business / Management</option>
+          <option value="Law">Law</option>
+          <option value="Psychology">Psychology</option>
+          <option value="Philosophy">Philosophy</option>
+          <option value="Religion">Religion / Theology</option>
+          <option value="Literature">Literature</option>
+          <option value="Language">Language & Linguistics</option>
+          <option value="Arts">Arts (Music, Visual, Performing)</option>
+          <option value="Education">Education</option>
+          <option value="Reference">Reference</option>
+        </optgroup>
+
+        <optgroup label="📖 Genres (Story / Literary Focus)">
+          <option value="Romance">Romance</option>
+          <option value="Mystery">Mystery / Detective</option>
+          <option value="Fantasy">Fantasy</option>
+          <option value="Science Fiction">Science Fiction</option>
+          <option value="Horror">Horror</option>
+          <option value="Thriller">Thriller / Suspense</option>
+          <option value="Adventure">Adventure</option>
+          <option value="Drama">Drama</option>
+          <option value="Historical Fiction">Historical Fiction</option>
+          <option value="Comedy">Comedy / Humor</option>
+          <option value="Slice of Life">Slice of Life</option>
+          <option value="Action">Action</option>
+          <option value="Supernatural">Supernatural / Paranormal</option>
+          <option value="Biography">Biography / Autobiography</option>
+          <option value="Memoir">Memoir</option>
+          <option value="Poetry">Poetry</option>
+          <option value="Comics">Graphic Novels / Comics</option>
+          <option value="Young Adult">Young Adult (YA)</option>
+          <option value="Children">Children’s Literature</option>
+          <option value="Non-fiction">Non-fiction</option>
+        </optgroup>
+      </select>
+    </div>
   </label>
 </p>
 
 
-<div class="form-actions">
-  <button type="submit" class="btn">Save</button>
-  <button type="button" class="btn" id="closeAddBookBtn">Cancel</button>
-</div>
+      <p><label>Description:<br><textarea name="description"></textarea></label></p>
+<p>
+  <label>Cover Image:<br>
+    <div class="file-input-wrapper">
+      <input type="file" id="coverUpload" accept="image/*">
+      <span class="file-label">Choose Cover</span>
+    </div>
+    <span id="coverFileName" class="file-name">No file chosen</span>
+  </label>
+</p>
 
+
+      <div class="form-actions">
+          <button type="button" class="btn" id="backToConversion">← Back</button>
+        <button type="button" class="btn" id="nextToStep2">Next →</button>
+      </div>
     </form>
   </div>
+
+  <!-- Step 2: Page Upload -->
+  <div class="creation-step hidden" id="step2">
+    <h3>Step 2: Upload Pages</h3>
+    <div id="pageList"></div>
+<div class="file-input-wrapper">
+  <input type="file" id="pageUpload" accept="image/*">
+  <span class="file-label">Choose Page</span>
 </div>
+<span id="pageFileName" class="file-name">No file chosen</span>
+
+
+    <button type="button" class="btn" id="addPageBtn">Add Page</button>
+    <div class="form-actions">
+      <button type="button" class="btn" id="backToStep1">← Back</button>
+      <button type="button" class="btn" id="nextToStep3">Next →</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Publish -->
+  <div class="creation-step hidden" id="step3">
+    <h3>Step 3: Publish</h3>
+    <p>Review your book and publish it to the library.</p>
+    <div class="form-actions">
+      <button type="button" class="btn" id="backToStep2">← Back</button>
+      <button type="button" class="btn" id="publishBookBtn">Publish</button>
+    </div>
+  </div>
+</section>
+
 
   <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
   <script>AOS.init();</script>
+
+  <!-- Tesseract.js OCR -->
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <!-- Dashboard Logic -->
   <script src="dashboard.js"></script>
