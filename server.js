@@ -19,7 +19,9 @@ if (!fs.existsSync(path.join(__dirname, "uploads"))) {
 
 const app = express();
 
+// ===============================
 // Middleware
+// ===============================
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
@@ -85,8 +87,6 @@ const upload = multer({ storage });
 // ===============================
 // User Routes
 // ===============================
-
-// --- SIGNUP ---
 app.post("/api/signup", async (req, res) => {
   try {
     const { username, email, password, collegeYear } = req.body;
@@ -112,7 +112,6 @@ app.post("/api/signup", async (req, res) => {
   }
 });
 
-// --- LOGIN ---
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -160,8 +159,6 @@ app.post("/api/login", async (req, res) => {
 // ===============================
 // Book Routes
 // ===============================
-
-// Add book (librarian only, requires token)
 app.post(
   "/api/books",
   (req, res, next) => {
@@ -235,7 +232,6 @@ app.post(
   }
 );
 
-// Get all books
 app.get("/api/books", async (req, res) => {
   try {
     const books = await Book.find();
@@ -248,11 +244,9 @@ app.get("/api/books", async (req, res) => {
 // ===============================
 // API Fallback (must come after all /api routes)
 // ===============================
-// Option 1: Regex (recommended, works in v4 & v5)
 app.use(/^\/api(\/|$)/, (req, res) => {
   res.status(404).json({ error: "API route not found" });
 });
-
 
 // ===============================
 // Frontend Routes (catch-all)
