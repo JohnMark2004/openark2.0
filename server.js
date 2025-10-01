@@ -10,6 +10,12 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");   // ✅ add this
+
+// ✅ Ensure uploads folder exists
+if (!fs.existsSync(path.join(__dirname, "uploads"))) {
+  fs.mkdirSync(path.join(__dirname, "uploads"));
+}
 
 const app = express();
 
@@ -23,13 +29,6 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // ===============================
 app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // uploaded book images
 app.use(express.static(path.join(__dirname, "public"))); // frontend (HTML/CSS/JS)
-
-// Default route → intro.html
-// Catch-all for frontend routes, but exclude /api/*
-app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "intro.html"));
-});
-
 
 // ===============================
 // MongoDB Setup
@@ -165,32 +164,38 @@ app.post("/api/login", async (req, res) => {
 // Add book (librarian only, requires token)
 app.post(
   "/api/books",
-  upload.fields([
-    { name: "cover", maxCount: 1 },
-    { name: "pages" }
-  ]),
+  (req, res, next) => {
+    upload.fields([{ name: "cover", maxCount: 1 }, { name: "pages" }])(req, res, function (err) {
+      if (err) {
+        console.error("❌ Multer error:", err);
+        return res.status(400).json({ error: "File upload error: " + err.message });
+      }
+      next();
+    });
+  },
   async (req, res) => {
     try {
+      console.log("📥 Incoming book upload");
+      console.log("Body:", req.body);
+      console.log("Files:", req.files);
+
+      // 🔒 Check token
       const authHeader = req.headers.authorization;
       if (!authHeader) return res.status(401).json({ error: "Missing token" });
 
       const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      let decoded;
+      try {
+        decoded = jwt.verify(token, process.env.JWT_SECRET);
+      } catch (e) {
+        return res.status(401).json({ error: "Invalid or expired token" });
+      }
+
       if (decoded.role !== "librarian") {
         return res.status(403).json({ error: "Forbidden: Only librarians can add books" });
       }
 
-      console.log("📥 req.body:", req.body);
-      console.log("📥 req.files:", req.files);
-
-      const title = req.body?.title || "";
-      const author = req.body?.author || "";
-      const publisher = req.body?.publisher || "";
-      const year = req.body?.year || "";
-      const category = req.body?.category || "";
-      const description = req.body?.description || "";
-      const pageTexts = req.body?.pageTexts || "[]";
-
+      const { title, author, publisher, year, category, description, pageTexts } = req.body;
       if (!title || !author || !publisher || !year || !category) {
         return res.status(400).json({ error: "Missing required fields" });
       }
@@ -200,14 +205,14 @@ app.post(
 
       let texts = [];
       try {
-        texts = JSON.parse(pageTexts);
+        texts = JSON.parse(pageTexts || "[]");
       } catch {
         texts = [];
       }
 
       const pages = pageFiles.map((file, idx) => ({
         img: `/uploads/${file.filename}`,
-        text: texts[idx] || ""
+        text: texts[idx] || "",
       }));
 
       const newBook = new Book({
@@ -216,17 +221,15 @@ app.post(
         publisher: publisher.trim(),
         year: Number(year),
         category: category.trim(),
-        description: description.trim(),
+        description: description?.trim() || "",
         img: coverFile ? `/uploads/${coverFile.filename}` : undefined,
-        pages
+        pages,
       });
 
       await newBook.save();
       res.status(201).json(newBook);
-
     } catch (err) {
       console.error("❌ Error creating book:", err);
-      // ✅ Always send JSON instead of HTML
       res.status(500).json({ error: "Failed to create book: " + err.message });
     }
   }
@@ -240,6 +243,20 @@ app.get("/api/books", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch books" });
   }
+});
+
+// ===============================
+// API Fallback (must come after all /api routes)
+// ===============================
+app.use("/api/*", (req, res) => {
+  res.status(404).json({ error: "API route not found" });
+});
+
+// ===============================
+// Frontend Routes (catch-all)
+// ===============================
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "intro.html"));
 });
 
 // ===============================
