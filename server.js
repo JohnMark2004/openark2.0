@@ -232,6 +232,33 @@ app.post(
   }
 );
 
+app.delete("/api/books/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (e) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+
+    if (decoded.role !== "librarian") {
+      return res.status(403).json({ error: "Forbidden: Only librarians can delete books" });
+    }
+
+    const deleted = await Book.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ error: "Book not found" });
+
+    res.json({ message: "Book deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting book:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 app.get("/api/books", async (req, res) => {
   try {
     const books = await Book.find();

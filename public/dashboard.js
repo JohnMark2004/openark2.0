@@ -252,16 +252,71 @@ async function loadConversionBooks() {
       addBookCard.innerHTML = `<span>＋</span><p>Add Book</p>`;
       conversionBooks.appendChild(addBookCard);
 
-      // Populate DB books
-      books.forEach((book) => {
-        const div = document.createElement("div");
-        div.className = "book";
-        div.innerHTML = `
-          <img src="${book.img}" alt="${book.title}">
-          <h4>${book.title}</h4>
+// Populate DB books
+books.forEach((book) => {
+  const div = document.createElement("div");
+  div.className = "book";
+  div.innerHTML = `
+    <img src="${book.img}" alt="${book.title}">
+    <h4>${book.title}</h4>
+    <button class="delete-btn">🗑️ Delete</button>
+  `;
+
+  // ✅ Click handler for details
+  div.querySelector("img").addEventListener("click", () => {
+    document.getElementById("conversionSection").classList.add("hidden");
+    document.getElementById("bookDetailsSection").classList.remove("hidden");
+
+    document.getElementById("detailCover").src = book.img;
+    document.getElementById("detailTitle").textContent = book.title;
+    document.getElementById("detailAuthor").textContent = book.author;
+    document.getElementById("detailPublisher").textContent = book.publisher;
+    document.getElementById("detailYear").textContent = book.year;
+    document.getElementById("detailCategory").textContent = book.category;
+    document.getElementById("detailDescription").textContent =
+      book.description || "No description available.";
+
+    const pageContainer = document.getElementById("pageContainer");
+    pageContainer.innerHTML = "";
+    if (book.pages && book.pages.length > 0) {
+      book.pages.forEach((page, idx) => {
+        const pdiv = document.createElement("div");
+        pdiv.className = "page";
+        pdiv.innerHTML = `
+          <img src="${page.img}" alt="Page ${idx + 1}">
+          <div class="ocr-text">${page.text || "No text detected."}</div>
         `;
-        conversionBooks.appendChild(div);
+        pageContainer.appendChild(pdiv);
       });
+    } else {
+      pageContainer.innerHTML = "<p>No pages available.</p>";
+    }
+  });
+
+  // ✅ Delete button handler
+  div.querySelector(".delete-btn").addEventListener("click", async (e) => {
+    e.stopPropagation(); // don’t trigger details view
+    if (!confirm(`Delete "${book.title}"?`)) return;
+
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/books/${book._id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error("Failed to delete book");
+      alert("✅ Book deleted successfully");
+      loadConversionBooks(); // refresh list
+    } catch (err) {
+      console.error("❌ Delete failed:", err);
+      alert("Failed to delete book");
+    }
+  });
+
+  conversionBooks.appendChild(div);
+});
+
 
       // Re-bind Add Book button
       const addBookBtn = document.getElementById("addBookBtn");
