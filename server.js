@@ -2,7 +2,9 @@
 // server.js (Merged: Multer + Users + Static Librarian)
 // ===============================
 
+
 require("dotenv").config();
+const cloudinary = require("cloudinary").v2;
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -11,6 +13,12 @@ const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");   // ✅ add this
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 // ✅ Ensure uploads folder exists
 if (!fs.existsSync(path.join(__dirname, "uploads"))) {
@@ -159,12 +167,18 @@ app.post("/api/login", async (req, res) => {
 // ===============================
 // Book Routes
 // ===============================
+const uploadToCloudinary = (filePath, folder) => {
+  return cloudinary.uploader.upload(filePath, {
+    folder,
+    resource_type: "image",
+  });
+};
+
 app.post(
   "/api/books",
   (req, res, next) => {
     upload.fields([{ name: "cover", maxCount: 1 }, { name: "pages" }])(req, res, function (err) {
       if (err) {
-        console.error("❌ Multer error:", err);
         return res.status(400).json({ error: "File upload error: " + err.message });
       }
       next();
@@ -172,46 +186,39 @@ app.post(
   },
   async (req, res) => {
     try {
-      console.log("📥 Incoming book upload");
-      console.log("Body:", req.body);
-      console.log("Files:", req.files);
-
-      // 🔒 Check token
+      // 🔒 Librarian token check (your code)
       const authHeader = req.headers.authorization;
       if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
       const token = authHeader.split(" ")[1];
-      let decoded;
-      try {
-        decoded = jwt.verify(token, process.env.JWT_SECRET);
-      } catch (e) {
-        return res.status(401).json({ error: "Invalid or expired token" });
-      }
-
-      if (decoded.role !== "librarian") {
-        return res.status(403).json({ error: "Forbidden: Only librarians can add books" });
-      }
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.role !== "librarian") return res.status(403).json({ error: "Forbidden" });
 
       const { title, author, publisher, year, category, description, pageTexts } = req.body;
       if (!title || !author || !publisher || !year || !category) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
-      const coverFile = req.files?.cover ? req.files.cover[0] : null;
-      const pageFiles = req.files?.pages || [];
-
-      let texts = [];
-      try {
-        texts = JSON.parse(pageTexts || "[]");
-      } catch {
-        texts = [];
+      // ✅ Upload to Cloudinary
+      let coverUrl = "";
+      if (req.files?.cover) {
+        const result = await uploadToCloudinary(req.files.cover[0].path, "openark/covers");
+        coverUrl = result.secure_url;
       }
 
-      const pages = pageFiles.map((file, idx) => ({
-        img: `/uploads/${file.filename}`,
-        text: texts[idx] || "",
-      }));
+      let texts = [];
+      try { texts = JSON.parse(pageTexts || "[]"); } catch { texts = []; }
 
+      const pageUrls = [];
+      for (let i = 0; i < (req.files.pages || []).length; i++) {
+        const file = req.files.pages[i];
+        const result = await uploadToCloudinary(file.path, "openark/pages");
+        pageUrls.push({
+          img: result.secure_url,
+          text: texts[i] || "",
+        });
+      }
+
+      // ✅ Save in MongoDB
       const newBook = new Book({
         title: title.trim(),
         author: author.trim(),
@@ -219,8 +226,8 @@ app.post(
         year: Number(year),
         category: category.trim(),
         description: description?.trim() || "",
-        img: coverFile ? `/uploads/${coverFile.filename}` : undefined,
-        pages,
+        img: coverUrl || "img/default-book.png",
+        pages: pageUrls,
       });
 
       await newBook.save();
@@ -231,6 +238,7 @@ app.post(
     }
   }
 );
+
 
 app.delete("/api/books/:id", async (req, res) => {
   try {
