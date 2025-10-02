@@ -1067,6 +1067,15 @@ main {
   color: #e4cea2;
 }
 
+.disclaimer {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 0.8rem;
+  opacity: 0.8;
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
   .book-read-grid {

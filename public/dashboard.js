@@ -205,6 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById("detailCategory").textContent = book.category;
             document.getElementById("detailCategoryStat").textContent = book.category;
             document.getElementById("detailDescription").textContent = book.description || "No description available.";
+            document.getElementById("disclaimer").textContent = "Disclaimer: This book is from the library. We do not own it; we only use it with permission for thesis purposes.";
 
             // Populate placeholders for data not in the DB
             document.getElementById("detailChapters").textContent = book.pages.length > 0 ? `${book.pages.length} Pages` : "N/A";
@@ -614,22 +615,28 @@ if (backToDetailsBtn) {
   });
 
   // --- Tab Switching Logic ---
-  const tabs = document.querySelectorAll(".book-read-tabs .tab");
-  const tabContents = {
-    about: document.getElementById("content-about"),
-    toc: document.getElementById("content-toc"),
-  };
+const tabs = document.querySelectorAll(".book-read-tabs .tab");
+const tabContents = {
+  about: document.getElementById("content-about"),
+  toc: document.getElementById("content-toc"),
+  read: document.getElementById("readerContent") // ✅ add readerContent as a tab section
+};
 
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      tabs.forEach((t) => t.classList.remove("active"));
-      tab.classList.add("active");
+tabs.forEach((tab) => {
+  tab.addEventListener("click", () => {
+    // remove active state
+    tabs.forEach((t) => t.classList.remove("active"));
+    tab.classList.add("active");
 
-      Object.values(tabContents).forEach(content => content.classList.add("hidden"));
-      const activeContent = tabContents[tab.dataset.tab];
-      if (activeContent) activeContent.classList.remove("hidden");
-    });
+    // hide all tab contents
+    Object.values(tabContents).forEach(content => content.classList.add("hidden"));
+
+    // show only selected tab
+    const activeContent = tabContents[tab.dataset.tab];
+    if (activeContent) activeContent.classList.remove("hidden");
   });
+});
+
 
   });
 
