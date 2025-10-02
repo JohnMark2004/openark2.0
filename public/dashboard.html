@@ -17,9 +17,9 @@
     </div>
     <nav data-aos="fade-down" data-aos-duration="1200">
       <a href="#" id="homeTab">Home</a>
-      <a href="#" id="conversionTab">Conversion</a>
       <a href="#">Browse</a>
-      <a href="#">Rankings</a>
+      <a href="#">MyBookmarks</a>
+      <a href="#" id="conversionTab">Conversion</a>
     </nav>
     <div class="right" data-aos="fade-left" data-aos-duration="1200">
       <a href="#" id="profileBtn">Profile</a>
@@ -27,7 +27,6 @@
     </div>
   </header>
 
-  <!-- Profile Modal -->
   <div id="profileModal" class="modal hidden">
     <div class="profile-container">
       <div class="profile-header">
@@ -44,93 +43,107 @@
   </div>
 
   <main class="dashboard">
-    <!-- Weekly Book + Meet Section -->
-       <section id="homeSection">
-            <section class="weekly-main">
-      <div class="weekly-book" data-aos="zoom-in-right" data-aos-duration="1500">
-        <h2>Available Books</h2>
-        <div class="book-feature" id="featuredBook">
-          <!-- Will be populated dynamically -->
+    <section id="homeSection">
+      <section class="weekly-main">
+        <div class="weekly-book" data-aos="zoom-in-right" data-aos-duration="1500">
+          <h2>Available Books</h2>
+          <div class="book-feature" id="featuredBook">
+            </div>
+        </div>
+        <div class="meet" data-aos="zoom-in-left" data-aos-duration="1500">
+          <h2>Meet OpenArk</h2>
+          <div class="meet-card">🌟 Join OpenArk Awards 2025 — Win $50,000!</div>
+          <div class="meet-card">📖 Author Benefits — Start your writing journey with us!</div>
+          <div class="meet-card">🎁 More Books & Bonus — Download the app for rewards!</div>
+        </div>
+      </section>
+      <section class="weekly-featured" data-aos="fade-up" data-aos-duration="1500">
+        <h2>All Books</h2>
+        <div class="featured-grid" id="dashboardBooks">
+          </div>
+      </section>
+    </section>
+
+    <section id="conversionSection" class="hidden">
+      <h2>Library Book Management</h2>
+      <div class="featured-grid" id="conversionBooks">
+        <div class="book add-book" id="addBookBtn">
+          <span>＋</span>
+          <p>Add Book</p>
         </div>
       </div>
+    </section>
 
-      <div class="meet" data-aos="zoom-in-left" data-aos-duration="1500">
-        <h2>Meet OpenArk</h2>
-        <div class="meet-card">🌟 Join OpenArk Awards 2025 — Win $50,000!</div>
-        <div class="meet-card">📖 Author Benefits — Start your writing journey with us!</div>
-        <div class="meet-card">🎁 More Books & Bonus — Download the app for rewards!</div>
+    <section id="bookDetailsSection" class="hidden">
+      <div class="book-read-container">
+        <button id="backToHomeBtn" class="btn btn-back">← Back to Library</button>
+
+        <div class="book-read-grid">
+          <div class="book-read-cover">
+            <img id="detailCover" src="img/default-book.png" alt="Book Cover">
+          </div>
+
+          <div class="book-read-info">
+            <p class="breadcrumbs">
+              <span id="detailCategory">Category</span> &gt; <span id="detailTitleBreadcrumb">Book Name</span>
+            </p>
+            <h2 id="detailTitle">Book Title Goes Here</h2>
+            <div class="book-stats">
+              <span><strong>Category:</strong> <span id="detailCategoryStat">N/A</span></span>
+              <span><strong>Pages:</strong> <span id="detailChapters">N/A</span></span>
+            </div>
+            <p class="author-info">by <span id="detailAuthor">Author Name</span></p>
+            
+            <div class="action-buttons">
+              <button id="readBookBtn" class="btn btn-read">READ</button>
+              <button class="btn btn-add-bookmark">+ ADD TO BOOKMARK</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="book-read-tabs">
+          <div class="tab active" data-tab="about">About</div>
+        </div>
+
+        <div class="book-read-content">
+          <div id="content-about">
+            <h3>Synopsis</h3>
+            <p id="detailDescription">No description available.</p>
+          </div>
+          <div id="content-toc" class="hidden">
+            <h3>Table of Contents</h3>
+            <p>Page previews will be available here.</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Weekly Featured -->
-    <section class="weekly-featured" data-aos="fade-up" data-aos-duration="1500">
-      <h2>All Books</h2>
-      <div class="featured-grid" id="dashboardBooks">
-        <!-- Will be populated dynamically -->
+    <section id="bookReaderSection" class="hidden">
+      <div class="reader-header">
+        <button id="backToDetailsBtn" class="btn">← Back to Details</button>
+        <h2 id="readerBookTitle"></h2>
       </div>
+      <div id="readerContent" class="reader-content">
+        </div>
     </section>
-       </section>
-
-<!-- Conversion Content -->
-<section id="conversionSection" class="hidden">
-  <h2>Library Book Management</h2>
-  <div class="featured-grid" id="conversionBooks">
-    <!-- Add New Book Card -->
-    <div class="book add-book" id="addBookBtn">
-      <span>＋</span>
-      <p>Add Book</p>
-    </div>
-  </div>
-</section>
-
-<!-- Book Details Section -->
-<section id="bookDetailsSection" class="hidden">
-  <button id="backToHomeBtn" class="btn">← Back</button>
-  <div class="book-details">
-    <div class="book-meta">
-      <img id="detailCover" src="" alt="Book Cover">
-      <h2 id="detailTitle"></h2>
-      <p><strong>Author:</strong> <span id="detailAuthor"></span></p>
-      <p><strong>Publisher:</strong> <span id="detailPublisher"></span></p>
-      <p><strong>Year:</strong> <span id="detailYear"></span></p>
-      <p><strong>Category:</strong> <span id="detailCategory"></span></p>
-    </div>
-
-    <!-- ✅ Overview Section -->
-    <div class="book-overview">
-      <h3>Overview</h3>
-      <p id="detailDescription">No description available.</p>
-    </div>
-
-    <div class="book-viewer">
-      <h3>Scanned Pages</h3>
-      <div id="pageContainer"></div>
-    </div>
-  </div>
-</section>
 
 
-
-<!-- Add Book Modal -->
-<!-- Book Creation Wizard -->
-<section id="bookCreationSection" class="hidden">
-  <h2>📚 Book Creation</h2>
-
-  <!-- Step 1: Metadata -->
-  <div class="creation-step" id="step1">
-    <h3>Step 1: Book Information</h3>
-    <form id="bookMetaForm">
-      <p><label>Book Title:<br><input type="text" name="title" required></label></p>
-      <p><label>Author:<br><input type="text" name="author" required></label></p>
-      <p><label>Publisher:<br><input type="text" name="publisher" required></label></p>
-      <p><label>Year:<br><input type="number" name="year" required></label></p>
-<p>
+    <section id="bookCreationSection" class="hidden">
+      <h2>Book Creation</h2>
+      <div class="creation-step" id="step1">
+        <h3>Step 1: Book Information</h3>
+        <form id="bookMetaForm">
+          <p><label>Book Title:<br><input type="text" name="title" required></label></p>
+          <p><label>Author:<br><input type="text" name="author" required></label></p>
+          <p><label>Publisher:<br><input type="text" name="publisher" required></label></p>
+          <p><label>Year:<br><input type="number" name="year" required></label></p>
+          <p>
   <label>Category:<br>
     <div class="select-wrapper">
       <select name="category" required>
         <option value="" disabled selected>Select a category</option>
 
-        <optgroup label="📘 Subjects (Academic Focus)">
+        <optgroup label="Subjects (Academic Focus)">
           <option value="Mathematics">Mathematics</option>
           <option value="Science">Science</option>
           <option value="Computer Science">Computer Science</option>
@@ -153,7 +166,7 @@
           <option value="Reference">Reference</option>
         </optgroup>
 
-        <optgroup label="📖 Genres (Story / Literary Focus)">
+        <optgroup label="Genres (Story / Literary Focus)">
           <option value="Romance">Romance</option>
           <option value="Mystery">Mystery / Detective</option>
           <option value="Fantasy">Fantasy</option>
@@ -178,65 +191,74 @@
       </select>
     </div>
   </label>
-</p>
-
-
-      <p><label>Description:<br><textarea name="description"></textarea></label></p>
-<p>
-  <label>Cover Image:<br>
-    <div class="file-input-wrapper">
-      <input type="file" id="coverUpload" accept="image/*">
-      <span class="file-label">Choose Cover</span>
-    </div>
-    <span id="coverFileName" class="file-name">No file chosen</span>
-  </label>
-</p>
-
-
-      <div class="form-actions">
-          <button type="button" class="btn" id="backToConversion">← Back</button>
-        <button type="button" class="btn" id="nextToStep2">Next →</button>
+          </p>
+          <p><label>Description:<br><textarea name="description"></textarea></label></p>
+          <p>
+            <label>Cover Image:<br>
+              <div class="file-input-wrapper">
+                <input type="file" id="coverUpload" accept="image/*">
+                <span class="file-label">Choose Cover</span>
+              </div>
+              <span id="coverFileName" class="file-name">No file chosen</span>
+            </label>
+          </p>
+          <div class="form-actions">
+            <button type="button" class="btn" id="backToConversion">← Back</button>
+            <button type="button" class="btn" id="nextToStep2">Next →</button>
+          </div>
+        </form>
       </div>
-    </form>
-  </div>
 
-  <!-- Step 2: Page Upload -->
-  <div class="creation-step hidden" id="step2">
-    <h3>Step 2: Upload Pages</h3>
-    <div id="pageList"></div>
-<div class="file-input-wrapper">
-  <input type="file" id="pageUpload" accept="image/*">
-  <span class="file-label">Choose Page</span>
+      <div class="creation-step hidden" id="step2">
+        <h3>Step 2: Upload Pages</h3>
+        <div id="pageList"></div>
+        <div class="file-input-wrapper">
+          <input type="file" id="pageUpload" accept="image/*">
+          <span class="file-label">Choose Page</span>
+        </div>
+        <span id="pageFileName" class="file-name">No file chosen</span>
+        <button type="button" class="btn" id="addPageBtn">Add Page</button>
+        <div class="form-actions">
+          <button type="button" class="btn" id="backToStep1">← Back</button>
+          <button type="button" class="btn" id="nextToStep3">Next →</button>
+        </div>
+      </div>
+
+      <div class="creation-step hidden" id="step3">
+        <h3>Step 3: Publish</h3>
+        <p>Review your book and publish it to the library.</p>
+        <div class="form-actions">
+          <button type="button" class="btn" id="backToStep2">← Back</button>
+          <button type="button" class="btn" id="publishBookBtn">Publish</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <div id="deleteModal" class="modal hidden">
+  <div class="profile-container">
+    <h3 style="margin-bottom: 1rem; color: var(--dusty);">Confirm Deletion</h3>
+    <p id="deleteModalMessage" style="margin-bottom: 1.5rem; color: var(--text-secondary);">
+      Are you sure you want to delete this book?
+    </p>
+    <div style="display: flex; justify-content: flex-end; gap: 1rem;">
+      <button id="cancelDeleteBtn" class="btn">Cancel</button>
+      <button id="confirmDeleteBtn" class="btn">Delete</button>
+    </div>
+  </div>
 </div>
-<span id="pageFileName" class="file-name">No file chosen</span>
 
 
-    <button type="button" class="btn" id="addPageBtn">Add Page</button>
-    <div class="form-actions">
-      <button type="button" class="btn" id="backToStep1">← Back</button>
-      <button type="button" class="btn" id="nextToStep3">Next →</button>
-    </div>
-  </div>
-
-  <!-- Step 3: Publish -->
-  <div class="creation-step hidden" id="step3">
-    <h3>Step 3: Publish</h3>
-    <p>Review your book and publish it to the library.</p>
-    <div class="form-actions">
-      <button type="button" class="btn" id="backToStep2">← Back</button>
-      <button type="button" class="btn" id="publishBookBtn">Publish</button>
-    </div>
-  </div>
-</section>
-
+  <div id="popup" class="popup hidden"></div>
 
   <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
-  <script>AOS.init();</script>
+  <script>
+    AOS.init();
+  </script>
 
-  <!-- Tesseract.js OCR -->
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
-  <!-- Dashboard Logic -->
   <script src="dashboard.js"></script>
 </body>
 </html>
