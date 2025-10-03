@@ -1075,6 +1075,132 @@ main {
   opacity: 0.8;
 }
 
+/* Browse Tab */
+.browse-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.browse-controls input[type="text"] {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.browse-controls select {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.genre-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.genre-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--dusty, #666);
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.genre-btn.active,
+.genre-btn:hover {
+  background: var(--dusty, #444);
+  color: white;
+}
+
+.browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.browse-grid .book {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.browse-grid .book:hover {
+  transform: translateY(-4px);
+}
+
+.browse-grid .book img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.browse-grid .book h4 {
+  font-size: 0.95rem;
+  margin: 0.5rem;
+  color: var(--dusty);
+}
+
+.browse-grid .book p {
+  font-size: 0.8rem;
+  margin: 0 0.5rem 0.5rem;
+  color: #777;
+}
+
+.genres-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.genres-buttons h4 {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--dusty);
+}
+
+.genres-buttons button {
+  padding: 6px 10px;
+  border: 1px solid var(--dusty);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary, #333);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genres-buttons button.active {
+  background: var(--dusty);
+  color: white;
+  box-shadow: 0 0 8px var(--dusty);
+}
+
+#detailAuthor {
+  font-weight: normal; /* default text normal */
+}
+
+#detailAuthor strong {
+  font-weight: bold; /* author bold */
+}
+
+#detailAuthor .value {
+  font-weight: bold; /* publisher + year values bold */
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {
