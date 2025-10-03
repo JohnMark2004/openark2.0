@@ -20,6 +20,31 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+
+function formatGenres(cat) {
+  if (Array.isArray(cat)) {
+    return cat.filter(c => c && c.trim() !== "").join(", ") || "N/A";
+  }
+  if (typeof cat === "string") {
+    try {
+      const parsed = JSON.parse(cat);
+      if (Array.isArray(parsed)) {
+        return parsed.filter(c => c && c.trim() !== "").join(", ") || "N/A";
+      }
+    } catch {
+      return cat
+        .replace(/^\[|\]$/g, "")
+        .replace(/"/g, "")
+        .split(",")
+        .map(s => s.trim())
+        .filter(s => s !== "")
+        .join(", ") || "N/A";
+    }
+    return cat.trim() || "N/A";
+  }
+  return "N/A";
+}
+
   // --- Sections / Elements ---
   const homeSection = document.getElementById("homeSection");
   const conversionSection = document.getElementById("conversionSection");
@@ -363,30 +388,42 @@ div.addEventListener("click", () =>
             document.getElementById("deleteModal").classList.add("hidden");
           });
 
-        document
-          .getElementById("confirmDeleteBtn")
-          .addEventListener("click", async () => {
-            if (!bookToDelete) return;
-            try {
-              const token = sessionStorage.getItem("token");
-              const res = await fetch(
-                `${API_URL}/api/books/${bookToDelete._id}`,
-                {
-                  method: "DELETE",
-                  headers: { Authorization: `Bearer ${token}` },
-                }
-              );
-              if (!res.ok) throw new Error("Failed to delete book");
-              showPopup("✅ Book deleted successfully", "success");
-              loadConversionBooks();
-            } catch (err) {
-              console.error("❌ Delete failed:", err);
-              showPopup("Failed to delete book", "error");
-            } finally {
-              bookToDelete = null;
-              document.getElementById("deleteModal").classList.add("hidden");
-            }
-          });
+document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
+  if (!bookToDelete) return;
+  try {
+    const token = sessionStorage.getItem("token");
+
+    // ✅ must use Mongo _id
+    const bookId = bookToDelete._id;
+    if (!bookId) throw new Error("No valid _id found for book");
+
+    const res = await fetch(`${API_URL}/api/books/${bookId}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(errText || "Failed to delete book");
+    }
+
+    await res.json().catch(() => {});
+    showPopup("✅ Book deleted successfully", "success");
+
+    // refresh after delete
+    await loadConversionBooks();
+    await loadBooks();
+    await loadBrowseBooks();
+
+  } catch (err) {
+    console.error("❌ Delete failed:", err);
+    showPopup("❌ Failed to delete book", "error");
+  } finally {
+    bookToDelete = null;
+    document.getElementById("deleteModal").classList.add("hidden");
+  }
+});
+
 
         // Add Book button
         const addBookBtn = document.getElementById("addBookBtn");
@@ -419,21 +456,20 @@ async function loadBrowseBooks(filters = {}) {
 // ✅ Inclusive Genre Filtering
 if (filters.genre && filters.genre !== "all") {
   books = books.filter((b) => {
+    // Normalize categories into a clean array
     let categories = [];
-
     if (Array.isArray(b.category)) {
       categories = b.category;
     } else if (typeof b.category === "string") {
       try {
-        // try parse JSON like '["Math","Law"]'
-        categories = JSON.parse(b.category);
-        if (!Array.isArray(categories)) categories = [categories];
+        const parsed = JSON.parse(b.category);
+        categories = Array.isArray(parsed) ? parsed : [parsed];
       } catch {
-        // fallback: split by comma
         categories = b.category.split(",").map(c => c.trim());
       }
     }
 
+    // ✅ Inclusive check: book is kept if at least ONE category matches selected genre
     return categories.some(
       (c) => c.trim().toLowerCase() === filters.genre.trim().toLowerCase()
     );
@@ -441,19 +477,13 @@ if (filters.genre && filters.genre !== "all") {
 }
 
     // Sorting
-    if (filters.sort === "latest") {
-      books.sort(
-        (a, b) =>
-          parseInt(b._id.substring(0, 8), 16) -
-          parseInt(a._id.substring(0, 8), 16)
-      );
-    } else if (filters.sort === "oldest") {
-      books.sort(
-        (a, b) =>
-          parseInt(a._id.substring(0, 8), 16) -
-          parseInt(b._id.substring(0, 8), 16)
-      );
-    }
+// Sorting
+if (filters.sort === "latest") {
+  books.sort((a, b) => (b.year || 0) - (a.year || 0));
+} else if (filters.sort === "oldest") {
+  books.sort((a, b) => (a.year || 0) - (b.year || 0));
+}
+
 
     // ✅ Render using correct `category` field
     const browseBooks = document.getElementById("browseBooks");
@@ -655,7 +685,12 @@ if (publishBookBtn) {
       fd.append("publisher", bookData.publisher || "");
       fd.append("year", bookData.year || "");
       // join multiple selected genres into a single string
-      fd.append("category", JSON.stringify(bookData.categories || ""));
+if (bookData.categories && bookData.categories.length > 0) {
+  bookData.categories.forEach(c => fd.append("category", c));
+} else {
+  fd.append("category", "");
+}
+
       fd.append("description", bookData.description || "");
 
       // --- Cover file ---
@@ -690,10 +725,22 @@ if (bookData.pageFiles && bookData.pageFiles.length > 0) {
         throw new Error(`Failed to publish book: ${errMsg}`);
       }
 
-      showPopup("✅ Book published successfully");
-      bookCreationSection.classList.add("hidden");
-      conversionSection.classList.remove("hidden");
-      loadConversionBooks();
+showPopup("✅ Book published successfully");
+bookCreationSection.classList.add("hidden");
+conversionSection.classList.remove("hidden");
+
+// ✅ clear bookData + reset form
+bookData = {};
+document.getElementById("bookMetaForm").reset();
+document.getElementById("coverFileName").textContent = "No file chosen";
+document.getElementById("pageFileName").textContent = "No file chosen";
+document.getElementById("pageList").innerHTML = "";
+
+// refresh all book views
+await loadConversionBooks();
+await loadBooks();
+await loadBrowseBooks();
+
     } catch (err) {
       console.error("❌ Publish failed:", err);
       showPopup("❌ Failed to publish book", "error");
