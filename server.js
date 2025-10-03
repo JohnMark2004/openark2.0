@@ -70,7 +70,7 @@ const bookSchema = new mongoose.Schema({
   author: { type: String, required: true },
   publisher: { type: String, required: true },
   year: { type: Number, required: true },
-  category: { type: String, required: true },
+  category: { type: [String], required: true },
   img: { type: String, default: "img/default-book.png" },
   description: { type: String, default: "" },
   pages: [pageSchema],
@@ -186,7 +186,7 @@ app.post(
   },
   async (req, res) => {
     try {
-      // 🔒 Librarian token check (your code)
+      // 🔒 Librarian token check
       const authHeader = req.headers.authorization;
       if (!authHeader) return res.status(401).json({ error: "Missing token" });
       const token = authHeader.split(" ")[1];
@@ -194,20 +194,40 @@ app.post(
       if (decoded.role !== "librarian") return res.status(403).json({ error: "Forbidden" });
 
       const { title, author, publisher, year, category, description, pageTexts } = req.body;
-      if (!title || !author || !publisher || !year || !category) {
-        return res.status(400).json({ error: "Missing required fields" });
-      }
 
-      // ✅ Upload to Cloudinary
+      // ✅ Normalize category into array
+// ✅ Normalize categories (always an array of unique, trimmed strings)
+let parsedCategories = [];
+try {
+  parsedCategories = JSON.parse(category); // frontend sends JSON string
+} catch {
+  parsedCategories = Array.isArray(category)
+    ? category
+    : category.split(",").map(c => c.trim());
+}
+
+// Clean: remove empty, trim, unique
+parsedCategories = parsedCategories
+  .filter(c => c && c.trim() !== "")
+  .map(c => c.trim())
+  .filter((c, i, arr) => arr.indexOf(c) === i);
+
+      // ✅ Upload cover to Cloudinary
       let coverUrl = "";
       if (req.files?.cover) {
         const result = await uploadToCloudinary(req.files.cover[0].path, "openark/covers");
         coverUrl = result.secure_url;
       }
 
+      // ✅ Handle page OCR texts
       let texts = [];
-      try { texts = JSON.parse(pageTexts || "[]"); } catch { texts = []; }
+      try {
+        texts = JSON.parse(pageTexts || "[]");
+      } catch {
+        texts = [];
+      }
 
+      // ✅ Upload pages to Cloudinary
       const pageUrls = [];
       for (let i = 0; i < (req.files.pages || []).length; i++) {
         const file = req.files.pages[i];
@@ -218,13 +238,13 @@ app.post(
         });
       }
 
-      // ✅ Save in MongoDB
+      // ✅ Create new Book
       const newBook = new Book({
         title: title.trim(),
         author: author.trim(),
         publisher: publisher.trim(),
         year: Number(year),
-        category: category.trim(),
+        category: parsedCategories,   // always array
         description: description?.trim() || "",
         img: coverUrl || "img/default-book.png",
         pages: pageUrls,
@@ -266,6 +286,24 @@ app.delete("/api/books/:id", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
+app.get("/api/genres", async (req, res) => {
+  try {
+    let genres = await Book.distinct("category");
+
+    // ✅ Clean up: remove empty/null, trim spaces, unique only
+    genres = genres
+      .filter(g => g && g.trim() !== "")   // remove empty/null
+      .map(g => g.trim())                  // trim spaces
+      .filter((g, i, arr) => arr.indexOf(g) === i); // unique only
+
+    res.json(genres);
+  } catch (err) {
+    console.error("❌ Error fetching genres:", err);
+    res.status(500).json({ error: "Failed to fetch genres" });
+  }
+});
+
 
 app.get("/api/books", async (req, res) => {
   try {
