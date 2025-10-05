@@ -151,6 +151,7 @@ if (addPageBtn) {
       bookDetailsSection.classList.add("hidden");
       bookCreationSection.classList.add("hidden");
       bookReaderSection.classList.add("hidden");
+      bookmarksSection.classList.add("hidden");
     });
   }
 
@@ -163,6 +164,7 @@ if (addPageBtn) {
       bookDetailsSection.classList.add("hidden");
       bookCreationSection.classList.add("hidden");
       bookReaderSection.classList.add("hidden");
+      bookmarksSection.classList.add("hidden");
     });
   }
 
@@ -175,6 +177,7 @@ if (addPageBtn) {
       bookDetailsSection.classList.add("hidden");
       bookCreationSection.classList.add("hidden");
       bookReaderSection.classList.add("hidden");
+      bookmarksSection.classList.add("hidden");
       loadBrowseBooks();
     });
   }
@@ -921,6 +924,8 @@ if (browseTab) {
     bookDetailsSection.classList.add("hidden");
     bookCreationSection.classList.add("hidden");
     bookReaderSection.classList.add("hidden");
+    bookmarksSection.classList.add("hidden");
+
 
     loadGenres();        // ✅ load genres dynamically
     loadBrowseBooks();   // ✅ load books
