@@ -57,6 +57,7 @@ const userSchema = new mongoose.Schema({
   password: String,
   collegeYear: String,
   role: { type: String, enum: ["student", "librarian"], default: "student" },
+  bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }]
 });
 const User = mongoose.model("User", userSchema);
 
@@ -124,18 +125,35 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 🔒 Static librarian account
-    if (email === "forlibrarianuse@gmail.com" && password === "librarian12345") {
-      const token = jwt.sign({ role: "librarian", email }, process.env.JWT_SECRET, {
-        expiresIn: "24h",
-      });
-      return res.json({
-        message: "Login successful",
-        token,
-        role: "librarian",
-        email,
-      });
-    }
+// 🔒 Static librarian account
+if (email === "forlibrarianuse@gmail.com" && password === "librarian12345") {
+  // ensure librarian user exists in DB
+  let librarianUser = await User.findOne({ email });
+  if (!librarianUser) {
+    librarianUser = new User({
+      username: "Librarian",
+      email,
+      password: await bcrypt.hash(password, 10),
+      role: "librarian",
+      collegeYear: "N/A",
+    });
+    await librarianUser.save();
+  }
+
+  const token = jwt.sign(
+    { id: librarianUser._id, role: "librarian", email },
+    process.env.JWT_SECRET,
+    { expiresIn: "24h" }
+  );
+
+  return res.json({
+    message: "Login successful",
+    token,
+    role: "librarian",
+    email,
+    username: librarianUser.username,
+  });
+}
 
     // Otherwise check student in DB
     const user = await User.findOne({ email });
@@ -259,7 +277,6 @@ parsedCategories = parsedCategories
   }
 );
 
-
 app.delete("/api/books/:id", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -311,6 +328,79 @@ app.get("/api/books", async (req, res) => {
     res.json(books);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch books" });
+  }
+});
+
+// ===============================
+// Bookmark Routes
+// ===============================
+app.post("/api/bookmarks/:bookId", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const { bookId } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(bookId))
+      return res.status(400).json({ error: "Invalid book ID" });
+
+    if (user.bookmarks.includes(bookId)) {
+      return res.status(400).json({ error: "Book already bookmarked" });
+    }
+
+    user.bookmarks.push(bookId);
+    await user.save();
+
+    res.json({ message: "Book added to bookmarks" });
+  } catch (err) {
+    console.error("❌ Add bookmark error:", err);
+    res.status(500).json({ error: "Failed to add bookmark" });
+  }
+});
+
+app.delete("/api/bookmarks/:bookId", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    user.bookmarks = user.bookmarks.filter(
+      (b) => b.toString() !== req.params.bookId
+    );
+    await user.save();
+
+    res.json({ message: "Book removed from bookmarks" });
+  } catch (err) {
+    console.error("❌ Remove bookmark error:", err);
+    res.status(500).json({ error: "Failed to remove bookmark" });
+  }
+});
+
+app.get("/api/bookmarks", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id).populate("bookmarks");
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json(user.bookmarks);
+  } catch (err) {
+    console.error("❌ Fetch bookmarks error:", err);
+    res.status(500).json({ error: "Failed to fetch bookmarks" });
   }
 });
 

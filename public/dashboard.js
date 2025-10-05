@@ -508,40 +508,6 @@ books.forEach((book) => {
   }
 }
 
-
-// --- Show Book Details ---
-function showBookDetails(book, fromSection) {
-  if (fromSection) {
-    fromSection.classList.add("hidden");
-    window.lastSection = fromSection; // ✅ remember where we came from
-  }
-  bookDetailsSection.classList.remove("hidden");
-
-  // ✅ Render genres correctly
-const genres = Array.isArray(book.category)
-  ? book.category.join(", ")
-  : book.category || "N/A";
-  
-  document.getElementById("detailCategory").textContent = genres;
-  document.getElementById("detailCategoryStat").textContent = genres;
-  document.getElementById("detailCover").src = book.img;
-  document.getElementById("detailTitle").textContent = book.title;
-  document.getElementById("detailTitleBreadcrumb").textContent = book.title;
-document.getElementById("detailAuthor").textContent = 
-  `${book.author} (${book.publisher}, ${book.year})`;
-
-  document.getElementById("detailDescription").textContent =
-    book.description || "No description available.";
-  document.getElementById("disclaimer").textContent =
-    "Disclaimer: This book is from the library. We do not own it; we only use it with permission for thesis purposes.";
-  document.getElementById("detailChapters").textContent =
-    book.pages && book.pages.length > 0
-      ? `${book.pages.length} Pages`
-      : "N/A";
-
-  window.currentBook = book;
-}
-
   // Browse filters events
   document.getElementById("browseSearch").addEventListener("input", () => {
     const search = document.getElementById("browseSearch").value.trim();
@@ -570,47 +536,46 @@ document.getElementById("detailAuthor").textContent =
     });
   });
 
-  // --- Show Book Details ---
 function showBookDetails(book, fromSection) {
   if (fromSection) {
     fromSection.classList.add("hidden");
-    window.lastSection = fromSection; // ✅ remember where we came from
+    window.lastSection = fromSection; 
   }
-    bookDetailsSection.classList.remove("hidden");
+  bookDetailsSection.classList.remove("hidden");
 
-const genres = Array.isArray(book.category)
-  ? book.category.join(", ")
-  : typeof book.category === "string"
-    ? book.category
-        .replace(/^\[|\]$/g, "")
-        .replace(/"/g, "")
-        .split(",")
-        .map((s) => s.trim())
-        .join(", ")
-    : "N/A";
+  const genres = Array.isArray(book.category)
+    ? book.category.join(", ")
+    : typeof book.category === "string"
+      ? book.category
+          .replace(/^\[|\]$/g, "")
+          .replace(/"/g, "")
+          .split(",")
+          .map((s) => s.trim())
+          .join(", ")
+      : "N/A";
 
-document.getElementById("detailCover").src = book.img;
-document.getElementById("detailTitle").textContent = book.title;
-document.getElementById("detailTitleBreadcrumb").textContent = book.title;
-document.getElementById("detailAuthor").innerHTML = `
-  <strong>${book.author}</strong>
-  &nbsp;&nbsp; Publisher: <span class="value">${book.publisher}</span>
-  &nbsp;&nbsp; Year: <span class="value">${book.year}</span>
-`;
+  document.getElementById("detailCover").src = book.img;
+  document.getElementById("detailTitle").textContent = book.title;
+  document.getElementById("detailTitle").dataset.bookId = book._id;  // ✅ critical line
+  document.getElementById("detailTitleBreadcrumb").textContent = book.title;
+  document.getElementById("detailAuthor").innerHTML = `
+    <strong>${book.author}</strong>
+    &nbsp;&nbsp; Publisher: <span class="value">${book.publisher}</span>
+    &nbsp;&nbsp; Year: <span class="value">${book.year}</span>
+  `;
+  document.getElementById("detailCategory").textContent = genres;
+  document.getElementById("detailCategoryStat").textContent = genres;
+  document.getElementById("detailDescription").textContent =
+    book.description || "No description available.";
+  document.getElementById("disclaimer").textContent =
+    "Disclaimer: This book is from the library. We do not own it; we only use it with permission for thesis purposes.";
+  document.getElementById("detailChapters").textContent =
+    book.pages && book.pages.length > 0
+      ? `${book.pages.length} Pages`
+      : "N/A";
 
-document.getElementById("detailCategory").textContent = genres;
-document.getElementById("detailCategoryStat").textContent = genres;
-document.getElementById("detailDescription").textContent =
-  book.description || "No description available.";
-document.getElementById("disclaimer").textContent =
-  "Disclaimer: This book is from the library. We do not own it; we only use it with permission for thesis purposes.";
-document.getElementById("detailChapters").textContent =
-  book.pages && book.pages.length > 0
-    ? `${book.pages.length} Pages`
-    : "N/A";
-
-    window.currentBook = book;
-  }
+  window.currentBook = book;
+}
 
     // --- Genre Button Toggle (move this near the top) ---
   const genreButtons = document.querySelectorAll("#categoriesButtons button");
@@ -797,6 +762,83 @@ document.getElementById("backToHomeBtn").addEventListener("click", () => {
       }
     });
   }
+
+  const bookmarksTab = document.getElementById("bookmarksTab");
+const bookmarksSection = document.getElementById("bookmarksSection");
+const bookmarksGrid = document.getElementById("bookmarksGrid");
+
+// --- Nav: Bookmarks ---
+if (bookmarksTab) {
+  bookmarksTab.addEventListener("click", (e) => {
+    e.preventDefault();
+    homeSection.classList.add("hidden");
+    conversionSection.classList.add("hidden");
+    browseSection.classList.add("hidden");
+    bookDetailsSection.classList.add("hidden");
+    bookCreationSection.classList.add("hidden");
+    bookReaderSection.classList.add("hidden");
+    bookmarksSection.classList.remove("hidden");
+    loadBookmarks();
+  });
+}
+
+// --- Add to bookmark ---
+document.querySelector(".btn-add-bookmark").addEventListener("click", async () => {
+  const token = sessionStorage.getItem("token");
+  if (!token) return showPopup("Please login first", "error");
+
+  // ✅ read bookId from dataset
+  const bookId = document.getElementById("detailTitle").dataset.bookId;
+  if (!bookId) {
+    showPopup("❌ No book selected", "error");
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/api/bookmarks/${bookId}`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text);
+    }
+
+    const data = await res.json();
+    showPopup(data.message, "success");
+  } catch (err) {
+    console.error("❌ Add bookmark failed:", err);
+    showPopup("Failed to add bookmark", "error");
+  }
+});
+
+// --- Load bookmarks ---
+async function loadBookmarks() {
+  try {
+    const token = sessionStorage.getItem("token");
+    const res = await fetch(`${API_URL}/api/bookmarks`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Failed to fetch bookmarks");
+
+    const bookmarks = await res.json();
+    bookmarksGrid.innerHTML = "";
+    bookmarks.forEach((book) => {
+      const div = document.createElement("div");
+      div.className = "book";
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <h4>${book.title}</h4>
+      `;
+      div.addEventListener("click", () => showBookDetails(book, bookmarksSection));
+      bookmarksGrid.appendChild(div);
+    });
+  } catch (err) {
+    console.error("❌ Error loading bookmarks:", err);
+  }
+}
+
 
   // --- Init ---
 if (browseTab) {
