@@ -568,7 +568,7 @@ function showBookDetails(book, fromSection) {
   document.getElementById("detailDescription").textContent =
     book.description || "No description available.";
   document.getElementById("disclaimer").textContent =
-    "Disclaimer: This book is from the library. We do not own it; we only use it with permission for thesis purposes.";
+    "Disclaimer: This book is from the library...";
   document.getElementById("detailChapters").textContent =
     book.pages && book.pages.length > 0
       ? `${book.pages.length} Pages`
@@ -576,6 +576,77 @@ function showBookDetails(book, fromSection) {
 
   window.currentBook = book;
 }
+
+// ===============================
+// BOOKMARK TOGGLE LOGIC
+// ===============================
+
+// helper to fetch current bookmarks
+async function getBookmarks() {
+  try {
+    const token = sessionStorage.getItem("token");
+    if (!token) return [];
+    const res = await fetch(`${API_URL}/api/bookmarks`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Failed to fetch bookmarks");
+    return await res.json();
+  } catch (err) {
+    console.error("❌ Error fetching bookmarks:", err);
+    return [];
+  }
+}
+
+// override existing showBookDetails to include button toggle
+const originalShowBookDetails = showBookDetails;
+showBookDetails = async function (book, fromSection) {
+  // call original
+  originalShowBookDetails(book, fromSection);
+
+  const token = sessionStorage.getItem("token");
+  const addBookmarkBtn = document.querySelector(".btn-add-bookmark");
+  if (!addBookmarkBtn) return;
+
+  // check current bookmarks
+  const bookmarks = await getBookmarks();
+  let isBookmarked = bookmarks.some((b) => b._id === book._id);
+
+  // update button label + style
+  addBookmarkBtn.textContent = isBookmarked
+    ? "REMOVE BOOKMARK"
+    : "+ ADD TO BOOKMARK";
+  addBookmarkBtn.classList.toggle("bookmarked", isBookmarked);
+
+  // add click toggle
+  addBookmarkBtn.onclick = async () => {
+    try {
+      const method = isBookmarked ? "DELETE" : "POST";
+      const res = await fetch(`${API_URL}/api/bookmarks/${book._id}`, {
+        method,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text);
+      }
+
+      const data = await res.json();
+      showPopup(data.message, "success");
+
+      // flip state
+      isBookmarked = !isBookmarked;
+      addBookmarkBtn.textContent = isBookmarked
+        ? "REMOVE BOOKMARK"
+        : "+ ADD TO BOOKMARK";
+      addBookmarkBtn.classList.toggle("bookmarked", isBookmarked);
+    } catch (err) {
+      console.error("❌ Toggle bookmark failed:", err);
+      showPopup("Failed to update bookmark", "error");
+    }
+  };
+};
+
+
 
     // --- Genre Button Toggle (move this near the top) ---
   const genreButtons = document.querySelectorAll("#categoriesButtons button");
@@ -782,36 +853,36 @@ if (bookmarksTab) {
   });
 }
 
-// --- Add to bookmark ---
-document.querySelector(".btn-add-bookmark").addEventListener("click", async () => {
-  const token = sessionStorage.getItem("token");
-  if (!token) return showPopup("Please login first", "error");
+// // --- Add to bookmark ---
+// document.querySelector(".btn-add-bookmark").addEventListener("click", async () => {
+//   const token = sessionStorage.getItem("token");
+//   if (!token) return showPopup("Please login first", "error");
 
-  // ✅ read bookId from dataset
-  const bookId = document.getElementById("detailTitle").dataset.bookId;
-  if (!bookId) {
-    showPopup("❌ No book selected", "error");
-    return;
-  }
+//   // ✅ read bookId from dataset
+//   const bookId = document.getElementById("detailTitle").dataset.bookId;
+//   if (!bookId) {
+//     showPopup("❌ No book selected", "error");
+//     return;
+//   }
 
-  try {
-    const res = await fetch(`${API_URL}/api/bookmarks/${bookId}`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+//   try {
+//     const res = await fetch(`${API_URL}/api/bookmarks/${bookId}`, {
+//       method: "POST",
+//       headers: { Authorization: `Bearer ${token}` },
+//     });
 
-    if (!res.ok) {
-      const text = await res.text();
-      throw new Error(text);
-    }
+//     if (!res.ok) {
+//       const text = await res.text();
+//       throw new Error(text);
+//     }
 
-    const data = await res.json();
-    showPopup(data.message, "success");
-  } catch (err) {
-    console.error("❌ Add bookmark failed:", err);
-    showPopup("Failed to add bookmark", "error");
-  }
-});
+//     const data = await res.json();
+//     showPopup(data.message, "success");
+//   } catch (err) {
+//     console.error("❌ Add bookmark failed:", err);
+//     showPopup("Failed to add bookmark", "error");
+//   }
+// });
 
 // --- Load bookmarks ---
 async function loadBookmarks() {

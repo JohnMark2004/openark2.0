@@ -1201,7 +1201,11 @@ main {
   font-weight: bold; /* publisher + year values bold */
 }
 
-
+.btn-add-bookmark.bookmarked {
+  background-color: #3a3a3a;
+  color: #e8dcb9;
+  border: 1px solid #e8dcb9;
+}
 
 /* Responsive */
 @media (max-width: 768px) {
