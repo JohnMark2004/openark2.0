@@ -30,7 +30,18 @@ const app = express();
 // ===============================
 // Middleware
 // ===============================
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5500",   // VS Code Live Server
+      "http://127.0.0.1:5500",
+      "http://localhost:3000",   // optional for React/Vite
+      "https://openark2-0.onrender.com" // deployed domain
+    ],
+    credentials: true,
+  })
+);
+
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
@@ -403,6 +414,56 @@ app.get("/api/bookmarks", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch bookmarks" });
   }
 });
+
+// ===============================
+// Add more pages to existing book (Librarian only)
+// ===============================
+app.post(
+  "/api/books/:id/add-pages",
+  upload.array("pages"),
+  async (req, res) => {
+    try {
+      const authHeader = req.headers.authorization;
+      if (!authHeader) return res.status(401).json({ error: "Missing token" });
+      const token = authHeader.split(" ")[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      if (decoded.role !== "librarian")
+        return res.status(403).json({ error: "Forbidden" });
+
+      const book = await Book.findById(req.params.id);
+      if (!book) return res.status(404).json({ error: "Book not found" });
+
+      const { pageTexts } = req.body;
+      let texts = [];
+      try {
+        texts = JSON.parse(pageTexts || "[]");
+      } catch {
+        texts = [];
+      }
+
+      const uploadedPages = [];
+      for (let i = 0; i < req.files.length; i++) {
+        const file = req.files[i];
+        const result = await cloudinary.uploader.upload(file.path, {
+          folder: "openark/pages",
+        });
+        uploadedPages.push({
+          img: result.secure_url,
+          text: texts[i] || "",
+        });
+      }
+
+      book.pages.push(...uploadedPages);
+      await book.save();
+
+      res.json({ message: "✅ New pages added successfully", pages: uploadedPages });
+    } catch (err) {
+      console.error("❌ Add pages failed:", err);
+      res.status(500).json({ error: "Failed to add pages" });
+    }
+  }
+);
+
 
 // ===============================
 // API Fallback (must come after all /api routes)

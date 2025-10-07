@@ -12,7 +12,12 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // API BASE URL
-  const API_URL = "https://openark2-0.onrender.com";
+  // ✅ Auto-detect local vs deployed environment
+const API_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://openark2-0.onrender.com";
+
 
   // --- Auth Check ---
   if (!sessionStorage.getItem("token")) {
@@ -580,6 +585,74 @@ function showBookDetails(book, fromSection) {
   window.currentBook = book;
 }
 
+  // ===============================
+// LIBRARIAN: ADD MORE PAGES (OCR)
+// ===============================
+const addMorePagesBtn = document.getElementById("addMorePagesBtn");
+// const role = localStorage.getItem("role");
+
+function enableAddMorePages(book) {
+  if (!addMorePagesBtn) return;
+
+  // Only librarians can see this button
+  if (role === "librarian") {
+    addMorePagesBtn.classList.remove("hidden");
+    addMorePagesBtn.onclick = async () => {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = "image/*";
+      fileInput.multiple = true;
+
+      fileInput.addEventListener("change", async () => {
+        const files = Array.from(fileInput.files);
+        if (files.length === 0) return;
+
+        showPopup("⏳ Processing OCR... Please wait", "success");
+
+        const pageTexts = [];
+        for (const file of files) {
+          try {
+            const { data: { text } } = await Tesseract.recognize(file, "eng");
+            pageTexts.push(text);
+          } catch (err) {
+            console.error("OCR failed:", err);
+            pageTexts.push("");
+          }
+        }
+
+        const formData = new FormData();
+        files.forEach(f => formData.append("pages", f));
+        formData.append("pageTexts", JSON.stringify(pageTexts));
+
+        const token = sessionStorage.getItem("token");
+        const res = await fetch(`${API_URL}/api/books/${book._id}/add-pages`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          showPopup("✅ Page(s) added successfully!", "success");
+
+          // Update displayed page count immediately
+          if (!book.pages) book.pages = [];
+          book.pages.push(...data.pages);
+          document.getElementById("detailChapters").textContent =
+            `${book.pages.length} Pages`;
+        } else {
+          showPopup(`❌ ${data.error || "Failed to add pages"}`, "error");
+        }
+      });
+
+      fileInput.click();
+    };
+  } else {
+    addMorePagesBtn.classList.add("hidden");
+  }
+}
+
+
 // ===============================
 // BOOKMARK TOGGLE LOGIC
 // ===============================
@@ -605,6 +678,7 @@ const originalShowBookDetails = showBookDetails;
 showBookDetails = async function (book, fromSection) {
   // call original
   originalShowBookDetails(book, fromSection);
+  enableAddMorePages(book);
 
   const token = sessionStorage.getItem("token");
   const addBookmarkBtn = document.querySelector(".btn-add-bookmark");
