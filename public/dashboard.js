@@ -883,33 +883,110 @@ document.getElementById("backToHomeBtn").addEventListener("click", () => {
     conversionSection.classList.remove("hidden");
   });
 
-  // --- Reader ---
-  const readBookBtn = document.getElementById("readBookBtn");
-  if (readBookBtn) {
-    readBookBtn.addEventListener("click", () => {
-      if (!window.currentBook) return;
-      bookDetailsSection.classList.add("hidden");
-      bookReaderSection.classList.remove("hidden");
-      document.getElementById("readerBookTitle").textContent =
-        window.currentBook.title;
+// --- Reader ---
+const readBookBtn = document.getElementById("readBookBtn");
+if (readBookBtn) {
+  readBookBtn.addEventListener("click", () => {
+    if (!window.currentBook) return;
 
-      const readerContent = document.getElementById("readerContent");
-      readerContent.innerHTML = "";
-      if (window.currentBook.pages && window.currentBook.pages.length > 0) {
-        window.currentBook.pages.forEach((page, idx) => {
-          const div = document.createElement("div");
-          div.className = "page";
-          div.innerHTML = `
+    bookDetailsSection.classList.add("hidden");
+    bookReaderSection.classList.remove("hidden");
+    document.getElementById("readerBookTitle").textContent =
+      window.currentBook.title;
+
+    const readerContent = document.getElementById("readerContent");
+    readerContent.innerHTML = "";
+
+    const role = localStorage.getItem("role") || "student";
+
+    if (window.currentBook.pages && window.currentBook.pages.length > 0) {
+      window.currentBook.pages.forEach((page, idx) => {
+        const div = document.createElement("div");
+        div.className = "page";
+        div.innerHTML = `
+          <div class="page-header">
             <h4 class="page-label">Page ${idx + 1}</h4>
-            <div class="ocr-text">${page.text || "No text detected."}</div>
-          `;
-          readerContent.appendChild(div);
+            ${
+              role === "librarian"
+                ? `<button class="edit-page-btn" data-index="${idx}"> Edit Page</button>`
+                : ""
+            }
+          </div>
+          <div class="ocr-text" id="ocr-text-${idx}">
+            ${page.text || "No text detected."}
+          </div>
+        `;
+        readerContent.appendChild(div);
+      });
+
+      // Librarian edit feature
+      if (role === "librarian") {
+        document.querySelectorAll(".edit-page-btn").forEach((btn) => {
+          btn.addEventListener("click", async () => {
+            const idx = btn.dataset.index;
+            const textDiv = document.getElementById(`ocr-text-${idx}`);
+            const oldText = textDiv.textContent.trim();
+
+            // Replace text area with large editable field
+            textDiv.innerHTML = `
+              <textarea id="edit-textarea-${idx}" class="edit-textarea">${oldText}</textarea>
+              <div class="edit-controls">
+                <button id="save-text-${idx}" class="save-page-btn"> Save Changes</button>
+                <button id="cancel-edit-${idx}" class="cancel-page-btn"> Cancel</button>
+              </div>
+            `;
+
+            // Save handler
+            document
+              .getElementById(`save-text-${idx}`)
+              .addEventListener("click", async () => {
+                const newText = document.getElementById(
+                  `edit-textarea-${idx}`
+                ).value;
+                const token = sessionStorage.getItem("token");
+
+                try {
+                  const res = await fetch(
+                    `${API_URL}/api/books/${window.currentBook._id}/pages/${idx}`,
+                    {
+                      method: "PATCH",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                      },
+                      body: JSON.stringify({ newText }),
+                    }
+                  );
+
+                  const data = await res.json();
+                  if (res.ok) {
+                    showPopup("✅ Page text updated successfully", "success");
+                    window.currentBook.pages[idx].text = newText;
+                    textDiv.innerHTML = newText;
+                  } else {
+                    showPopup(`❌ ${data.error}`, "error");
+                  }
+                } catch (err) {
+                  console.error("❌ Save failed:", err);
+                  showPopup("Failed to update page text", "error");
+                }
+              });
+
+            // Cancel handler
+            document
+              .getElementById(`cancel-edit-${idx}`)
+              .addEventListener("click", () => {
+                textDiv.innerHTML = oldText;
+              });
+          });
         });
-      } else {
-        readerContent.innerHTML = "<p>No pages available for this book.</p>";
       }
-    });
-  }
+    } else {
+      readerContent.innerHTML = "<p>No pages available for this book.</p>";
+    }
+  });
+}
+
 
   const bookmarksTab = document.getElementById("bookmarksTab");
 const bookmarksSection = document.getElementById("bookmarksSection");

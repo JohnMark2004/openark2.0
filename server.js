@@ -464,6 +464,40 @@ app.post(
   }
 );
 
+// ===============================
+// Update specific page text (Librarian only)
+// ===============================
+app.patch("/api/books/:bookId/pages/:pageIndex", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "librarian")
+      return res.status(403).json({ error: "Forbidden" });
+
+    const { bookId, pageIndex } = req.params;
+    const { newText } = req.body;
+
+    const book = await Book.findById(bookId);
+    if (!book) return res.status(404).json({ error: "Book not found" });
+
+    const index = parseInt(pageIndex, 10);
+    if (isNaN(index) || index < 0 || index >= book.pages.length) {
+      return res.status(400).json({ error: "Invalid page index" });
+    }
+
+    book.pages[index].text = newText;
+    await book.save();
+
+    res.json({ message: "✅ Page text updated successfully" });
+  } catch (err) {
+    console.error("❌ Update page text failed:", err);
+    res.status(500).json({ error: "Failed to update page text" });
+  }
+});
+
 
 // ===============================
 // API Fallback (must come after all /api routes)

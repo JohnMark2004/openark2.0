@@ -1207,6 +1207,111 @@ main {
   border: 1px solid #e8dcb9;
 }
 
+/* === Reader Page Styling === */
+.page {
+  background: #f8f9fa;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.page-label {
+  color: #003366; /* OpenArk deep blue */
+  font-weight: 600;
+  margin: 0;
+}
+
+.ocr-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 16px;
+  color: #222;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+/* === Edit Mode === */
+.edit-textarea {
+  width: 100%;
+  min-height: 180px;
+  font-size: 16px;
+  line-height: 1.6;
+  border: 2px solid #003366;
+  border-radius: 10px;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  background-color: #fff;
+  color: #111;
+  font-family: inherit;
+}
+
+.edit-controls {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.edit-page-btn,
+.save-page-btn,
+.cancel-page-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.edit-page-btn {
+  background-color: #e4dac5;
+  color: #2E2E2E;
+}
+
+.edit-page-btn:hover {
+  background-color: #2E2E2E;
+  color: #e4dac5;
+}
+
+.save-page-btn {
+  background-color: #e4dac5;
+  color: #2E2E2E;
+}
+
+.save-page-btn:hover {
+  background-color: #2E2E2E;
+  color: #e4dac5;
+}
+
+.cancel-page-btn {
+  background-color: #2E2E2E;
+  color: #e4dac5;
+}
+
+.cancel-page-btn:hover {
+  background-color: #e4dac5;
+  color: #2E2E2E;
+}
+
+.edit-page-btn:hover,
+.save-page-btn:hover,
+.cancel-page-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  transition: all 0.3s ease;
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
   .book-read-grid {
