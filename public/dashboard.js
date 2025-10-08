@@ -246,17 +246,24 @@ if (addPageBtn) {
 
     // Bind events
     document.querySelectorAll(".genre-btn").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".genre-btn").forEach((b) =>
-          b.classList.remove("active")
-        );
-        btn.classList.add("active");
+btn.addEventListener("click", () => {
+  document.querySelectorAll(".genre-btn").forEach((b) =>
+    b.classList.remove("active")
+  );
+  btn.classList.add("active");
 
-        const search = document.getElementById("browseSearch").value.trim();
-        const sort = document.getElementById("browseSort").value;
-        const genre = btn.dataset.genre;
-        loadBrowseBooks({ search, sort, genre });
-      });
+  const search = document.getElementById("browseSearch").value.trim();
+  const sort = document.getElementById("browseSort").value;
+  const genre = btn.dataset.genre;
+
+  // 🆕 Update heading
+  const genreTitle = document.getElementById("currentGenreTitle");
+  genreTitle.textContent =
+    genre === "all" ? "Showing: All" : `Showing: ${genre}`;
+
+  loadBrowseBooks({ search, sort, genre });
+});
+
     });
   } catch (err) {
     console.error("❌ Error loading genres:", err);
@@ -265,81 +272,160 @@ if (addPageBtn) {
 
 
 
-  async function loadBooks() {
-    try {
-      const res = await fetch(`${API_URL}/api/books`);
-      if (!res.ok) throw new Error("Failed to fetch books");
-      const books = await res.json();
+// 📚 Load Recently Added Books (Home Section)
+async function loadBooks() {
+  try {
+    const res = await fetch(`${API_URL}/api/books`);
+    if (!res.ok) throw new Error("Failed to fetch books");
+    const books = await res.json();
 
-      // Featured Slideshow
-      if (featuredBookContainer && books.length > 0) {
-        featuredBookContainer.innerHTML = `
-          <img src="${books[0].img}" alt="${books[0].title}">
-          <div class="info">
-            <h3>${books[0].title}</h3>
-<p><strong>${books[0].author}</strong> — ${books[0].publisher}, ${books[0].year}</p>
+    // Sort by newest first (based on createdAt)
+    books.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-          </div>
-        `;
+    // 📘 Show only the 12 most recent books
+    const recentBooks = books.slice(0, 6);
 
-        let current = 0;
-        setInterval(() => {
-          current = (current + 1) % books.length;
-          const book = books[current];
-          const img = featuredBookContainer.querySelector("img");
-          const title = featuredBookContainer.querySelector("h3");
-          const desc = featuredBookContainer.querySelector("p:last-child");
+    // Target the grid container
+    const dashboardBooks = document.getElementById("dashboardBooks");
+    if (!dashboardBooks) return;
 
-          img.classList.add("fade-out");
-          title.classList.add("fade-out");
-          desc.classList.add("fade-out");
+    // Clear old content
+    dashboardBooks.innerHTML = "";
 
-          setTimeout(() => {
-            img.src = book.img;
-            img.alt = book.title;
-            title.textContent = book.title;
-desc.textContent = `${book.author} — ${book.publisher}, ${book.year}`;
-            img.classList.remove("fade-out");
-            title.classList.remove("fade-out");
-            desc.classList.remove("fade-out");
-          }, 500);
-        }, 5000);
-      }
+    // Build each book card
+    recentBooks.forEach(book => {
+      const div = document.createElement("div");
+      div.className = "book";
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <h4>${book.title}</h4>
+      `;
 
-      // All Books Grid (Home)
-      const dashboardBooks = document.getElementById("dashboardBooks");
-      if (dashboardBooks) {
-        dashboardBooks.innerHTML = "";
-books.forEach((book) => {
-  const genres = Array.isArray(book.category)
-    ? book.category.join(", ")
-    : typeof book.category === "string"
-      ? book.category
-          .replace(/^\[|\]$/g, "")  // remove []
-          .replace(/"/g, "")        // remove quotes
-          .split(",")
-          .map((s) => s.trim())
-          .join(", ")
-      : "N/A";
+      // When clicked → show details
+      div.addEventListener("click", () => showBookDetails(book, homeSection));
+      dashboardBooks.appendChild(div);
+    });
 
-  const div = document.createElement("div");
-  div.className = "book";
-div.innerHTML = `
-  <img src="${book.img}" alt="${book.title}">
-  <h4>${book.title}</h4>
-`;
-div.addEventListener("click", () =>
-  showBookDetails(book, homeSection)
-);
-
-  dashboardBooks.appendChild(div);
-});
-
-      }
-    } catch (err) {
-      console.error("❌ Error loading books:", err);
-    }
+  } catch (err) {
+    console.error("❌ Error loading books:", err);
   }
+}
+
+// 📖 CONTINUE READING SECTION
+function saveLastRead(book) {
+  const history = JSON.parse(localStorage.getItem("continueReading") || "[]");
+  // Remove if already exists
+  const updated = history.filter(b => b._id !== book._id);
+  // Add to front
+  updated.unshift({
+    _id: book._id,
+    title: book.title,
+    img: book.img,
+    author: book.author
+  });
+  // Keep only latest 5
+  localStorage.setItem("continueReading", JSON.stringify(updated.slice(0, 5)));
+}
+
+function loadContinueReading() {
+  const container = document.getElementById("continueReadingGrid");
+  if (!container) return;
+
+  const history = JSON.parse(localStorage.getItem("continueReading") || "[]");
+  container.innerHTML = "";
+
+  if (history.length === 0) {
+    container.innerHTML = `<p style="opacity:0.7;">No recent reads yet.</p>`;
+    return;
+  }
+
+  history.forEach(book => {
+    const div = document.createElement("div");
+    div.className = "book";
+    div.innerHTML = `
+      <img src="${book.img}" alt="${book.title}">
+      <h4>${book.title}</h4>
+    `;
+    div.addEventListener("click", () => {
+      showBookDetails(book, homeSection);
+    });
+    container.appendChild(div);
+  });
+}
+
+
+// 🎞️ BOOK SLIDESHOW (Home Banner)
+async function loadBookSlideshow() {
+  try {
+    const res = await fetch(`${API_URL}/api/books`);
+    if (!res.ok) throw new Error("Failed to fetch books");
+    const books = await res.json();
+
+    const slideshow = document.getElementById("bookSlideshow");
+    if (!slideshow) return;
+
+    // Build slides
+    slideshow.innerHTML = books
+      .map(book => `
+        <div class="book-slide">
+          <img src="${book.img}" alt="${book.title}">
+          <div class="slide-info">
+            <h3>${book.title}</h3>
+            <p><strong>Author:</strong> ${book.author}</p>
+            <p><strong>Publisher:</strong> ${book.publisher}</p>
+            <p><strong>Year:</strong> ${book.year}</p>
+            <p class="synopsis"><strong>Synopsis:</strong> ${book.description || "No synopsis available."}</p>
+            <button class="btn btn-read-slide" data-id="${book._id}"> Read</button>
+          </div>
+        </div>
+      `)
+      .join("");
+
+    let current = 0;
+    const slides = document.querySelectorAll(".book-slide");
+
+    function showSlide(index) {
+      slideshow.style.transform = `translateX(-${index * 100}%)`;
+    }
+
+    // 🔹 Navigation Buttons
+    document.getElementById("nextSlide").addEventListener("click", () => {
+      current = (current + 1) % slides.length;
+      showSlide(current);
+    });
+
+    document.getElementById("prevSlide").addEventListener("click", () => {
+      current = (current - 1 + slides.length) % slides.length;
+      showSlide(current);
+    });
+
+    // 🔹 Handle "Read" button clicks
+    document.querySelectorAll(".btn-read-slide").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const bookId = btn.dataset.id;
+        const selectedBook = books.find(b => b._id === bookId);
+        if (!selectedBook) return;
+
+        // Use your existing detail function
+        showBookDetails(selectedBook, document.getElementById("homeSection"));
+
+        // Optional: instantly open reader
+        // document.getElementById("readBookBtn").click();
+      });
+    });
+
+    // 🔹 Auto-slide every 10 seconds
+    setInterval(() => {
+      current = (current + 1) % slides.length;
+      showSlide(current);
+    }, 10000);
+  } catch (err) {
+    console.error("❌ Error loading slideshow:", err);
+  }
+}
+
+loadBookSlideshow();
+
 
   // --- Load Books for Conversion (Librarian) ---
   async function loadConversionBooks() {
@@ -448,69 +534,58 @@ document.getElementById("confirmDeleteBtn").addEventListener("click", async () =
   }
 
 // --- Browse Tab logic ---
-async function loadBrowseBooks(filters = {}) {
+async function loadBrowseBooks({ search = "", sort = "newest", genre = "all" } = {}) {
   try {
     const res = await fetch(`${API_URL}/api/books`);
     if (!res.ok) throw new Error("Failed to fetch books");
-    let books = await res.json();
+    const books = await res.json();
 
-    // Apply filters
-    if (filters.search) {
-      books = books.filter((b) =>
-        b.title.toLowerCase().includes(filters.search.toLowerCase())
+    let filtered = books;
+
+    // 🔹 Filter by genre
+    if (genre && genre !== "all") {
+      filtered = filtered.filter((book) =>
+        Array.isArray(book.category)
+          ? book.category.includes(genre)
+          : (book.category || "").toLowerCase().includes(genre.toLowerCase())
       );
     }
 
-// ✅ Inclusive Genre Filtering
-if (filters.genre && filters.genre !== "all") {
-  books = books.filter((b) => {
-    // Normalize categories into a clean array
-    let categories = [];
-    if (Array.isArray(b.category)) {
-      categories = b.category;
-    } else if (typeof b.category === "string") {
-      try {
-        const parsed = JSON.parse(b.category);
-        categories = Array.isArray(parsed) ? parsed : [parsed];
-      } catch {
-        categories = b.category.split(",").map(c => c.trim());
-      }
+    // 🔹 Filter by search
+    if (search) {
+      filtered = filtered.filter(
+        (book) =>
+          book.title.toLowerCase().includes(search.toLowerCase()) ||
+          book.author.toLowerCase().includes(search.toLowerCase())
+      );
     }
 
-    // ✅ Inclusive check: book is kept if at least ONE category matches selected genre
-    return categories.some(
-      (c) => c.trim().toLowerCase() === filters.genre.trim().toLowerCase()
-    );
-  });
-}
+    // 🔹 Sort
+    if (sort === "az") filtered.sort((a, b) => a.title.localeCompare(b.title));
+    else if (sort === "za") filtered.sort((a, b) => b.title.localeCompare(a.title));
+    else if (sort === "newest") filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    else if (sort === "oldest") filtered.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
 
-    // Sorting
-// Sorting
-if (filters.sort === "latest") {
-  books.sort((a, b) => (b.year || 0) - (a.year || 0));
-} else if (filters.sort === "oldest") {
-  books.sort((a, b) => (a.year || 0) - (b.year || 0));
-}
-
-
-    // ✅ Render using correct `category` field
+    // 🔹 Display results
     const browseBooks = document.getElementById("browseBooks");
     browseBooks.innerHTML = "";
-books.forEach((book) => {
-  const genres = Array.isArray(book.category)
-    ? book.category.join(", ")
-    : book.category || "N/A";
 
-  const div = document.createElement("div");
-  div.className = "book";
-  div.innerHTML = `
-    <img src="${book.img}" alt="${book.title}">
-    <h4>${book.title}</h4>
-  `;
-  div.addEventListener("click", () => showBookDetails(book, browseSection));
-  browseBooks.appendChild(div);
-});
+    if (filtered.length === 0) {
+      browseBooks.innerHTML = `<p>No books found for this genre.</p>`;
+      return;
+    }
 
+    filtered.forEach((book) => {
+      const div = document.createElement("div");
+      div.className = "book";
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <h4>${book.title}</h4>
+        <p>${book.author}</p>
+      `;
+      div.addEventListener("click", () => showBookDetails(book, browseSection));
+      browseBooks.appendChild(div);
+    });
   } catch (err) {
     console.error("❌ Error loading browse books:", err);
   }
@@ -986,8 +1061,6 @@ if (readBookBtn) {
     }
   });
 }
-
-
   const bookmarksTab = document.getElementById("bookmarksTab");
 const bookmarksSection = document.getElementById("bookmarksSection");
 const bookmarksGrid = document.getElementById("bookmarksGrid");
@@ -1085,4 +1158,11 @@ if (browseTab) {
 
   loadBooks();
   loadConversionBooks();
+  const viewAllBtn = document.getElementById("viewAllBtn");
+if (viewAllBtn) {
+  viewAllBtn.addEventListener("click", () => {
+    const browseTab = document.querySelector('[data-section="browseSection"], #browseTab');
+    if (browseTab) browseTab.click();
+  });
+}
 });

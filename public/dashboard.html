@@ -9,8 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
 </head>
-<body>
-  <header class="topbar" data-aos="fade-down" data-aos-duration="1000">
+<body class="dashboard-body">
+  <div class="dashboard-wrapper">
+    <header class="topbar" data-aos="fade-down" data-aos-duration="1000">
     <div class="left" data-aos="fade-right" data-aos-duration="1200">
       <img src="img/logo.png" class="logo" alt="Logo">
       <h1>OpenArk</h1>
@@ -44,24 +45,21 @@
 
   <main class="dashboard">
     <section id="homeSection">
-      <section class="weekly-main">
-        <div class="weekly-book" data-aos="zoom-in-right" data-aos-duration="1500">
-          <h2>Available Books</h2>
-          <div class="book-feature" id="featuredBook">
-            </div>
-        </div>
-        <div class="meet" data-aos="zoom-in-left" data-aos-duration="1500">
-          <h2>Meet OpenArk</h2>
-          <div class="meet-card">🌟 Join OpenArk Awards 2025 — Win $50,000!</div>
-          <div class="meet-card">📖 Author Benefits — Start your writing journey with us!</div>
-          <div class="meet-card">🎁 More Books & Bonus — Download the app for rewards!</div>
-        </div>
-      </section>
-      <section class="weekly-featured" data-aos="fade-up" data-aos-duration="1500">
-        <h2>All Books</h2>
-        <div class="featured-grid" id="dashboardBooks">
-          </div>
-      </section>
+      <h2>Available Books</h2>
+      <!-- 🎞️ BOOK SLIDESHOW SECTION -->
+<section class="book-slideshow-container" data-aos="fade-up" data-aos-duration="1500">
+  <div class="book-slideshow" id="bookSlideshow"></div>
+
+  <button class="slide-btn prev" id="prevSlide">❮</button>
+  <button class="slide-btn next" id="nextSlide">❯</button>
+</section>
+<section class="weekly-featured" id="homeSection">
+  <div class="section-header">
+    <h2>Recently Added</h2>
+    <button id="viewAllBtn" class="btn-view-all">View All →</button>
+  </div>
+  <div class="book-grid" id="dashboardBooks"></div>
+</section>
     </section>
 
     <section id="conversionSection" class="hidden">
@@ -226,7 +224,7 @@
     </section>
 
 <section id="browseSection" class="hidden">
-  <h2>Browse Books</h2>
+  <h2 id="browseHeading">Browse Library</h2>
 
   <!-- Top Controls -->
   <div class="browse-controls">
@@ -283,7 +281,7 @@
     <button class="genre-btn" data genre="Non-fiction">Non-fiction</option>
     add more genres -->
   </div>
-
+ <h3 id="currentGenreTitle">Showing: All</h3>
   <!-- Book Grid -->
   <div class="browse-grid" id="browseBooks"></div>
 </section>
@@ -322,5 +320,6 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <script src="dashboard.js"></script>
+  </div>
 </body>
 </html>

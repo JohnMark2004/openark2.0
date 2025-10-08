@@ -10,6 +10,22 @@
   --text-secondary: #555555;
 }
 
+/* ====== FIXED DASHBOARD WIDTH LIKE 9ANIME ====== */
+body.dashboard-body {
+  display: flex;
+  justify-content: center;
+  background-color: var(--pink-bg);
+}
+
+.dashboard-wrapper {
+  width: 100%;
+  max-width: 1280px; /* adjust to your liking (9anime uses ~1280–1360px) */
+  background-color: var(--pink-bg);
+  box-shadow: 0 0 30px rgba(0,0,0,0.05);
+  min-height: 100vh;
+}
+
+
 /* Soft neutral background */
 body {
   font-family: 'Montserrat', sans-serif;
@@ -20,12 +36,14 @@ body {
   line-height: 1.5;
 }
 
+
+
 /* Topbar */
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 5rem;
+  padding: 0.1rem 3rem;
   background: var(--beige);
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
@@ -1310,6 +1328,225 @@ main {
   filter: brightness(1.1);
   transition: all 0.3s ease;
 }
+
+/* ======================================================
+   🎞️ BOOK SLIDESHOW (Book Cover Style)
+   ====================================================== */
+.book-slideshow-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 2rem auto 4rem;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  background: var(--white);
+}
+
+.book-slideshow {
+  display: flex;
+  transition: transform 0.6s ease-in-out;
+}
+
+.book-slide {
+  min-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgb(250, 245, 241);
+  padding: 1.5rem 2rem;
+  box-sizing: border-box;
+}
+
+/* 📘 Fix image to look like a book cover */
+.book-slide img {
+  width: 250px;            /* realistic width */
+  height: 350px;           /* book-like proportions */
+  object-fit: cover;
+  border-radius: 8px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  flex-shrink: 0;
+}
+
+/* Info section */
+.slide-info {
+  flex: 1;
+  margin-left: 2rem;
+  background: #f9f6f2;
+  color: #2E2E2E;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.slide-info h3 {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+  color: #2E2E2E;
+}
+
+.slide-info p {
+  margin-bottom: 0.4rem;
+  color: #2E2E2E;
+}
+
+.slide-info .synopsis {
+  color: #2E2E2E;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+  max-height: 5.5em;        /* limit lines */
+  overflow: hidden;
+  display: -webkit-box;      /* enable multi-line clamp */
+  -webkit-line-clamp: 1;     /* show up to 4 lines */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+
+/* Arrow buttons */
+.slide-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255,255,255,0.7);
+  border: none;
+  font-size: 2rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.3s;
+  z-index: 5;
+}
+
+.slide-btn:hover {
+  background: rgba(255,255,255,0.9);
+}
+
+.slide-btn.prev {
+  left: 10px;
+}
+
+.slide-btn.next {
+  right: 10px;
+}
+
+/* 🎯 Slideshow "Read" Button — aligned to the right */
+.btn-read-slide {
+  margin-top: 1rem;
+  align-self: flex-end;        /* push to the right */
+  background-color: var(--beige);
+  color: var(--dusty);
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.btn-read-slide:hover {
+  background-color: var(--dusty);
+  color: var(--white);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .book-slide {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .book-slide img {
+    width: 200px;
+    height: 280px;
+    margin-bottom: 1rem;
+  }
+
+.slide-info {
+  flex: 1;
+  margin-left: 2rem;
+  background: var(--dusty);
+  color: var(--white);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;  /* makes align-self work */
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+}
+
+/* 🌟 Recently Added Section Header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  font-size: 1.6rem;
+  color: var(--dusty);
+  font-weight: 700;
+}
+
+/* 🎯 "View All" button styling */
+.btn-view-all {
+  background: none;
+  border: none;
+  color: var(--dusty);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+}
+
+.btn-view-all:hover {
+  color: var(--beige);
+  text-decoration: underline;
+}
+
+/* 📚 Recently Added Book Grid */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1.2rem;
+  padding-top: 0.5rem;
+}
+
+/* 📖 Individual Book Card */
+.book {
+  background: var(--white);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.book:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 🖼️ Fix book image size */
+.book img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
 
 
 /* Responsive */
