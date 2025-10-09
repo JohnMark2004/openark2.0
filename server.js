@@ -744,7 +744,7 @@ app.get(/^\/(?!api).*/, (req, res) => {
 // ===============================
 // Start Server
 // ===============================
-const server = http.createServer(app);a
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: [
