@@ -744,15 +744,15 @@ app.get(/^\/(?!api).*/, (req, res) => {
 // ===============================
 // Start Server
 // ===============================
-const PORT = process.env.PORT || 5000;
-const http = require("http");
-const { Server } = require("socket.io");
-
-// Create HTTP server and attach socket.io
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // or your frontend URL
+    origin: [
+      "http://localhost:5500",
+      "http://127.0.0.1:5500",
+      "http://localhost:3000",
+      "https://openark2-0.onrender.com"
+    ],
     methods: ["GET", "POST", "DELETE"],
   },
 });
@@ -771,12 +771,3 @@ io.on("connection", (socket) => {
     console.log("❌ A user disconnected:", socket.id);
   });
 });
-
-// Helper: broadcast new or deleted comment
-function broadcastComment(bookId, type, payload) {
-  io.to(bookId.toString()).emit("commentUpdate", { type, payload });
-}
-
-// Replace your old `app.listen` call:
-server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-
