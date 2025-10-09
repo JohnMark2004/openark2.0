@@ -744,7 +744,7 @@ app.get(/^\/(?!api).*/, (req, res) => {
 // ===============================
 // Start Server
 // ===============================
-const server = http.createServer(app);
+const server = http.createServer(app);a
 const io = new Server(server, {
   cors: {
     origin: [
@@ -771,3 +771,12 @@ io.on("connection", (socket) => {
     console.log("❌ A user disconnected:", socket.id);
   });
 });
+
+// Helper: broadcast new or deleted comment
+function broadcastComment(bookId, type, payload) {
+  io.to(bookId.toString()).emit("commentUpdate", { type, payload });
+}
+
+// Start the server
+const PORT = process.env.PORT || 5000;
+server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
