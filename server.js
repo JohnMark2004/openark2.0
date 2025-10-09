@@ -229,6 +229,20 @@ app.delete("/api/comments/:commentId", async (req, res) => {
   }
 });
 
+// ===============================
+// Get Single Book by ID
+// ===============================
+app.get("/api/books/:id", async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) return res.status(404).json({ error: "Book not found" });
+    res.json(book);
+  } catch (err) {
+    console.error("❌ Fetch book by ID error:", err);
+    res.status(500).json({ error: "Failed to load book" });
+  }
+});
+
 
 // ===============================
 // Multer Setup
@@ -586,30 +600,34 @@ app.get("/api/bookmarks", async (req, res) => {
   }
 });
 
-// Save last read progress
+// ===============================
+// Continue Reading Routes
+// ===============================
 app.post("/api/continue", async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ error: "No token" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const { bookId, lastPage = 1 } = req.body;
+    const { bookId, lastPage } = req.body;
+    if (!bookId) return res.status(400).json({ error: "Missing bookId" });
+
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Update or insert record
-    const idx = user.continueReading.findIndex(c => c.bookId.toString() === bookId);
-    if (idx >= 0) {
-      user.continueReading[idx].lastPage = lastPage;
-      user.continueReading[idx].updatedAt = new Date();
+    const existing = user.continueReading.find(
+      (c) => c.bookId.toString() === bookId
+    );
+
+    if (existing) {
+      existing.lastPage = lastPage || existing.lastPage;
+      existing.updatedAt = Date.now();
     } else {
-      user.continueReading.unshift({ bookId, lastPage });
+      user.continueReading.push({ bookId, lastPage: lastPage || 1 });
     }
 
-    // Keep last 5 entries
-    user.continueReading = user.continueReading.slice(0, 5);
     await user.save();
-
     res.json({ message: "Progress saved" });
   } catch (err) {
     console.error("❌ Continue save error:", err);
@@ -617,31 +635,39 @@ app.post("/api/continue", async (req, res) => {
   }
 });
 
-// Get user's continue reading list
 app.get("/api/continue", async (req, res) => {
   try {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ error: "No token" });
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id).populate("continueReading.bookId");
+    const user = await User.findById(decoded.id).populate({
+      path: "continueReading.bookId",
+      model: "Book",
+    });
+
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    const books = user.continueReading.map(c => ({
-      _id: c.bookId._id,
-      title: c.bookId.title,
-      author: c.bookId.author,
-      img: c.bookId.img,
-      lastPage: c.lastPage,
-    }));
+    const books = user.continueReading
+      .filter((c) => c.bookId)
+      .sort((a, b) => b.updatedAt - a.updatedAt)
+      .map((c) => ({
+        _id: c.bookId._id,
+        title: c.bookId.title,
+        author: c.bookId.author,
+        img: c.bookId.img,
+        category: c.bookId.category,
+        description: c.bookId.description,
+        lastPage: c.lastPage,
+      }));
 
     res.json(books);
   } catch (err) {
-    console.error("❌ Continue get error:", err);
-    res.status(500).json({ error: "Failed to load progress" });
+    console.error("❌ Continue fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch continue reading" });
   }
 });
-
 
 // ===============================
 // Add more pages to existing book (Librarian only)

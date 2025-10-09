@@ -61,7 +61,6 @@ body {
   height: 3rem;
   border-radius: 50%;
   object-fit: cover;
-  box-shadow: 0 2px 8px var(--rose);
 }
 
 .topbar h1 {
@@ -133,6 +132,47 @@ main {
   margin-bottom: 3rem;
 }
 
+/* ===========================================
+   📚 Unified Book Card Font & Spacing (All Sections)
+   =========================================== */
+.book h4,
+.browse-grid .book h4,
+.continue-reading .book h4,
+.bookmarks-grid .book h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dusty);
+  margin: 0.45rem 0 0.15rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* First genre below title (e.g. "(Fantasy …)") */
+.book .genre-label,
+.browse-grid .book .genre-label,
+.continue-reading .book .genre-label,
+.bookmarks-grid .book .genre-label {
+  font-size: 0.75rem;
+  color: #777;
+  text-align: center;
+  margin-bottom: 0.4rem;
+  opacity: 0.9;
+  font-style: italic;
+}
+
+/* Ensure consistent image spacing */
+.book img,
+.browse-grid .book img,
+.continue-reading .book img,
+.bookmarks-grid .book img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+
 .weekly-book h2,
 .meet h2,
 .weekly-featured h2 {
@@ -148,13 +188,11 @@ main {
   background: var(--white);
   padding: 1rem;
   border-radius: 16px;
-  box-shadow: 0 4px 16px var(--rose);
 }
 
 .book-feature img {
   width: 250px;
   border-radius: 12px;
-  box-shadow: 0 2px 12px var(--rose);
 }
 
 .book-feature .info {
@@ -180,7 +218,6 @@ main {
   padding: 1rem;
   margin-bottom: 1rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px var(--rose);
   color: var(--text-main);
   font-weight: 600;
 }
@@ -213,57 +250,6 @@ main {
   }
 }
 
-
-.featured-grid .book {
-  width: 150px;
-  height: 220px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
-  background: var(--white);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px var(--rose);
-  padding: 0 0 1rem 0;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.featured-grid .book:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 18px var(--dusty);
-}
-
-.featured-grid img {
-  width: 150px;
-  height: 220px;
-  object-fit: cover;
-  border-radius: 8px 8px 0 0;
-  box-shadow: 0 2px 8px var(--rose);
-  margin-bottom: 0;
-}
-
-.featured-grid .book h4 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0.5rem 0 0;
-}
-
-
-.featured-grid p {
-  margin-top: 0.5rem;
-  color: var(--dusty);
-  font-weight: 600;
-  font-size: 1rem;
-  background: var(--white);
-  width: 100%;
-  text-align: center;
-  border-radius: 0 0 8px 8px;
-  padding-bottom: 0.3rem;
-}
-
-
 /* Modal (same style as intro modals) */
 .modal {
   position: fixed;
@@ -288,7 +274,6 @@ main {
   background: #fff;
   padding: 2rem 2.5rem;
   border-radius: 16px;
-  box-shadow: 0 8px 32px 0 rgba(255, 255, 255, 0.3);
   min-width: 320px;
 }
 
@@ -464,13 +449,6 @@ main {
   box-shadow: 0 0 6px rgba(46, 46, 46, 0.2);
 }
 
-.book h4 {
-  font-size: 1rem;
-  margin: 0.5rem 0 0.3rem;
-  font-weight: 600;
-  text-align: center;
-}
-
 .book p.desc {
   font-size: 0.85rem;
   color: #555;
@@ -574,7 +552,6 @@ main {
   background: var(--white);
   padding: 1rem 1.5rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px var(--rose);
 }
 
 .book-overview h3 {
@@ -596,7 +573,6 @@ main {
   background: var(--white);
   padding: 2rem;
   border-radius: 16px;
-  box-shadow: 0 4px 16px var(--rose);
   margin: 2rem auto;          /* center it */
   max-width: 700px;           /* limit width */
   width: 90%;                 /* responsive */
@@ -623,7 +599,6 @@ main {
   font-size: 1.2rem;
   margin-bottom: 1rem;
   color: var(--dusty);
-  border-left: 4px solid var(--rose);
   padding-left: 0.6rem;
 }
 
@@ -773,7 +748,6 @@ main {
 }
 
 .file-input-wrapper:hover {
-  background: var(--rose);
 }
 
 .file-input-wrapper:active {
@@ -987,7 +961,6 @@ main {
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--dusty);
-  border-left: 4px solid var(--rose);
   padding-left: 0.6rem;
 }
 
@@ -995,7 +968,6 @@ main {
   background: var(--white);
   padding: 1rem 1.2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px var(--rose);
   line-height: 1.6;
   font-size: 1rem;
   color: var(--text-secondary);
@@ -1147,7 +1119,6 @@ main {
 .browse-grid .book {
   background: white;
   border-radius: 10px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s;
@@ -1161,18 +1132,6 @@ main {
   width: 100%;
   height: 220px;
   object-fit: cover;
-}
-
-.browse-grid .book h4 {
-  font-size: 0.95rem;
-  margin: 0.5rem;
-  color: var(--dusty);
-}
-
-.browse-grid .book p {
-  font-size: 0.8rem;
-  margin: 0 0.5rem 0.5rem;
-  color: #777;
 }
 
 .genres-buttons {
@@ -1231,7 +1190,6 @@ main {
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .page-header {
@@ -1364,7 +1322,6 @@ main {
   height: 350px;           /* book-like proportions */
   object-fit: cover;
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
   flex-shrink: 0;
 }
 
@@ -1528,7 +1485,6 @@ main {
   background: var(--white);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
   cursor: pointer;
   text-align: center;
@@ -1570,15 +1526,14 @@ main {
 .continue-reading .book {
   background: var(--white);
   border-radius: 10px;
-  box-shadow: 0 2px 8px var(--rose);
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   overflow: hidden;
 }
 
 .continue-reading .book:hover {
-  transform: scale(1.08);
-  box-shadow: 0 6px 18px var(--dusty);
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .continue-reading img {
@@ -1673,7 +1628,6 @@ main {
   margin-top: 0.8rem;
   padding: 0.6rem;
   border: none;
-  background: var(--rose);
   color: var(--white);
   font-weight: 600;
   border-radius: 8px;

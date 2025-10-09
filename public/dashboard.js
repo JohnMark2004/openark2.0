@@ -312,10 +312,15 @@ async function loadBooks() {
     recentBooks.forEach(book => {
       const div = document.createElement("div");
       div.className = "book";
-      div.innerHTML = `
-        <img src="${book.img}" alt="${book.title}">
-        <h4>${book.title}</h4>
-      `;
+const firstGenre = Array.isArray(book.category)
+  ? book.category[0]
+  : (book.category?.split(",")[0] || "Unknown");
+
+div.innerHTML = `
+  <img src="${book.img}" alt="${book.title}">
+  <h4>${book.title}</h4>
+  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+`;
 
       // When clicked → show details
       div.addEventListener("click", () => showBookDetails(book, homeSection));
@@ -365,11 +370,30 @@ async function loadContinueReading() {
     books.forEach(book => {
       const div = document.createElement("div");
       div.className = "book";
-      div.innerHTML = `
-        <img src="${book.img}" alt="${book.title}">
-        <h4>${book.title}</h4>
-      `;
-      div.addEventListener("click", () => showBookDetails(book));
+const firstGenre = Array.isArray(book.category)
+  ? book.category[0]
+  : (book.category?.split(",")[0] || "Unknown");
+
+div.innerHTML = `
+  <img src="${book.img}" alt="${book.title}">
+  <h4>${book.title}</h4>
+  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+`;
+      div.addEventListener("click", async () => {
+  try {
+    const token = sessionStorage.getItem("token");
+    const res = await fetch(`${API_URL}/api/books/${book._id}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error("Failed to load full book details");
+    const fullBook = await res.json();
+    showBookDetails(fullBook, document.getElementById("homeSection"));
+  } catch (err) {
+    console.error("❌ Failed to fetch full book info:", err);
+    showBookDetails(book, document.getElementById("homeSection")); // fallback
+  }
+});
+
       container.appendChild(div);
     });
   } catch (err) {
@@ -477,11 +501,17 @@ loadBookSlideshow();
         books.forEach((book) => {
           const div = document.createElement("div");
           div.className = "book";
-          div.innerHTML = `
-            <img src="${book.img}" alt="${book.title}">
-            <h4>${book.title}</h4>
-            <button class="delete-btn">Delete</button>
-          `;
+const firstGenre = Array.isArray(book.category)
+  ? book.category[0]
+  : (book.category?.split(",")[0] || "Unknown");
+
+div.innerHTML = `
+  <img src="${book.img}" alt="${book.title}">
+  <h4>${book.title}</h4>
+  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+              <button class="delete-btn">Delete</button>
+`;
+
 
           div.querySelector("img").addEventListener("click", () =>
             showBookDetails(book, conversionSection)
@@ -603,10 +633,16 @@ async function loadBrowseBooks({ search = "", sort = "newest", genre = "all" } =
     filtered.forEach((book) => {
       const div = document.createElement("div");
       div.className = "book";
-      div.innerHTML = `
-        <img src="${book.img}" alt="${book.title}">
-        <h4>${book.title}</h4>
-      `;
+const firstGenre = Array.isArray(book.category)
+  ? book.category[0]
+  : (book.category?.split(",")[0] || "Unknown");
+
+div.innerHTML = `
+  <img src="${book.img}" alt="${book.title}">
+  <h4>${book.title}</h4>
+  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+`;
+
       div.addEventListener("click", () => showBookDetails(book, browseSection));
       browseBooks.appendChild(div);
     });
@@ -1368,10 +1404,16 @@ async function loadBookmarks() {
     bookmarks.forEach((book) => {
       const div = document.createElement("div");
       div.className = "book";
-      div.innerHTML = `
-        <img src="${book.img}" alt="${book.title}">
-        <h4>${book.title}</h4>
-      `;
+const firstGenre = Array.isArray(book.category)
+  ? book.category[0]
+  : (book.category?.split(",")[0] || "Unknown");
+
+div.innerHTML = `
+  <img src="${book.img}" alt="${book.title}">
+  <h4>${book.title}</h4>
+  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+`;
+
       div.addEventListener("click", () => showBookDetails(book, bookmarksSection));
       bookmarksGrid.appendChild(div);
     });
