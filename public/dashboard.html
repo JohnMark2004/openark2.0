@@ -154,6 +154,29 @@
             <p id="detailDescription">No description available.</p>
             <p id="disclaimer" class="disclaimer"></p>
           </div>
+          <!-- COMMENTS: start -->
+<div id="commentsWrapper" class="comments-wrapper" style="margin-top:1rem;">
+  <h4>Comments</h4>
+
+  <!-- Comment form -->
+  <div id="commentForm" class="comment-form" style="display:none; margin-bottom:0.8rem;">
+    <img id="commenterPfpSmall" src="assets/default-pfp.png" alt="pfp" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:0.6rem;vertical-align:middle;">
+    <textarea id="commentText" placeholder="Write a comment..." style="width:70%;min-height:60px;vertical-align:middle;padding:0.6rem;border-radius:8px;border:1px solid #ccc;"></textarea>
+    <div style="margin-top:0.5rem;">
+      <button id="postCommentBtn" class="btn">Post</button>
+    </div>
+  </div>
+
+  <!-- If not logged in, show prompt -->
+  <div id="commentLoginPrompt" style="opacity:0.85;margin-bottom:0.6rem;">
+    <small>Log in to post a comment.</small>
+  </div>
+
+  <!-- Comments list -->
+  <div id="commentsList" class="comments-list" style="margin-top:0.6rem;"></div>
+</div>
+<!-- COMMENTS: end -->
+
           <div id="content-toc" class="hidden">
             <h3>Table of Contents</h3>
             <p>Page previews will be available here.</p>
@@ -361,6 +384,7 @@
     AOS.init();
   </script>
 
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
   <script src="dashboard.js"></script>

@@ -12,7 +12,9 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs");   // ✅ add this
+const fs = require("fs");
+const http = require("http");  
+const { Server } = require("socket.io"); 
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -96,6 +98,137 @@ const bookSchema = new mongoose.Schema({
   pages: [pageSchema],
 });
 const Book = mongoose.model("Book", bookSchema);
+
+// ---- Comments: schema and routes ----
+// add this after bookSchema (or near other schemas)
+const commentSchema = new mongoose.Schema({
+  bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
+  authorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  text: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
+});
+const Comment = mongoose.model("Comment", commentSchema);
+
+// POST a comment to a book (authenticated)
+app.post("/api/books/:id/comments", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const book = await Book.findById(req.params.id);
+    if (!book) return res.status(404).json({ error: "Book not found" });
+
+    const { text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ error: "Empty comment" });
+
+    const comment = new Comment({
+      bookId: book._id,
+      authorId: user._id,
+      text: text.trim(),
+    });
+    await comment.save();
+
+    const populated = await Comment.findById(comment._id).populate({
+      path: "authorId",
+      select: "username profilePic role",
+    });
+
+    // ✅ broadcast AFTER populate
+    broadcastComment(book._id, "new", {
+      _id: populated._id,
+      text: populated.text,
+      createdAt: populated.createdAt,
+      author: {
+        _id: populated.authorId._id,
+        username: populated.authorId.username,
+        profilePic: populated.authorId.profilePic,
+        role: populated.authorId.role,
+      },
+    });
+
+    res.json({
+      message: "Comment saved",
+      comment: {
+        _id: populated._id,
+        text: populated.text,
+        createdAt: populated.createdAt,
+        author: {
+          _id: populated.authorId._id,
+          username: populated.authorId.username,
+          profilePic: populated.authorId.profilePic,
+          role: populated.authorId.role,
+        },
+      },
+    });
+  } catch (err) {
+    console.error("❌ Add comment error:", err);
+    res.status(500).json({ error: "Failed to add comment" });
+  }
+});
+
+
+// GET comments for a book (sorted newest first)
+app.get("/api/books/:id/comments", async (req, res) => {
+  try {
+    const book = await Book.findById(req.params.id);
+    if (!book) return res.status(404).json({ error: "Book not found" });
+
+    const comments = await Comment.find({ bookId: book._id })
+      .sort({ createdAt: -1 })
+      .populate({ path: "authorId", select: "username profilePic role" });
+
+    const payload = comments.map(c => ({
+      _id: c._id,
+      text: c.text,
+      createdAt: c.createdAt,
+      author: {
+        _id: c.authorId._id,
+        username: c.authorId.username,
+        profilePic: c.authorId.profilePic,
+        role: c.authorId.role,
+      },
+    }));
+
+    res.json(payload);
+  } catch (err) {
+    console.error("❌ Get comments error:", err);
+    res.status(500).json({ error: "Failed to load comments" });
+  }
+});
+
+// DELETE a comment (only author or librarian)
+app.delete("/api/comments/:commentId", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const comment = await Comment.findById(req.params.commentId).populate("authorId");
+    if (!comment) return res.status(404).json({ error: "Comment not found" });
+
+    // allow deletion if requester is comment author OR librarian
+    if (comment.authorId._id.toString() !== user._id.toString() && user.role !== "librarian") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    await Comment.deleteOne({ _id: comment._id });
+    broadcastComment(comment.bookId, "delete", { _id: comment._id });
+    res.json({ message: "Comment deleted", commentId: comment._id });
+  } catch (err) {
+    console.error("❌ Delete comment error:", err);
+    res.status(500).json({ error: "Failed to delete comment" });
+  }
+});
+
 
 // ===============================
 // Multer Setup
@@ -612,4 +745,38 @@ app.get(/^\/(?!api).*/, (req, res) => {
 // Start Server
 // ===============================
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+const http = require("http");
+const { Server } = require("socket.io");
+
+// Create HTTP server and attach socket.io
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // or your frontend URL
+    methods: ["GET", "POST", "DELETE"],
+  },
+});
+
+// Socket.IO connection listener
+io.on("connection", (socket) => {
+  console.log("🔌 A user connected:", socket.id);
+
+  // join a room for each book (so we broadcast only to relevant book viewers)
+  socket.on("joinBookRoom", (bookId) => {
+    socket.join(bookId);
+    console.log(`📚 socket ${socket.id} joined book room: ${bookId}`);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("❌ A user disconnected:", socket.id);
+  });
+});
+
+// Helper: broadcast new or deleted comment
+function broadcastComment(bookId, type, payload) {
+  io.to(bookId.toString()).emit("commentUpdate", { type, payload });
+}
+
+// Replace your old `app.listen` call:
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+

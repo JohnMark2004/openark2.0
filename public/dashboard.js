@@ -25,6 +25,11 @@ const API_URL =
     return;
   }
 
+  // ----- WebSocket Setup -----
+const socket = io(API_URL.replace("/api", ""), {
+  transports: ["websocket"],
+});
+
 
 function formatGenres(cat) {
   if (Array.isArray(cat)) {
@@ -1156,6 +1161,198 @@ if (saveProfilePicBtn) {
   });
 }
 
+// ---------- Comments feature ----------
+const commentsListEl = document.getElementById("commentsList");
+const commentFormEl = document.getElementById("commentForm");
+const commentLoginPrompt = document.getElementById("commentLoginPrompt");
+const commentTextEl = document.getElementById("commentText");
+const postCommentBtn = document.getElementById("postCommentBtn");
+const commenterPfpSmall = document.getElementById("commenterPfpSmall");
+
+async function loadCommentsForBook(bookId) {
+  try {
+    commentsListEl.innerHTML = `<p style="opacity:0.6;">Loading comments...</p>`;
+    const res = await fetch(`${API_URL}/api/books/${bookId}/comments`);
+    if (!res.ok) throw new Error("Failed to load comments");
+    const comments = await res.json();
+
+    if (!comments || comments.length === 0) {
+      commentsListEl.innerHTML = `<p style="opacity:0.7;">No comments yet. Be the first to comment!</p>`;
+      return;
+    }
+
+    commentsListEl.innerHTML = "";
+    comments.forEach(c => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "comment-item";
+      wrapper.style = "display:flex;gap:0.7rem;padding:0.6rem;border-radius:8px;margin-bottom:0.5rem;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,0.04);";
+
+      const img = document.createElement("img");
+      img.src = c.author.profilePic || "assets/default-pfp.png";
+      img.style = "width:44px;height:44px;border-radius:50%;object-fit:cover;";
+      img.alt = "pfp";
+
+      const body = document.createElement("div");
+      body.style = "flex:1;";
+
+      const header = document.createElement("div");
+      header.style = "display:flex;align-items:center;gap:0.6rem;justify-content:space-between;";
+
+      const who = document.createElement("div");
+      who.innerHTML = `<strong style="font-size:0.95rem">${c.author.username || 'User'}</strong>
+                       <div style="font-size:0.8rem;color:#666;margin-top:2px;">${formatPHDate(c.createdAt)}</div>`;
+
+      const actions = document.createElement("div");
+
+      // show delete only if current user is author or current role is librarian
+      const meId = localStorage.getItem("userId") || null;
+      const myRole = localStorage.getItem("role") || "student";
+      if (myRole === "librarian" || (c.author._id && meId && c.author._id === meId)) {
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "Delete";
+        delBtn.className = "delete-btn";
+        delBtn.style = "font-size:0.8rem;padding:0.25rem 0.6rem;border-radius:8px;";
+        delBtn.addEventListener("click", async () => {
+          if (!confirm("Delete this comment?")) return;
+          try {
+            const token = sessionStorage.getItem("token");
+            const r = await fetch(`${API_URL}/api/comments/${c._id}`, {
+              method: "DELETE",
+              headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await r.json();
+            if (!r.ok) throw new Error(data.error || "Failed");
+            showPopup("Comment deleted", "success");
+            // refresh comments
+            loadCommentsForBook(bookId);
+          } catch (err) {
+            console.error(err);
+            showPopup("Failed to delete comment", "error");
+          }
+        });
+        actions.appendChild(delBtn);
+      }
+
+      header.appendChild(who);
+      header.appendChild(actions);
+
+      const textDiv = document.createElement("div");
+      textDiv.style = "margin-top:6px;white-space:pre-wrap;";
+      textDiv.textContent = c.text;
+
+      body.appendChild(header);
+      body.appendChild(textDiv);
+
+      wrapper.appendChild(img);
+      wrapper.appendChild(body);
+
+      commentsListEl.appendChild(wrapper);
+    });
+  } catch (err) {
+    console.error("❌ loadCommentsForBook error:", err);
+    commentsListEl.innerHTML = `<p style="opacity:0.7;">Failed to load comments</p>`;
+  }
+}
+
+function formatPHDate(dateStrOrObj) {
+  const d = new Date(dateStrOrObj);
+  // Format: Oct 9, 2025, 3:45 PM (Asia/Manila)
+  try {
+    return new Intl.DateTimeFormat("en-PH", {
+      timeZone: "Asia/Manila",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    }).format(d);
+  } catch (e) {
+    // fallback
+    return d.toLocaleString();
+  }
+}
+
+// Show/hide comment form depending on auth
+function updateCommentFormVisibility() {
+  const token = sessionStorage.getItem("token");
+  if (token) {
+    commentFormEl.style.display = "block";
+    commentLoginPrompt.style.display = "none";
+    commenterPfpSmall.src = localStorage.getItem("pfp") || "assets/default-pfp.png";
+    // store user id if server returns it on login — otherwise, you can set it in localStorage at login time
+    // localStorage.setItem("userId", "<user-id-from-server>"); // ensure this is set at login
+  } else {
+    commentFormEl.style.display = "none";
+    commentLoginPrompt.style.display = "block";
+  }
+}
+
+// Post comment
+postCommentBtn.addEventListener("click", async () => {
+  const token = sessionStorage.getItem("token");
+  if (!token) {
+    showPopup("Please log in to comment", "error");
+    return;
+  }
+  const txt = (commentTextEl.value || "").trim();
+  if (!txt) return showPopup("Please write something", "error");
+
+  const bookId = document.getElementById("detailTitle").dataset.bookId;
+  if (!bookId) return showPopup("Book not found", "error");
+
+  try {
+    const res = await fetch(`${API_URL}/api/books/${bookId}/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ text: txt }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "Failed to post comment");
+
+    commentTextEl.value = "";
+    showPopup("Comment posted", "success");
+    loadCommentsForBook(bookId);
+  } catch (err) {
+    console.error("❌ Post comment error:", err);
+    showPopup("Failed to post comment", "error");
+  }
+});
+
+// Hook showBookDetails to load comments and join room
+const originalShowBookDetails2 = showBookDetails;
+showBookDetails = async function(book, fromSection) {
+  originalShowBookDetails2(book, fromSection);
+  updateCommentFormVisibility();
+  if (book && book._id) {
+    loadCommentsForBook(book._id);
+    socket.emit("joinBookRoom", book._id); // join the live room
+  }
+};
+
+// ----- Realtime comment updates -----
+socket.on("commentUpdate", (data) => {
+  const currentBook = document.getElementById("detailTitle").dataset.bookId;
+  if (!currentBook) return;
+
+  if (data.type === "new" && data.payload && data.payload.author) {
+    loadCommentsForBook(currentBook);
+  } else if (data.type === "delete") {
+    loadCommentsForBook(currentBook);
+  }
+});
+// hook: call updateCommentFormVisibility once on load
+updateCommentFormVisibility();
+
+// IMPORTANT: ensure loadCommentsForBook(bookId) is called when opening book details.
+// In your showBookDetails override you call originalShowBookDetails(book,...).
+// After that call (or within it) call loadCommentsForBook(book._id) and updateCommentFormVisibility().
+// Example: (if you already override showBookDetails) add:
+
+
 
 // --- Load bookmarks ---
 async function loadBookmarks() {
@@ -1205,6 +1402,9 @@ if (browseTab) {
   loadBooks();
   loadContinueReading();
   loadConversionBooks();
+  updateCommentFormVisibility();
+loadCommentsForBook(book._id);
+
   const viewAllBtn = document.getElementById("viewAllBtn");
 if (viewAllBtn) {
   viewAllBtn.addEventListener("click", () => {
