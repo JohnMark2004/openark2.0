@@ -187,34 +187,45 @@ if (addPageBtn) {
     });
   }
 
-  // --- Profile Modal ---
-  const profileLink = document.getElementById("profileBtn");
-  const profileModal = document.getElementById("profileModal");
-  const closeProfileBtn = document.getElementById("closeProfileBtn");
+// --- Profile Dropdown Logic ---
+const navProfileImg = document.getElementById("navProfileImg");
+const dropdown = document.getElementById("profileDropdown");
+const dropdownProfileImg = document.getElementById("dropdownProfileImg");
+const dropdownUsername = document.getElementById("dropdownUsername");
+const dropdownEmail = document.getElementById("dropdownEmail");
 
-  if (profileLink && profileModal && closeProfileBtn) {
-    profileLink.addEventListener("click", (e) => {
-      e.preventDefault();
-      document.getElementById("profile-username").textContent =
-        localStorage.getItem("username") || "User";
-      document.getElementById("profile-email").textContent =
-        localStorage.getItem("email") || "user@email.com";
-      document.getElementById("profile-year").textContent =
-        localStorage.getItem("collegeYear") || "N/A";
-      profileModal.classList.remove("hidden");
-    });
+if (navProfileImg && dropdown) {
+  // Populate user info
+  const username = localStorage.getItem("username") || "User";
+  const email = localStorage.getItem("email") || "user@email.com";
+  const pfp = localStorage.getItem("pfp") || "assets/default-pfp.png";
 
-    closeProfileBtn.addEventListener("click", () =>
-      profileModal.classList.add("hidden")
-    );
+  dropdownUsername.textContent = username;
+  dropdownEmail.textContent = email;
+  navProfileImg.src = pfp;
+  dropdownProfileImg.src = pfp;
 
-    profileModal.addEventListener("click", (e) => {
-      const container = profileModal.querySelector(".profile-container");
-      if (!container.contains(e.target)) {
-        profileModal.classList.add("hidden");
-      }
-    });
-  }
+  // Toggle dropdown on click
+  navProfileImg.addEventListener("click", () => {
+    dropdown.classList.toggle("hidden");
+  });
+  // Open full profile modal when clicking on username inside dropdown
+dropdownUsername.addEventListener("click", () => {
+  document.getElementById("profileModal").classList.remove("hidden");
+});
+
+// Close modal
+document.getElementById("closeProfileBtn").addEventListener("click", () => {
+  document.getElementById("profileModal").classList.add("hidden");
+});
+
+  // Close dropdown if clicked outside
+  document.addEventListener("click", (e) => {
+    if (!dropdown.contains(e.target) && e.target !== navProfileImg) {
+      dropdown.classList.add("hidden");
+    }
+  });
+}
 
   // --- Load Books for Home ---
   const featuredBookContainer = document.getElementById("featuredBook");
@@ -311,27 +322,27 @@ async function loadBooks() {
   }
 }
 
-// 📖 CONTINUE READING SECTION
 function saveLastRead(book) {
-  const history = JSON.parse(localStorage.getItem("continueReading") || "[]");
-  // Remove if already exists
+  const email = localStorage.getItem("email") || "guest";
+  const key = `continueReading_${email}`;
+  const history = JSON.parse(localStorage.getItem(key) || "[]");
   const updated = history.filter(b => b._id !== book._id);
-  // Add to front
   updated.unshift({
     _id: book._id,
     title: book.title,
     img: book.img,
     author: book.author
   });
-  // Keep only latest 5
-  localStorage.setItem("continueReading", JSON.stringify(updated.slice(0, 5)));
+  localStorage.setItem(key, JSON.stringify(updated.slice(0, 5)));
 }
 
 function loadContinueReading() {
+  const email = localStorage.getItem("email") || "guest";
+  const key = `continueReading_${email}`;
   const container = document.getElementById("continueReadingGrid");
   if (!container) return;
 
-  const history = JSON.parse(localStorage.getItem("continueReading") || "[]");
+  const history = JSON.parse(localStorage.getItem(key) || "[]");
   container.innerHTML = "";
 
   if (history.length === 0) {
@@ -346,9 +357,7 @@ function loadContinueReading() {
       <img src="${book.img}" alt="${book.title}">
       <h4>${book.title}</h4>
     `;
-    div.addEventListener("click", () => {
-      showBookDetails(book, homeSection);
-    });
+    div.addEventListener("click", () => showBookDetails(book, homeSection));
     container.appendChild(div);
   });
 }
@@ -581,7 +590,6 @@ async function loadBrowseBooks({ search = "", sort = "newest", genre = "all" } =
       div.innerHTML = `
         <img src="${book.img}" alt="${book.title}">
         <h4>${book.title}</h4>
-        <p>${book.author}</p>
       `;
       div.addEventListener("click", () => showBookDetails(book, browseSection));
       browseBooks.appendChild(div);
@@ -964,6 +972,7 @@ if (readBookBtn) {
   readBookBtn.addEventListener("click", () => {
     if (!window.currentBook) return;
 
+    saveLastRead(window.currentBook);
     bookDetailsSection.classList.add("hidden");
     bookReaderSection.classList.remove("hidden");
     document.getElementById("readerBookTitle").textContent =
@@ -1080,36 +1089,62 @@ if (bookmarksTab) {
   });
 }
 
-// // --- Add to bookmark ---
-// document.querySelector(".btn-add-bookmark").addEventListener("click", async () => {
-//   const token = sessionStorage.getItem("token");
-//   if (!token) return showPopup("Please login first", "error");
+const token = sessionStorage.getItem("token");
+const profilePicInput = document.getElementById("profilePicInput");
+const saveProfilePicBtn = document.getElementById("saveProfilePicBtn");
+const uploadTriggerBtn = document.getElementById("uploadTriggerBtn");
+// const dropdownProfileImg = document.getElementById("dropdownProfileImg");
+// const navProfileImg = document.getElementById("navProfileImg");
 
-//   // ✅ read bookId from dataset
-//   const bookId = document.getElementById("detailTitle").dataset.bookId;
-//   if (!bookId) {
-//     showPopup("❌ No book selected", "error");
-//     return;
-//   }
+if (uploadTriggerBtn && profilePicInput) {
+  uploadTriggerBtn.addEventListener("click", () => {
+    profilePicInput.click(); // open file picker
+  });
+}
 
-//   try {
-//     const res = await fetch(`${API_URL}/api/bookmarks/${bookId}`, {
-//       method: "POST",
-//       headers: { Authorization: `Bearer ${token}` },
-//     });
+if (profilePicInput) {
+  profilePicInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Live preview before saving
+      const previewURL = URL.createObjectURL(file);
+      dropdownProfileImg.src = previewURL;
+      navProfileImg.src = previewURL;
+    }
+  });
+}
 
-//     if (!res.ok) {
-//       const text = await res.text();
-//       throw new Error(text);
-//     }
+if (saveProfilePicBtn) {
+  saveProfilePicBtn.addEventListener("click", async () => {
+    const file = profilePicInput.files[0];
+    if (!file) return showPopup("Please select a picture first", "error");
 
-//     const data = await res.json();
-//     showPopup(data.message, "success");
-//   } catch (err) {
-//     console.error("❌ Add bookmark failed:", err);
-//     showPopup("Failed to add bookmark", "error");
-//   }
-// });
+    const formData = new FormData();
+    formData.append("pfp", file);
+
+    try {
+      const res = await fetch(`${API_URL}/api/uploadProfilePic`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        localStorage.setItem("pfp", data.profilePic);
+        dropdownProfileImg.src = data.profilePic;
+        navProfileImg.src = data.profilePic;
+        showPopup("✅ Profile picture updated!", "success");
+      } else {
+        showPopup(data.error || "Upload failed", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showPopup("Upload error", "error");
+    }
+  });
+}
+
 
 // --- Load bookmarks ---
 async function loadBookmarks() {
@@ -1157,6 +1192,7 @@ if (browseTab) {
 }
 
   loadBooks();
+  loadContinueReading();
   loadConversionBooks();
   const viewAllBtn = document.getElementById("viewAllBtn");
 if (viewAllBtn) {

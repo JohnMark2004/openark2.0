@@ -23,25 +23,62 @@
       <a href="#" id="bookmarksTab">MyBookmarks</a>
     </nav>
     <div class="right" data-aos="fade-left" data-aos-duration="1200">
-      <a href="#" id="profileBtn">Profile</a>
-      <button id="logoutBtn" class="btn">Logout</button>
+<!-- 🔹 Top-right Profile Icon -->
+<div class="profile-menu">
+  <img src="assets/default-pfp.png" id="navProfileImg" alt="Profile" class="nav-pfp">
+
+  <!-- 🔹 Dropdown Card -->
+<div class="profile-dropdown hidden" id="profileDropdown">
+  <div class="profile-info">
+    <img src="assets/default-pfp.png" id="dropdownProfileImg" alt="Profile Picture" class="dropdown-pfp">
+    <div class="user-text">
+      <h4 id="dropdownUsername">User Name</h4>
+      <p id="dropdownEmail">user@email.com</p>
+    </div>
+  </div>
+
+  <!-- ✅ Profile Picture Upload inside dropdown -->
+  <div class="profile-upload" style="margin-top: 10px; text-align: center;">
+    <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+    <button id="uploadTriggerBtn" class="btn" style="margin-bottom: 6px;">Change Picture</button>
+    <button id="saveProfilePicBtn" class="btn">Save</button>
+  </div>
+
+  <hr />
+  <button id="logoutBtn" class="logout-btn">Log out</button>
+</div>
+
+</div>
+
     </div>
   </header>
 
-  <div id="profileModal" class="modal hidden">
-    <div class="profile-container">
-      <div class="profile-header">
-        <img src="img/logo.png" alt="Logo" class="profile-logo">
-        <h2>My Profile</h2>
-      </div>
-      <div class="profile-details">
-        <p><strong>Username:</strong> <span id="profile-username">User</span></p>
-        <p><strong>Email:</strong> <span id="profile-email">user@email.com</span></p>
-        <p><strong>College Year:</strong> <span id="profile-year">N/A</span></p>
-      </div>
-      <button id="closeProfileBtn" class="btn">Close</button>
+<div id="profileModal" class="modal hidden">
+  <div class="profile-container">
+    <div class="profile-header">
+      <img src="img/logo.png" alt="Logo" class="profile-logo">
+      <h2>My Profile</h2>
     </div>
+
+    <div class="profile-details">
+      <p><strong>Username:</strong> <span id="profile-username">User</span></p>
+      <p><strong>Email:</strong> <span id="profile-email">user@email.com</span></p>
+      <p><strong>College Year:</strong> <span id="profile-year">N/A</span></p>
+    </div>
+
+    <!-- ✅ Moved here -->
+    <div class="profile-upload">
+      <img id="profilePicPreview" src="assets/default-pfp.png"
+           alt="Profile Picture"
+           style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin-bottom:10px;">
+      <input type="file" id="profilePicInput" accept="image/*">
+      <button id="saveProfilePicBtn" class="btn">Save Picture</button>
+    </div>
+
+    <button id="closeProfileBtn" class="btn">Close</button>
   </div>
+</div>
+
 
   <main class="dashboard">
     <section id="homeSection">
@@ -60,6 +97,13 @@
   </div>
   <div class="book-grid" id="dashboardBooks"></div>
 </section>
+<section class="continue-reading">
+  <div class="section-header">
+    <h2>Continue Reading</h2>
+  </div>
+  <div class="book-grid" id="continueReadingGrid"></div>
+</section>
+
     </section>
 
     <section id="conversionSection" class="hidden">

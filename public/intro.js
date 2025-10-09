@@ -147,7 +147,7 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
       localStorage.setItem("username", data.username || "User");
       localStorage.setItem("email", data.email || email);
       localStorage.setItem("collegeYear", data.collegeYear || "N/A");
-
+      localStorage.setItem("pfp", data.profilePic || "assets/default-pfp.png");
       closeModal(loginModal);
       window.location.href = "dashboard.html";
     }
