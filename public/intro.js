@@ -159,7 +159,7 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
 });
 
 // ===============================
-// POPULATE INTRO SLIDESHOW & COUNT (from DB)
+// POPULATE INTRO SLIDESHOW & COUNT (Infinite Carousel)
 // ===============================
 async function loadIntroBooks() {
   try {
@@ -167,31 +167,57 @@ async function loadIntroBooks() {
     if (!res.ok) throw new Error("Failed to fetch books");
     const books = await res.json();
 
-    // Populate slideshow track
-    const bookTrack = document.getElementById("introBookTrack");
-    if (bookTrack) {
-      bookTrack.innerHTML = ""; // clear any static
-      // loop twice for infinite scroll effect
-      for (let i = 0; i < 1; i++) {
-        books.forEach((book) => {
-          const img = document.createElement("img");
-          img.src = book.img;
-          img.alt = book.title;
-          img.className = "book";
-          bookTrack.appendChild(img);
-        });
-      }
+    const track = document.getElementById("introBookTrack");
+    const countEl = document.getElementById("bookCount");
+    if (!track) return;
+
+    // Clear old content
+    track.innerHTML = "";
+
+    if (!books || books.length === 0) {
+      track.innerHTML = `<p class="no-books">No books available yet.</p>`;
+      if (countEl) countEl.textContent = "Available Books: 0";
+      return;
     }
 
-    // Show available book count
-    const bookCountElement = document.getElementById("bookCount");
-    if (bookCountElement) {
-      bookCountElement.textContent = `Available Books: ${books.length}`;
+    // --- Duplicate content for seamless infinite scrolling ---
+    const allBooks = [...books, ...books]; // doubled list
+
+    allBooks.forEach((book) => {
+      const img = document.createElement("img");
+      img.src = book.img;
+      img.alt = book.title;
+      img.className = "book";
+      track.appendChild(img);
+    });
+
+    // --- Update count ---
+    if (countEl) countEl.textContent = `Available Books: ${books.length}`;
+
+    // --- Animate infinite scroll ---
+    let position = 0;
+    const speed = 0.4; // adjust this for faster/slower scroll
+
+    function animate() {
+      position -= speed;
+      if (Math.abs(position) >= track.scrollWidth / 2) {
+        position = 0; // reset smoothly at halfway point
+      }
+      track.style.transform = `translateX(${position}px)`;
+      requestAnimationFrame(animate);
     }
+
+    track.style.display = "flex";
+    track.style.gap = "20px";
+    track.style.transition = "none";
+    track.style.willChange = "transform";
+    requestAnimationFrame(animate);
   } catch (err) {
     console.error("❌ Error loading intro books:", err);
   }
 }
+
+document.addEventListener("DOMContentLoaded", loadIntroBooks);
 
 // Run on load
 document.addEventListener("DOMContentLoaded", loadIntroBooks);
