@@ -380,18 +380,17 @@ div.innerHTML = `
   <p class="genre-label">(${firstGenre.trim()} ...)</p>
 `;
       div.addEventListener("click", async () => {
-  try {
-    const token = sessionStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/books/${book._id}`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) throw new Error("Failed to load full book details");
-    const fullBook = await res.json();
-    showBookDetails(fullBook, document.getElementById("homeSection"));
-  } catch (err) {
-    console.error("❌ Failed to fetch full book info:", err);
-    showBookDetails(book, document.getElementById("homeSection")); // fallback
-  }
+try {
+  const token = sessionStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/books/${book._id}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const fullBook = res.ok ? await res.json() : book;
+  showBookDetails(fullBook, document.getElementById("homeSection"));
+} catch (err) {
+  console.error("❌ Failed to fetch full book info:", err);
+  showBookDetails(book, document.getElementById("homeSection"));
+}
 });
 
       container.appendChild(div);
@@ -484,11 +483,11 @@ async function loadBookSlideshow() {
     });
 
     // Auto slide every 10s
-    let interval = setInterval(() => showSlide(current + 1), 10000);
+    let interval = setInterval(() => showSlide(current + 1), 7000);
 
     slideshow.addEventListener("mouseenter", () => clearInterval(interval));
     slideshow.addEventListener("mouseleave", () => {
-      interval = setInterval(() => showSlide(current + 1), 10000);
+      interval = setInterval(() => showSlide(current + 1), 7000);
     });
   } catch (err) {
     console.error("❌ Error loading slideshow:", err);
@@ -1446,6 +1445,26 @@ div.innerHTML = `
     console.error("❌ Error loading bookmarks:", err);
   }
 }
+const viewAllBtn = document.getElementById("viewAllBtn");
+if (viewAllBtn) {
+  viewAllBtn.addEventListener("click", () => {
+    const home = document.getElementById("homeSection");
+    const browse = document.getElementById("browseSection");
+    if (!home || !browse) return;
+
+    home.classList.add("hidden");
+    browse.classList.remove("hidden");
+
+    // Optional: set nav active state
+    document.getElementById("browseTab")?.classList.add("active");
+    document.getElementById("homeTab")?.classList.remove("active");
+
+    // Load content
+    loadGenres();
+    loadBrowseBooks();
+  });
+}
+
 
 
   // --- Init ---
@@ -1472,11 +1491,4 @@ if (browseTab) {
   updateCommentFormVisibility();
 loadCommentsForBook(book._id);
 
-  const viewAllBtn = document.getElementById("viewAllBtn");
-if (viewAllBtn) {
-  viewAllBtn.addEventListener("click", () => {
-    const browseTab = document.querySelector('[data-section="browseSection"], #browseTab');
-    if (browseTab) browseTab.click();
-  });
-}
 });
