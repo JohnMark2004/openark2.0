@@ -1610,7 +1610,6 @@ main {
   height: 38px;
   border-radius: 50%;
   cursor: pointer;
-  border: 2px solid var(--dusty);
   transition: transform 0.2s ease;
 }
 

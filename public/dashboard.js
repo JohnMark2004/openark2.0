@@ -322,45 +322,56 @@ async function loadBooks() {
   }
 }
 
-function saveLastRead(book) {
-  const email = localStorage.getItem("email") || "guest";
-  const key = `continueReading_${email}`;
-  const history = JSON.parse(localStorage.getItem(key) || "[]");
-  const updated = history.filter(b => b._id !== book._id);
-  updated.unshift({
-    _id: book._id,
-    title: book.title,
-    img: book.img,
-    author: book.author
-  });
-  localStorage.setItem(key, JSON.stringify(updated.slice(0, 5)));
+async function saveLastRead(book, lastPage = 1) {
+  const token = sessionStorage.getItem("token");
+  if (!token) return;
+
+  try {
+    await fetch(`${API_URL}/api/continue`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ bookId: book._id, lastPage }),
+    });
+  } catch (err) {
+    console.error("❌ Failed to save progress:", err);
+  }
 }
 
-function loadContinueReading() {
-  const email = localStorage.getItem("email") || "guest";
-  const key = `continueReading_${email}`;
+async function loadContinueReading() {
+  const token = sessionStorage.getItem("token");
   const container = document.getElementById("continueReadingGrid");
   if (!container) return;
 
-  const history = JSON.parse(localStorage.getItem(key) || "[]");
-  container.innerHTML = "";
+  try {
+    const res = await fetch(`${API_URL}/api/continue`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const books = await res.json();
 
-  if (history.length === 0) {
-    container.innerHTML = `<p style="opacity:0.7;">No recent reads yet.</p>`;
-    return;
+    container.innerHTML = "";
+    if (books.length === 0) {
+      container.innerHTML = `<p style="opacity:0.7;">No recent reads yet.</p>`;
+      return;
+    }
+
+    books.forEach(book => {
+      const div = document.createElement("div");
+      div.className = "book";
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <h4>${book.title}</h4>
+      `;
+      div.addEventListener("click", () => showBookDetails(book));
+      container.appendChild(div);
+    });
+  } catch (err) {
+    console.error("❌ Failed to load continue reading:", err);
   }
-
-  history.forEach(book => {
-    const div = document.createElement("div");
-    div.className = "book";
-    div.innerHTML = `
-      <img src="${book.img}" alt="${book.title}">
-      <h4>${book.title}</h4>
-    `;
-    div.addEventListener("click", () => showBookDetails(book, homeSection));
-    container.appendChild(div);
-  });
 }
+
 
 
 // 🎞️ BOOK SLIDESHOW (Home Banner)

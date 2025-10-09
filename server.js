@@ -69,6 +69,13 @@ const userSchema = new mongoose.Schema({
   collegeYear: String,
   role: { type: String, enum: ["student", "librarian"], default: "student" },
   bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
+    continueReading: [
+    {
+      bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
+      lastPage: { type: Number, default: 1 },
+      updatedAt: { type: Date, default: Date.now },
+    },
+  ],
   profilePic: { type: String, default: "assets/default-pfp.png" }
 });
 const User = mongoose.model("User", userSchema);
@@ -445,6 +452,63 @@ app.get("/api/bookmarks", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch bookmarks" });
   }
 });
+
+// Save last read progress
+app.post("/api/continue", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ error: "No token" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const { bookId, lastPage = 1 } = req.body;
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Update or insert record
+    const idx = user.continueReading.findIndex(c => c.bookId.toString() === bookId);
+    if (idx >= 0) {
+      user.continueReading[idx].lastPage = lastPage;
+      user.continueReading[idx].updatedAt = new Date();
+    } else {
+      user.continueReading.unshift({ bookId, lastPage });
+    }
+
+    // Keep last 5 entries
+    user.continueReading = user.continueReading.slice(0, 5);
+    await user.save();
+
+    res.json({ message: "Progress saved" });
+  } catch (err) {
+    console.error("❌ Continue save error:", err);
+    res.status(500).json({ error: "Failed to save progress" });
+  }
+});
+
+// Get user's continue reading list
+app.get("/api/continue", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ error: "No token" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id).populate("continueReading.bookId");
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    const books = user.continueReading.map(c => ({
+      _id: c.bookId._id,
+      title: c.bookId.title,
+      author: c.bookId.author,
+      img: c.bookId.img,
+      lastPage: c.lastPage,
+    }));
+
+    res.json(books);
+  } catch (err) {
+    console.error("❌ Continue get error:", err);
+    res.status(500).json({ error: "Failed to load progress" });
+  }
+});
+
 
 // ===============================
 // Add more pages to existing book (Librarian only)
