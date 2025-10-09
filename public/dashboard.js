@@ -403,7 +403,7 @@ div.innerHTML = `
 
 
 
-// 🎞️ BOOK SLIDESHOW (Home Banner)
+// 🎞️ BOOK SLIDESHOW (Home Banner) — infinite loop version
 async function loadBookSlideshow() {
   try {
     const res = await fetch(`${API_URL}/api/books`);
@@ -413,9 +413,19 @@ async function loadBookSlideshow() {
     const slideshow = document.getElementById("bookSlideshow");
     if (!slideshow) return;
 
-    // Build slides
-    slideshow.innerHTML = books
-      .map(book => `
+    if (!books || books.length === 0) {
+      slideshow.innerHTML = `<p class="no-books" style="padding:12px;opacity:0.8;">No books available at the moment.</p>`;
+      return;
+    }
+
+    // clone first and last slides for smooth looping
+    const firstClone = { ...books[0] };
+    const lastClone = { ...books[books.length - 1] };
+    const fullList = [lastClone, ...books, firstClone];
+
+    slideshow.innerHTML = fullList
+      .map(
+        (book) => `
         <div class="book-slide">
           <img src="${book.img}" alt="${book.title}">
           <div class="slide-info">
@@ -424,57 +434,72 @@ async function loadBookSlideshow() {
             <p><strong>Publisher:</strong> ${book.publisher}</p>
             <p><strong>Year:</strong> ${book.year}</p>
             <p class="synopsis"><strong>Synopsis:</strong> ${book.description || "No synopsis available."}</p>
-            <button class="btn btn-read-slide" data-id="${book._id}"> Read</button>
+            <button class="btn btn-read-slide" data-id="${book._id}">Read</button>
           </div>
-        </div>
-      `)
+        </div>`
+      )
       .join("");
 
-    let current = 0;
-    const slides = document.querySelectorAll(".book-slide");
+    const slides = slideshow.querySelectorAll(".book-slide");
+    const total = slides.length;
+    let current = 1; // start at the "real" first slide
 
+    slideshow.style.transform = `translateX(-${current * 100}%)`;
+    slideshow.style.transition = "transform 0.6s ease";
+
+    // Show slide helper
     function showSlide(index) {
-      slideshow.style.transform = `translateX(-${index * 100}%)`;
+      current = index;
+      slideshow.style.transition = "transform 0.6s ease";
+      slideshow.style.transform = `translateX(-${current * 100}%)`;
     }
 
-    // 🔹 Navigation Buttons
-    document.getElementById("nextSlide").addEventListener("click", () => {
-      current = (current + 1) % slides.length;
-      showSlide(current);
+    // Handle looping transitions
+    slideshow.addEventListener("transitionend", () => {
+      if (current === 0) {
+        slideshow.style.transition = "none";
+        current = total - 2; // jump to last real slide
+        slideshow.style.transform = `translateX(-${current * 100}%)`;
+      } else if (current === total - 1) {
+        slideshow.style.transition = "none";
+        current = 1; // jump to first real slide
+        slideshow.style.transform = `translateX(-${current * 100}%)`;
+      }
     });
 
-    document.getElementById("prevSlide").addEventListener("click", () => {
-      current = (current - 1 + slides.length) % slides.length;
-      showSlide(current);
+    // Buttons
+    const nextBtn = document.getElementById("nextSlide");
+    const prevBtn = document.getElementById("prevSlide");
+
+    if (nextBtn) nextBtn.onclick = () => showSlide(current + 1);
+    if (prevBtn) prevBtn.onclick = () => showSlide(current - 1);
+
+    // Delegate read buttons
+    slideshow.addEventListener("click", (e) => {
+      const btn = e.target.closest(".btn-read-slide");
+      if (!btn) return;
+      const bookId = btn.dataset.id;
+      const selected = books.find((b) => b._id === bookId);
+      if (selected) showBookDetails(selected, document.getElementById("homeSection"));
     });
 
-    // 🔹 Handle "Read" button clicks
-    document.querySelectorAll(".btn-read-slide").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const bookId = btn.dataset.id;
-        const selectedBook = books.find(b => b._id === bookId);
-        if (!selectedBook) return;
+    // Auto slide every 10s
+    let interval = setInterval(() => showSlide(current + 1), 10000);
 
-        // Use your existing detail function
-        showBookDetails(selectedBook, document.getElementById("homeSection"));
-
-        // Optional: instantly open reader
-        // document.getElementById("readBookBtn").click();
-      });
+    slideshow.addEventListener("mouseenter", () => clearInterval(interval));
+    slideshow.addEventListener("mouseleave", () => {
+      interval = setInterval(() => showSlide(current + 1), 10000);
     });
-
-    // 🔹 Auto-slide every 10 seconds
-    setInterval(() => {
-      current = (current + 1) % slides.length;
-      showSlide(current);
-    }, 10000);
   } catch (err) {
     console.error("❌ Error loading slideshow:", err);
+    const slideshow = document.getElementById("bookSlideshow");
+    if (slideshow)
+      slideshow.innerHTML = `<p class="error">Failed to load slideshow. Check console.</p>`;
   }
 }
 
+// initial call (keep this)
 loadBookSlideshow();
-
 
   // --- Load Books for Conversion (Librarian) ---
   async function loadConversionBooks() {
