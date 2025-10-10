@@ -350,15 +350,15 @@ if (email === "forlibrarianuse@gmail.com" && password === "librarian12345") {
 });
 
 // ===============================
-// Profile Picture Upload
+// Upload Profile Picture (final)
 // ===============================
-app.post("/api/uploadProfilePic", upload.single("pfp"), async (req, res) => {
+app.post("/api/upload-profile-pic", upload.single("profilePic"), async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
@@ -366,6 +366,7 @@ app.post("/api/uploadProfilePic", upload.single("pfp"), async (req, res) => {
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "openark/profile_pics",
     });
+    fs.unlinkSync(req.file.path); // clean up local temp file
 
     user.profilePic = result.secure_url;
     await user.save();
@@ -376,7 +377,6 @@ app.post("/api/uploadProfilePic", upload.single("pfp"), async (req, res) => {
     res.status(500).json({ error: "Upload failed" });
   }
 });
-
 
 // ===============================
 // Book Routes

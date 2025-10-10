@@ -55,6 +55,18 @@ function formatGenres(cat) {
   return "N/A";
 }
 
+// 🔧 Universal Loader Controls
+function showLoader(id = "globalLoader") {
+  const loader = document.getElementById(id);
+  if (loader) loader.classList.remove("hidden");
+}
+
+function hideLoader(id = "globalLoader") {
+  const loader = document.getElementById(id);
+  if (loader) loader.classList.add("hidden");
+}
+
+
   // --- Sections / Elements ---
   const homeSection = document.getElementById("homeSection");
   const conversionSection = document.getElementById("conversionSection");
@@ -286,50 +298,56 @@ btn.addEventListener("click", () => {
   }
 }
 
-
-
 // 📚 Load Recently Added Books (Home Section)
 async function loadBooks() {
+  showLoader("loadingSpinnerHome");
+  const dashboardBooks = document.getElementById("dashboardBooks");
+  const loadingSpinner = document.getElementById("loadingSpinner");
+  if (!dashboardBooks || !loadingSpinner) return;
+
   try {
+    // 🔄 Show spinner while loading
+    loadingSpinner.classList.remove("hidden");
+    dashboardBooks.innerHTML = "";
+
     const res = await fetch(`${API_URL}/api/books`);
     if (!res.ok) throw new Error("Failed to fetch books");
     const books = await res.json();
 
-    // Sort by newest first (based on createdAt)
+    // ✅ Hide spinner after load
+    loadingSpinner.classList.add("hidden");
+
+    // Sort newest → oldest
     books.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-    // 📘 Show only the 12 most recent books
+    // 📘 Only show 6 newest
     const recentBooks = books.slice(0, 6);
 
-    // Target the grid container
-    const dashboardBooks = document.getElementById("dashboardBooks");
-    if (!dashboardBooks) return;
-
-    // Clear old content
-    dashboardBooks.innerHTML = "";
-
-    // Build each book card
+    // Build cards
     recentBooks.forEach(book => {
       const div = document.createElement("div");
       div.className = "book";
-const firstGenre = Array.isArray(book.category)
-  ? book.category[0]
-  : (book.category?.split(",")[0] || "Unknown");
 
-div.innerHTML = `
-  <img src="${book.img}" alt="${book.title}">
-  <h4>${book.title}</h4>
-  <p class="genre-label">(${firstGenre.trim()} ...)</p>
-`;
+      const firstGenre = Array.isArray(book.category)
+        ? book.category[0]
+        : (book.category?.split(",")[0] || "Unknown");
 
-      // When clicked → show details
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <h4>${book.title}</h4>
+        <p class="genre-label">(${firstGenre.trim()} ...)</p>
+      `;
+
       div.addEventListener("click", () => showBookDetails(book, homeSection));
       dashboardBooks.appendChild(div);
     });
 
   } catch (err) {
     console.error("❌ Error loading books:", err);
+    loadingSpinner.classList.add("hidden");
+    dashboardBooks.innerHTML = `<p style="opacity:0.7;text-align:center;">Failed to load books.</p>`;
   }
+  hideLoader("loadingSpinnerHome");
 }
 
 async function saveLastRead(book, lastPage = 1) {
@@ -351,6 +369,7 @@ async function saveLastRead(book, lastPage = 1) {
 }
 
 async function loadContinueReading() {
+  showLoader("loadingSpinnerContinue");
   const token = sessionStorage.getItem("token");
   const container = document.getElementById("continueReadingGrid");
   if (!container) return;
@@ -398,12 +417,12 @@ try {
   } catch (err) {
     console.error("❌ Failed to load continue reading:", err);
   }
+  hideLoader("loadingSpinnerContinue");
 }
 
-
-
-// 🎞️ BOOK SLIDESHOW (Home Banner) — infinite loop version
+// 🎞️ BOOK SLIDESHOW (Home Banner) — smooth + spam-proof
 async function loadBookSlideshow() {
+  showLoader("loadingSpinnerSlide");
   try {
     const res = await fetch(`${API_URL}/api/books`);
     if (!res.ok) throw new Error("Failed to fetch books");
@@ -413,88 +432,91 @@ async function loadBookSlideshow() {
     if (!slideshow) return;
 
     if (!books || books.length === 0) {
-      slideshow.innerHTML = `<p class="no-books" style="padding:12px;opacity:0.8;">No books available at the moment.</p>`;
+      slideshow.innerHTML = `<p class="no-books" style="padding:12px;opacity:0.8;">No books available.</p>`;
       return;
     }
 
-    // clone first and last slides for smooth looping
+    // clone first and last slides for looping
     const firstClone = { ...books[0] };
     const lastClone = { ...books[books.length - 1] };
     const fullList = [lastClone, ...books, firstClone];
 
-    slideshow.innerHTML = fullList
-      .map(
-        (book) => `
-        <div class="book-slide">
-          <img src="${book.img}" alt="${book.title}">
-          <div class="slide-info">
-            <h3>${book.title}</h3>
-            <p><strong>Author:</strong> ${book.author}</p>
-            <p><strong>Publisher:</strong> ${book.publisher}</p>
-            <p><strong>Year:</strong> ${book.year}</p>
-            <p class="synopsis"><strong>Synopsis:</strong> ${book.description || "No synopsis available."}</p>
-            <button class="btn btn-read-slide" data-id="${book._id}">Read</button>
-          </div>
-        </div>`
-      )
-      .join("");
+    slideshow.innerHTML = fullList.map(book => `
+      <div class="book-slide">
+        <img src="${book.img}" alt="${book.title}">
+        <div class="slide-info">
+          <h3>${book.title}</h3>
+          <p><strong>Author:</strong> ${book.author}</p>
+          <p><strong>Publisher:</strong> ${book.publisher}</p>
+          <p><strong>Year:</strong> ${book.year}</p>
+          <p class="synopsis"><strong>Synopsis:</strong> ${book.description || "No synopsis available."}</p>
+          <button class="btn btn-read-slide" data-id="${book._id}">Read</button>
+        </div>
+      </div>
+    `).join("");
 
     const slides = slideshow.querySelectorAll(".book-slide");
     const total = slides.length;
-    let current = 1; // start at the "real" first slide
+    let current = 1;
+    let isTransitioning = false;
 
     slideshow.style.transform = `translateX(-${current * 100}%)`;
     slideshow.style.transition = "transform 0.6s ease";
 
-    // Show slide helper
-    function showSlide(index) {
+    function goToSlide(index) {
+      if (isTransitioning) return; // 🚫 prevent spam clicks
+      isTransitioning = true;
       current = index;
       slideshow.style.transition = "transform 0.6s ease";
       slideshow.style.transform = `translateX(-${current * 100}%)`;
     }
 
-    // Handle looping transitions
     slideshow.addEventListener("transitionend", () => {
+      // seamless looping logic
       if (current === 0) {
         slideshow.style.transition = "none";
-        current = total - 2; // jump to last real slide
+        current = total - 2;
         slideshow.style.transform = `translateX(-${current * 100}%)`;
       } else if (current === total - 1) {
         slideshow.style.transition = "none";
-        current = 1; // jump to first real slide
+        current = 1;
         slideshow.style.transform = `translateX(-${current * 100}%)`;
       }
+      // small timeout to re-enable clicks after transition
+      setTimeout(() => (isTransitioning = false), 100);
     });
 
-    // Buttons
+    // Navigation
     const nextBtn = document.getElementById("nextSlide");
     const prevBtn = document.getElementById("prevSlide");
 
-    if (nextBtn) nextBtn.onclick = () => showSlide(current + 1);
-    if (prevBtn) prevBtn.onclick = () => showSlide(current - 1);
+    if (nextBtn)
+      nextBtn.onclick = () => goToSlide(current + 1);
+    if (prevBtn)
+      prevBtn.onclick = () => goToSlide(current - 1);
 
-    // Delegate read buttons
+    // Auto-play every 7 seconds
+    let interval = setInterval(() => goToSlide(current + 1), 7000);
+
+    // Pause on hover
+    slideshow.addEventListener("mouseenter", () => clearInterval(interval));
+    slideshow.addEventListener("mouseleave", () => {
+      interval = setInterval(() => goToSlide(current + 1), 7000);
+    });
+
+    // “Read” button inside slides
     slideshow.addEventListener("click", (e) => {
       const btn = e.target.closest(".btn-read-slide");
       if (!btn) return;
       const bookId = btn.dataset.id;
-      const selected = books.find((b) => b._id === bookId);
+      const selected = books.find(b => b._id === bookId);
       if (selected) showBookDetails(selected, document.getElementById("homeSection"));
     });
 
-    // Auto slide every 10s
-    let interval = setInterval(() => showSlide(current + 1), 7000);
-
-    slideshow.addEventListener("mouseenter", () => clearInterval(interval));
-    slideshow.addEventListener("mouseleave", () => {
-      interval = setInterval(() => showSlide(current + 1), 7000);
-    });
   } catch (err) {
-    console.error("❌ Error loading slideshow:", err);
-    const slideshow = document.getElementById("bookSlideshow");
-    if (slideshow)
-      slideshow.innerHTML = `<p class="error">Failed to load slideshow. Check console.</p>`;
+    console.error("❌ Slideshow error:", err);
   }
+  hideLoader("loadingSpinnerSlide");
 }
 
 // initial call (keep this)
@@ -502,6 +524,7 @@ loadBookSlideshow();
 
   // --- Load Books for Conversion (Librarian) ---
   async function loadConversionBooks() {
+    showLoader("loadingSpinnerConversion");
     try {
       const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/books`, {
@@ -610,10 +633,12 @@ document.getElementById("confirmDeleteBtn").addEventListener("click", async () =
     } catch (err) {
       console.error("❌ Error loading conversion books:", err);
     }
+        hideLoader("loadingSpinnerConversion");
   }
 
 // --- Browse Tab logic ---
 async function loadBrowseBooks({ search = "", sort = "newest", genre = "all" } = {}) {
+  showLoader("loadingSpinnerBrowse");
   try {
     const res = await fetch(`${API_URL}/api/books`);
     if (!res.ok) throw new Error("Failed to fetch books");
@@ -673,6 +698,7 @@ div.innerHTML = `
   } catch (err) {
     console.error("❌ Error loading browse books:", err);
   }
+  hideLoader("loadingSpinnerBrowse");
 }
 
   // Browse filters events
@@ -1169,20 +1195,15 @@ const token = sessionStorage.getItem("token");
 const profilePicInput = document.getElementById("profilePicInput");
 const saveProfilePicBtn = document.getElementById("saveProfilePicBtn");
 const uploadTriggerBtn = document.getElementById("uploadTriggerBtn");
-// const dropdownProfileImg = document.getElementById("dropdownProfileImg");
-// const navProfileImg = document.getElementById("navProfileImg");
 
 if (uploadTriggerBtn && profilePicInput) {
-  uploadTriggerBtn.addEventListener("click", () => {
-    profilePicInput.click(); // open file picker
-  });
+  uploadTriggerBtn.addEventListener("click", () => profilePicInput.click());
 }
 
 if (profilePicInput) {
   profilePicInput.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Live preview before saving
       const previewURL = URL.createObjectURL(file);
       dropdownProfileImg.src = previewURL;
       navProfileImg.src = previewURL;
@@ -1196,10 +1217,10 @@ if (saveProfilePicBtn) {
     if (!file) return showPopup("Please select a picture first", "error");
 
     const formData = new FormData();
-    formData.append("pfp", file);
+    formData.append("profilePic", file);
 
     try {
-      const res = await fetch(`${API_URL}/api/uploadProfilePic`, {
+      const res = await fetch(`${API_URL}/api/upload-profile-pic`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
@@ -1215,11 +1236,12 @@ if (saveProfilePicBtn) {
         showPopup(data.error || "Upload failed", "error");
       }
     } catch (err) {
-      console.error(err);
-      showPopup("Upload error", "error");
+      console.error("❌ Upload error:", err);
+      showPopup("Upload failed", "error");
     }
   });
 }
+
 
 // ---------- Comments feature ----------
 const commentsListEl = document.getElementById("commentsList");
@@ -1230,6 +1252,7 @@ const postCommentBtn = document.getElementById("postCommentBtn");
 const commenterPfpSmall = document.getElementById("commenterPfpSmall");
 
 async function loadCommentsForBook(bookId) {
+  showLoader("loadingSpinnerComment");
   try {
     commentsListEl.innerHTML = `<p style="opacity:0.6;">Loading comments...</p>`;
     const res = await fetch(`${API_URL}/api/books/${bookId}/comments`);
@@ -1312,6 +1335,7 @@ async function loadCommentsForBook(bookId) {
     console.error("❌ loadCommentsForBook error:", err);
     commentsListEl.innerHTML = `<p style="opacity:0.7;">Failed to load comments</p>`;
   }
+  hideLoader("loadingSpinnerComment");
 }
 
 function formatPHDate(dateStrOrObj) {
@@ -1416,6 +1440,7 @@ updateCommentFormVisibility();
 
 // --- Load bookmarks ---
 async function loadBookmarks() {
+  showLoader("loadingSpinnerBookmarks");
   try {
     const token = sessionStorage.getItem("token");
     const res = await fetch(`${API_URL}/api/bookmarks`, {
@@ -1444,6 +1469,7 @@ div.innerHTML = `
   } catch (err) {
     console.error("❌ Error loading bookmarks:", err);
   }
+  hideLoader("loadingSpinnerBookmarks");
 }
 const viewAllBtn = document.getElementById("viewAllBtn");
 if (viewAllBtn) {
