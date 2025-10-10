@@ -214,8 +214,16 @@ const dropdownEmail = document.getElementById("dropdownEmail");
 if (navProfileImg && dropdown) {
   // Populate user info
   const username = localStorage.getItem("username") || "User";
-  const email = localStorage.getItem("email") || "user@email.com";
-  const pfp = localStorage.getItem("pfp") || "assets/default-pfp.png";
+let pfp = localStorage.getItem("pfp") || "assets/default-pfp.png";
+
+// 🧩 If librarian, assign default local PNGs
+const email = localStorage.getItem("email");
+if (email?.includes("librarian")) {
+  const num = email.match(/\d+/)?.[0] || "1";
+  pfp = `assets/librarian${num}.png`;
+  localStorage.setItem("pfp", pfp);
+}
+
 
   dropdownUsername.textContent = username;
   dropdownEmail.textContent = email;
@@ -369,7 +377,7 @@ async function saveLastRead(book, lastPage = 1) {
 }
 
 async function loadContinueReading() {
-  showLoader("loadingSpinnerContinue");
+  
   const token = sessionStorage.getItem("token");
   const container = document.getElementById("continueReadingGrid");
   if (!container) return;
@@ -417,7 +425,6 @@ try {
   } catch (err) {
     console.error("❌ Failed to load continue reading:", err);
   }
-  hideLoader("loadingSpinnerContinue");
 }
 
 // 🎞️ BOOK SLIDESHOW (Home Banner) — smooth + spam-proof
@@ -1252,7 +1259,6 @@ const postCommentBtn = document.getElementById("postCommentBtn");
 const commenterPfpSmall = document.getElementById("commenterPfpSmall");
 
 async function loadCommentsForBook(bookId) {
-  showLoader("loadingSpinnerComment");
   try {
     const res = await fetch(`${API_URL}/api/books/${bookId}/comments`);
     if (!res.ok) throw new Error("Failed to load comments");
@@ -1334,7 +1340,6 @@ async function loadCommentsForBook(bookId) {
     console.error("❌ loadCommentsForBook error:", err);
     commentsListEl.innerHTML = `<p style="opacity:0.7;">Failed to load comments</p>`;
   }
-  hideLoader("loadingSpinnerComment");
 }
 
 function formatPHDate(dateStrOrObj) {

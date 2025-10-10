@@ -78,7 +78,7 @@ const userSchema = new mongoose.Schema({
       updatedAt: { type: Date, default: Date.now },
     },
   ],
-  profilePic: { type: String, default: "assets/default-pfp.png" }
+  profilePic: { type: String, default: "assets/default-pfp.jpg" }
 });
 const User = mongoose.model("User", userSchema);
 
@@ -291,48 +291,67 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // 🔒 Static librarian accounts
-    const staticLibrarians = [
-      { email: "librarian1@gmail.com", password: "libpass1", username: "Librarian 1" },
-      { email: "librarian2@gmail.com", password: "libpass2", username: "Librarian 2" },
-      { email: "librarian3@gmail.com", password: "libpass3", username: "Librarian 3" },
-      { email: "librarian4@gmail.com", password: "libpass4", username: "Librarian 4" },
-      { email: "librarian5@gmail.com", password: "libpass5", username: "Librarian 5" },
-    ];
+// ===============================
+// Librarian Login (Static Librarians)
+// ===============================
+const staticLibrarians = [
+  { email: "librarian1@gmail.com", password: "libpass1", username: "Librarian 1" },
+  { email: "librarian2@gmail.com", password: "libpass2", username: "Librarian 2" },
+  { email: "librarian3@gmail.com", password: "libpass3", username: "Librarian 3" },
+  { email: "librarian4@gmail.com", password: "libpass4", username: "Librarian 4" },
+  { email: "librarian5@gmail.com", password: "libpass5", username: "Librarian 5" },
+];
 
-    // Check if the login matches a static librarian
-    const matchedLibrarian = staticLibrarians.find(
-      (lib) => lib.email === email && lib.password === password
-    );
+const matchedLibrarian = staticLibrarians.find(
+  (lib) => lib.email === email && lib.password === password
+);
 
-    if (matchedLibrarian) {
-      // ensure librarian exists in DB
-      let librarianUser = await User.findOne({ email: matchedLibrarian.email });
-      if (!librarianUser) {
-        librarianUser = new User({
-          username: matchedLibrarian.username,
-          email: matchedLibrarian.email,
-          password: await bcrypt.hash(matchedLibrarian.password, 10),
-          role: "librarian",
-          collegeYear: "N/A",
-        });
-        await librarianUser.save();
-      }
+if (matchedLibrarian) {
+  const index = staticLibrarians.indexOf(matchedLibrarian);
 
-      const token = jwt.sign(
-        { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
-        process.env.JWT_SECRET,
-        { expiresIn: "24h" }
-      );
+  // 🧩 Local librarian profile images (non-changeable)
+  const librarianImages = [
+    "assets/librarian1.png",
+    "assets/librarian2.png",
+    "assets/librarian3.png",
+    "assets/librarian4.png",
+    "assets/librarian5.png",
+  ];
 
-      return res.json({
-        message: "Login successful",
-        token,
-        role: "librarian",
-        email: librarianUser.email,
-        username: librarianUser.username,
-      });
-    }
+  // ensure librarian exists in DB (so comments/bookmarks work)
+  let librarianUser = await User.findOne({ email: matchedLibrarian.email });
+  if (!librarianUser) {
+    librarianUser = new User({
+      username: matchedLibrarian.username,
+      email: matchedLibrarian.email,
+      password: await bcrypt.hash(matchedLibrarian.password, 10),
+      role: "librarian",
+      collegeYear: "N/A",
+      profilePic: librarianImages[index], // ✅ fixed image in DB
+    });
+    await librarianUser.save();
+  } else if (librarianUser.profilePic !== librarianImages[index]) {
+    // update pic if not matching
+    librarianUser.profilePic = librarianImages[index];
+    await librarianUser.save();
+  }
+
+  const token = jwt.sign(
+    { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
+    process.env.JWT_SECRET,
+    { expiresIn: "24h" }
+  );
+
+  return res.json({
+    message: "Login successful",
+    token,
+    role: "librarian",
+    email: librarianUser.email,
+    username: librarianUser.username,
+    profilePic: librarianUser.profilePic, // ✅ send correct local image
+  });
+}
+
 
     // Otherwise, check student in DB
     const user = await User.findOne({ email });
@@ -363,7 +382,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 // ===============================
-// Upload Profile Picture (final)
+// Upload Profile Picture (Students only)
 // ===============================
 app.post("/api/upload-profile-pic", upload.single("profilePic"), async (req, res) => {
   try {
@@ -372,14 +391,20 @@ app.post("/api/upload-profile-pic", upload.single("profilePic"), async (req, res
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    // Upload to Cloudinary
+    // ❌ Librarians cannot upload
+    if (user.role === "librarian") {
+      return res.status(403).json({ error: "Librarians cannot change profile picture" });
+    }
+
+    // ✅ Students upload normally
     const result = await cloudinary.uploader.upload(req.file.path, {
       folder: "openark/profile_pics",
     });
-    fs.unlinkSync(req.file.path); // clean up local temp file
+    fs.unlinkSync(req.file.path);
 
     user.profilePic = result.secure_url;
     await user.save();
