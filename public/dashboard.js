@@ -1254,7 +1254,6 @@ const commenterPfpSmall = document.getElementById("commenterPfpSmall");
 async function loadCommentsForBook(bookId) {
   showLoader("loadingSpinnerComment");
   try {
-    commentsListEl.innerHTML = `<p style="opacity:0.6;">Loading comments...</p>`;
     const res = await fetch(`${API_URL}/api/books/${bookId}/comments`);
     if (!res.ok) throw new Error("Failed to load comments");
     const comments = await res.json();

@@ -291,37 +291,50 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-// 🔒 Static librarian account
-if (email === "forlibrarianuse@gmail.com" && password === "librarian12345") {
-  // ensure librarian user exists in DB
-  let librarianUser = await User.findOne({ email });
-  if (!librarianUser) {
-    librarianUser = new User({
-      username: "Librarian",
-      email,
-      password: await bcrypt.hash(password, 10),
-      role: "librarian",
-      collegeYear: "N/A",
-    });
-    await librarianUser.save();
-  }
+    // 🔒 Static librarian accounts
+    const staticLibrarians = [
+      { email: "librarian1@gmail.com", password: "libpass1", username: "Librarian 1" },
+      { email: "librarian2@gmail.com", password: "libpass2", username: "Librarian 2" },
+      { email: "librarian3@gmail.com", password: "libpass3", username: "Librarian 3" },
+      { email: "librarian4@gmail.com", password: "libpass4", username: "Librarian 4" },
+      { email: "librarian5@gmail.com", password: "libpass5", username: "Librarian 5" },
+    ];
 
-  const token = jwt.sign(
-    { id: librarianUser._id, role: "librarian", email },
-    process.env.JWT_SECRET,
-    { expiresIn: "24h" }
-  );
+    // Check if the login matches a static librarian
+    const matchedLibrarian = staticLibrarians.find(
+      (lib) => lib.email === email && lib.password === password
+    );
 
-  return res.json({
-    message: "Login successful",
-    token,
-    role: "librarian",
-    email,
-    username: librarianUser.username,
-  });
-}
+    if (matchedLibrarian) {
+      // ensure librarian exists in DB
+      let librarianUser = await User.findOne({ email: matchedLibrarian.email });
+      if (!librarianUser) {
+        librarianUser = new User({
+          username: matchedLibrarian.username,
+          email: matchedLibrarian.email,
+          password: await bcrypt.hash(matchedLibrarian.password, 10),
+          role: "librarian",
+          collegeYear: "N/A",
+        });
+        await librarianUser.save();
+      }
 
-    // Otherwise check student in DB
+      const token = jwt.sign(
+        { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      return res.json({
+        message: "Login successful",
+        token,
+        role: "librarian",
+        email: librarianUser.email,
+        username: librarianUser.username,
+      });
+    }
+
+    // Otherwise, check student in DB
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
