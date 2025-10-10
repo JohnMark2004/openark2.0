@@ -781,6 +781,61 @@ app.get(/^\/(?!api).*/, (req, res) => {
 });
 
 // ===============================
+// Profile Picture Upload (Student + Librarian)
+// ===============================
+app.post("/api/uploadProfilePic", upload.single("profilePic"), async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // Librarians may not exist in DB, so handle both
+    let user = await User.findById(decoded.id);
+
+    // Static librarian handling (not saved in DB)
+    const staticLibrarians = [
+      "librarian1@gmail.com",
+      "librarian2@gmail.com",
+      "librarian3@gmail.com",
+      "librarian4@gmail.com",
+      "librarian5@gmail.com",
+    ];
+
+    if (!user && decoded.role === "librarian") {
+      // Fake librarian record (not persisted)
+      const uploadedUrl = `/uploads/${req.file.filename}`;
+      return res.json({
+        message: "Profile picture updated",
+        profilePic: uploadedUrl,
+      });
+    }
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    // Upload to Cloudinary (optional, if configured)
+    let imageUrl = `/uploads/${req.file.filename}`;
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+      const uploadRes = await cloudinary.uploader.upload(req.file.path, {
+        folder: "profile_pics",
+      });
+      imageUrl = uploadRes.secure_url;
+      fs.unlinkSync(req.file.path); // remove local temp
+    }
+
+    user.profilePic = imageUrl;
+    await user.save();
+
+    res.json({ message: "Profile picture updated", profilePic: imageUrl });
+  } catch (err) {
+    console.error("❌ Profile pic upload error:", err);
+    res.status(500).json({ error: "Failed to upload profile picture" });
+  }
+});
+
+
+// ===============================
 // Start Server
 // ===============================
 const server = http.createServer(app);
