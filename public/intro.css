@@ -400,6 +400,7 @@ main {
     width: 38px;
     height: 38px;
     object-fit: contain;
+    border-radius: 50%;
 }
 
 .login-form input {
@@ -506,6 +507,7 @@ body, html {
     width: 38px;
     height: 38px;
     object-fit: contain;
+    border-radius: 50%;
 }
 
 .signup-form {

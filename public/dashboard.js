@@ -234,15 +234,6 @@ if (email?.includes("librarian")) {
   navProfileImg.addEventListener("click", () => {
     dropdown.classList.toggle("hidden");
   });
-  // Open full profile modal when clicking on username inside dropdown
-dropdownUsername.addEventListener("click", () => {
-  document.getElementById("profileModal").classList.remove("hidden");
-});
-
-// Close modal
-document.getElementById("closeProfileBtn").addEventListener("click", () => {
-  document.getElementById("profileModal").classList.add("hidden");
-});
 
   // Close dropdown if clicked outside
   document.addEventListener("click", (e) => {
@@ -587,49 +578,52 @@ div.innerHTML = `
           conversionBooks.appendChild(div);
         });
 
-        // Delete Modal actions
-        document
-          .getElementById("cancelDeleteBtn")
-          .addEventListener("click", () => {
-            bookToDelete = null;
-            document.getElementById("deleteModal").classList.add("hidden");
-          });
+// --- Delete Modal actions (Safe) ---
+const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
+const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
 
-document.getElementById("confirmDeleteBtn").addEventListener("click", async () => {
-  if (!bookToDelete) return;
-  try {
-    const token = sessionStorage.getItem("token");
-
-    // ✅ must use Mongo _id
-    const bookId = bookToDelete._id;
-    if (!bookId) throw new Error("No valid _id found for book");
-
-    const res = await fetch(`${API_URL}/api/books/${bookId}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (!res.ok) {
-      const errText = await res.text();
-      throw new Error(errText || "Failed to delete book");
-    }
-
-    await res.json().catch(() => {});
-    showPopup("✅ Book deleted successfully", "success");
-
-    // refresh after delete
-    await loadConversionBooks();
-    await loadBooks();
-    await loadBrowseBooks();
-
-  } catch (err) {
-    console.error("❌ Delete failed:", err);
-    showPopup("❌ Failed to delete book", "error");
-  } finally {
+if (cancelDeleteBtn) {
+  cancelDeleteBtn.addEventListener("click", () => {
     bookToDelete = null;
     document.getElementById("deleteModal").classList.add("hidden");
-  }
-});
+  });
+}
+
+if (confirmDeleteBtn) {
+  confirmDeleteBtn.addEventListener("click", async () => {
+    if (!bookToDelete) return;
+    try {
+      const token = sessionStorage.getItem("token");
+      const bookId = bookToDelete._id;
+      if (!bookId) throw new Error("No valid _id found for book");
+
+      const res = await fetch(`${API_URL}/api/books/${bookId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || "Failed to delete book");
+      }
+
+      await res.json().catch(() => {});
+      showPopup("✅ Book deleted successfully", "success");
+
+      // refresh after delete
+      await loadConversionBooks();
+      await loadBooks();
+      await loadBrowseBooks();
+
+    } catch (err) {
+      console.error("❌ Delete failed:", err);
+      showPopup("❌ Failed to delete book", "error");
+    } finally {
+      bookToDelete = null;
+      document.getElementById("deleteModal").classList.add("hidden");
+    }
+  });
+}
 
 
         // Add Book button
