@@ -312,10 +312,10 @@ if (matchedLibrarian) {
   // 🧩 Local librarian profile images (non-changeable)
   const librarianImages = [
     "assets/librarian1.png",
-    "assets/librarian2.png",
-    "assets/librarian3.png",
-    "assets/librarian4.png",
-    "assets/librarian5.png",
+    "assets/librarian1.png",
+    "assets/librarian1.png",
+    "assets/librarian1.png",
+    "assets/librarian1.png",
   ];
 
   // ensure librarian exists in DB (so comments/bookmarks work)

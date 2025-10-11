@@ -144,6 +144,9 @@
               <span><strong>Category:</strong> <span id="detailCategoryStat">N/A</span></span>
               <span><strong>Pages:</strong> <span id="detailChapters">N/A</span></span>
             </div>
+                        <div class="book-stats">
+            <span><strong>Views:</strong> <span id="detailViews">0</span></span>
+            </div>
             <p class="author-info">by <span id="detailAuthor">Author Name</span></p>
             
             <div class="action-buttons">
@@ -160,7 +163,7 @@
 
         <div class="book-read-content">
           <div id="content-about">
-            <h3>Synopsis</h3>
+            <h3>Description</h3>
             <p id="detailDescription">No description available.</p>
             <p id="disclaimer" class="disclaimer"></p>
           </div>
@@ -387,7 +390,17 @@
     </div>
   </div>
 </div>
-
+<!-- 🗑️ Delete Comment Confirmation Modal -->
+<div id="deleteModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Delete Comment?</h3>
+    <p>Are you sure you want to delete this comment? This action cannot be undone.</p>
+    <div class="modal-buttons">
+      <button id="cancelDelete" class="btn cancel-btn">Cancel</button>
+      <button id="confirmDelete" class="btn delete-btn">Delete</button>
+    </div>
+  </div>
+</div>  
 
   <div id="popup" class="popup hidden"></div>
 

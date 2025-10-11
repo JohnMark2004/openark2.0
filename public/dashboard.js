@@ -452,11 +452,15 @@ async function loadBookSlideshow() {
       <div class="book-slide">
         <img src="${book.img}" alt="${book.title}">
         <div class="slide-info">
-          <h3>${book.title}</h3>
-          <p><strong>Author:</strong> ${book.author}</p>
-          <p><strong>Publisher:</strong> ${book.publisher}</p>
-          <p><strong>Year:</strong> ${book.year}</p>
-          <p class="synopsis"><strong>Synopsis:</strong> ${book.description || "No synopsis available."}</p>
+<h3 class="book-title">${book.title}</h3>
+<p class="book-meta">
+    <strong>Category:</strong> ${Array.isArray(book.category) ? book.category.join(", ") : book.category || "Uncategorized"}
+<strong>•</strong> <strong>Author:</strong> ${book.author}
+  <strong>•</strong> <strong>Year:</strong> ${book.year}
+</p>
+<p class="book-desc"><strong>Description</strong></p>
+<p class="book-desc-p">${book.description || "No description available."}</p>
+
           <button class="btn btn-read-slide" data-id="${book._id}">Read</button>
         </div>
       </div>
@@ -1301,22 +1305,46 @@ async function loadCommentsForBook(bookId) {
         delBtn.className = "delete-btn";
         delBtn.style = "font-size:0.8rem;padding:0.25rem 0.6rem;border-radius:8px;";
         delBtn.addEventListener("click", async () => {
-          if (!confirm("Delete this comment?")) return;
-          try {
-            const token = sessionStorage.getItem("token");
-            const r = await fetch(`${API_URL}/api/comments/${c._id}`, {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
-            });
-            const data = await r.json();
-            if (!r.ok) throw new Error(data.error || "Failed");
-            showPopup("Comment deleted", "success");
-            // refresh comments
-            loadCommentsForBook(bookId);
-          } catch (err) {
-            console.error(err);
-            showPopup("Failed to delete comment", "error");
-          }
+// Open delete confirmation modal
+const commentToDelete = c;
+document.getElementById("deleteCommentMessage").textContent =
+  `Are you sure you want to delete this comment by "${c.author.username}"?`;
+document.getElementById("deleteCommentModal").classList.remove("hidden");
+
+// Handle confirm
+const confirmBtn = document.getElementById("confirmDeleteCommentBtn");
+const cancelBtn = document.getElementById("cancelDeleteCommentBtn");
+
+// Remove old listeners to prevent stacking
+confirmBtn.replaceWith(confirmBtn.cloneNode(true));
+cancelBtn.replaceWith(cancelBtn.cloneNode(true));
+
+const newConfirmBtn = document.getElementById("confirmDeleteCommentBtn");
+const newCancelBtn = document.getElementById("cancelDeleteCommentBtn");
+
+newCancelBtn.addEventListener("click", () => {
+  document.getElementById("deleteCommentModal").classList.add("hidden");
+});
+
+newConfirmBtn.addEventListener("click", async () => {
+  try {
+    const token = sessionStorage.getItem("token");
+    const r = await fetch(`${API_URL}/api/comments/${commentToDelete._id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.error || "Failed");
+    showPopup("Comment deleted", "success");
+    loadCommentsForBook(bookId);
+  } catch (err) {
+    console.error(err);
+    showPopup("Failed to delete comment", "error");
+  } finally {
+    document.getElementById("deleteCommentModal").classList.add("hidden");
+  }
+});
+
         });
         actions.appendChild(delBtn);
       }
@@ -1519,6 +1547,5 @@ if (browseTab) {
   loadContinueReading();
   loadConversionBooks();
   updateCommentFormVisibility();
-loadCommentsForBook(book._id);
 
 });
