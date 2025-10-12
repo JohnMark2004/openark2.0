@@ -1764,6 +1764,57 @@ main {
   color: white;
 }
 
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.4);
+  z-index: 9999;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  border: 2px solid #800000;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 350px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.confirm-btn {
+  background-color: #800000; /* maroon */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background-color: #d4af37; /* gold */
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.confirm-btn:hover { background-color: #a52a2a; }
+.cancel-btn:hover { background-color: #e1c050; }
 
 
 /* Responsive */
