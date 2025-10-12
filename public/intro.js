@@ -95,10 +95,22 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   const confirmPassword = e.target[3].value;
   const collegeYear = e.target[4].value;
 
-  if (password !== confirmPassword) {
-    showPopup("Passwords do not match", "error");
-    return;
-  }
+// Password validation (no special character required)
+const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+
+if (password !== confirmPassword) {
+  showPopup("Passwords do not match", "error");
+  return;
+}
+
+if (!passwordRegex.test(password)) {
+  showPopup(
+    "Password must be at least 6 characters and include uppercase, lowercase, and a number.",
+    "error"
+  );
+  return;
+}
+
 
   try {
     const res = await fetch(`${API_URL}/api/signup`, {
@@ -157,6 +169,20 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
     showPopup("Login request failed", "error");
   }
 });
+
+// Toggle show/hide password (using eye icons)
+document.addEventListener("click", (e) => {
+  if (e.target.classList.contains("toggle-password")) {
+    const inputId = e.target.dataset.target;
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    const isHidden = input.type === "password";
+    input.type = isHidden ? "text" : "password";
+    e.target.src = isHidden ? "img/eye-password-show-svgrepo-com.svg" : "img/eye-password-hide-svgrepo-com.svg";
+  }
+});
+
 
 // ===============================
 // POPULATE INTRO SLIDESHOW & COUNT (Infinite Carousel)

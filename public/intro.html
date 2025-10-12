@@ -94,7 +94,10 @@
           <h2>Log In</h2>
         </div>
         <input type="text" placeholder="Email" required>
-        <input type="password" placeholder="Password" required>
+        <div class="password-field">
+          <input type="password" placeholder="Password" id="loginPassword" required>
+<img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="loginPassword" alt="Show Password">
+        </div>
         <button class="button" type="submit">Log In</button>
         <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
       </form>
@@ -111,14 +114,22 @@
         </div>
         <input type="text" placeholder="Username" required>
         <input type="email" placeholder="Email" required>
-        <input type="password" placeholder="Password" required>
-        <input type="password" placeholder="Confirm Password" required>
+<div class="password-field">
+  <input type="password" placeholder="Password" id="signupPassword" required>
+  <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="signupPassword" alt="Show Password">
+</div>
+
+<div class="password-field">
+  <input type="password" placeholder="Confirm Password" id="signupConfirmPassword" required>
+  <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="signupConfirmPassword" alt="Show Password">
+</div>
         <select class="college-year" required>
-          <option value="" disabled selected>Select College Year</option>
-          <option value="freshman">Freshman (1st year)</option>
-          <option value="sophomore">Sophomore (2nd year)</option>
-          <option value="junior">Junior (3rd year)</option>
-          <option value="senior">Senior (4th year)</option>
+          <option value="" disabled selected>Select Year Level</option>
+  <option value="senior-high">Senior High</option>
+  <option value="freshman">College Freshman (1st year)</option>
+  <option value="sophomore">College Sophomore (2nd year)</option>
+  <option value="junior">College Junior (3rd year)</option>
+  <option value="senior">College Senior (4th year)</option>
         </select>
         <button class="button" type="submit">Sign Up</button>
         <p class="login-link">Already have an account? <a href="#">Log In</a></p>

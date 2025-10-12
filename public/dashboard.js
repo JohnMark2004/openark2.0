@@ -757,7 +757,7 @@ function showBookDetails(book, fromSection) {
   document.getElementById("detailTitle").dataset.bookId = book._id;  // ✅ critical line
   document.getElementById("detailTitleBreadcrumb").textContent = book.title;
   document.getElementById("detailAuthor").innerHTML = `
-    <strong>${book.author}</strong>
+    Author: <strong>${book.author}</strong>
     &nbsp;&nbsp; Publisher: <span class="value">${book.publisher}</span>
     &nbsp;&nbsp; Year: <span class="value">${book.year}</span>
   `;

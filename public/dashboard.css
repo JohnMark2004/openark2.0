@@ -44,7 +44,7 @@ body {
   justify-content: space-between;
   align-items: center;
   padding: 0.1rem 3rem;
-  background: var(--beige);
+  background: #9A3F3F;
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
   box-shadow: 0 2px 12px 0 rgba(212, 165, 165, 0.07);
@@ -67,7 +67,7 @@ body {
   font-size: 2rem;
   font-weight: 700;
   letter-spacing: 0.1rem;
-  color: var(--dusty);
+  color: #C9A227;
   cursor: pointer;
 }
 
@@ -80,7 +80,7 @@ body {
 }
 
 .topbar nav a:hover {
-  color: var(--dusty);
+  color: #C9A227;
 }
 
 .topbar .right {
@@ -104,8 +104,8 @@ body {
   padding: 0.75rem 2rem;
   border-radius: 50px;
   box-shadow: 0 0 15px rgba(156, 149, 149, 0.3);
-  background-color: #e4dac5;
-  color: var(--dusty);
+  background-color: #E6CFA9;
+  color:  #9A3F3F;
   font-weight: 600;
   letter-spacing: 0.1rem;
   border: none;
@@ -114,8 +114,8 @@ body {
 }
 
 .btn:hover {
-  background-color: var(--dusty);
-  color: #e4dac5;
+  background-color:  #9A3F3F;
+  color: #E6CFA9;
   box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
 }
 
@@ -141,7 +141,7 @@ main {
 .bookmarks-grid .book h4 {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--dusty);
+  color: #C9A227;
   margin: 0.45rem 0 0.15rem;
   text-align: center;
   line-height: 1.2;
@@ -153,7 +153,7 @@ main {
 .continue-reading .book .genre-label,
 .bookmarks-grid .book .genre-label {
   font-size: 0.75rem;
-  color: #777;
+  color: white;
   text-align: center;
   margin-bottom: 0.4rem;
   opacity: 0.9;
@@ -770,8 +770,8 @@ main {
   display: inline-block;
   overflow: hidden;
   border-radius: 10px;
-  background: var(--dusty);
-  color: var(--white);
+    background-color: #E6CFA9;
+    color: #9A3F3F;
   font-family: 'Montserrat', sans-serif;
   font-size: 0.95rem;
   font-weight: 500;
@@ -782,6 +782,8 @@ main {
 }
 
 .file-input-wrapper:hover {
+      background-color: #9A3F3F;
+    color: #E6CFA9;
 }
 
 .file-input-wrapper:active {
@@ -862,15 +864,16 @@ main {
 .btn-back {
   margin-bottom: 1.5rem;
   background-color: transparent;
-  border: 1px solid #e4cea2;
-  color: #2E2E2E;
+  border: 1px solid #E6CFA9;
+  color: #9A3F3F;
   font-weight: 500;
   padding: 0.6rem 1.2rem;
 }
 
 .btn-back:hover {
-  background-color: #e4cea2;
-  color: white;
+  background-color: #9A3F3F;
+  color: #E6CFA9;
+  border: 1px solid #9A3F3F;
 }
 
 .book-read-grid {
@@ -928,27 +931,28 @@ main {
 }
 
 .btn-read {
-  background: #e4cea2; /* Blue color from image */
-  color: #2E2E2E;
+  background: #E6CFA9; /* Blue color from image */
+  color: #9A3F3F;
   padding: 0.8rem 2.5rem;
 }
 
 .btn-read:hover {
-  background: #2E2E2E;
-  color: #e4cea2;
+  background: #9A3F3F;
+  color: #E6CFA9;
   box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
 }
 
 .btn-add-bookmark {
   background: var(--white);
-  color: #e4cea2;
-  border: 1px solid #e4cea2;
+  color: #9A3F3F;
+  border: 1px solid #E6CFA9;
   padding: 0.8rem 1.5rem;
 }
 
 .btn-add-bookmark:hover {
-  background: #e4cea2; /* A very light blue */
-  color: #2E2E2E;
+  background: #9A3F3F; /* A very light blue */
+  color: #E6CFA9;
+  border: 1px solid #9A3F3F;
 }
 
 .book-read-tabs {
@@ -1077,8 +1081,8 @@ main {
 }
 
 .delete-btn{
-    background: #e4cea2;
-  color: #2E2E2E;
+    background-color: #E6CFA9;
+    color: #9A3F3F;
   border: none;
   padding: 0.2rem 1rem;
   border-radius: 12px;
@@ -1087,8 +1091,8 @@ main {
 }
 
 .delete-btn:hover{
-    background: #2E2E2E;
-  color: #e4cea2;
+    background-color: #9A3F3F;
+    color: #E6CFA9;
 }
 
 .disclaimer {
@@ -1130,7 +1134,7 @@ main {
 
 .genre-btn {
   padding: 0.5rem 1rem;
-  border: 1px solid var(--dusty, #666);
+  border: 1px solid #C1856D;
   border-radius: 20px;
   background: white;
   cursor: pointer;
@@ -1140,7 +1144,7 @@ main {
 
 .genre-btn.active,
 .genre-btn:hover {
-  background: var(--dusty, #444);
+  background: #C1856D;
   color: white;
 }
 
@@ -1151,7 +1155,7 @@ main {
 }
 
 .browse-grid .book {
-  background: white;
+  background: #9A3F3F;
   border-radius: 10px;
   overflow: hidden;
   cursor: pointer;
@@ -1185,19 +1189,19 @@ main {
 
 .genres-buttons button {
   padding: 6px 10px;
-  border: 1px solid var(--dusty);
+  border: 1px solid #9A3F3F;
   border-radius: 6px;
   background: transparent;
-  color: var(--text-primary, #333);
+  color: var(--text-primary, #9A3F3F);
   font-size: 0.9rem;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .genres-buttons button.active {
-  background: var(--dusty);
-  color: white;
-  box-shadow: 0 0 8px var(--dusty);
+    background-color: #E6CFA9;
+    color: #9A3F3F;
+  box-shadow: 0 0 8px #9A3F3F;
 }
 
 #detailAuthor {
@@ -1284,33 +1288,33 @@ main {
 }
 
 .edit-page-btn {
-  background-color: #e4dac5;
-  color: #2E2E2E;
+    background-color: #E6CFA9;
+    color: #9A3F3F;
 }
 
 .edit-page-btn:hover {
-  background-color: #2E2E2E;
-  color: #e4dac5;
+    background-color: #9A3F3F;
+    color: #E6CFA9;
 }
 
 .save-page-btn {
-  background-color: #e4dac5;
-  color: #2E2E2E;
+    background-color: #E6CFA9;
+    color: #9A3F3F;
 }
 
 .save-page-btn:hover {
-  background-color: #2E2E2E;
-  color: #e4dac5;
+    background-color: #9A3F3F;
+    color: #E6CFA9;
 }
 
 .cancel-page-btn {
-  background-color: #2E2E2E;
-  color: #e4dac5;
+    background-color: #E6CFA9;
+    color: #9A3F3F;
 }
 
 .cancel-page-btn:hover {
-  background-color: #e4dac5;
-  color: #2E2E2E;
+    background-color: #9A3F3F;
+    color: #E6CFA9;
 }
 
 .edit-page-btn:hover,
@@ -1345,7 +1349,7 @@ main {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: rgb(250, 245, 241);
+  background: #9A3F3F;
   padding: 1.5rem 2rem;
   box-sizing: border-box;
 }
@@ -1363,7 +1367,7 @@ main {
 .slide-info {
   flex: 1;
   margin-left: 2rem;
-  background: #f9f6f2;
+  background: #fff2e1;
   color: #2E2E2E;
   padding: 1.5rem 2rem;
   border-radius: 12px;
@@ -1404,7 +1408,7 @@ main {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255,255,255,0.7);
+  background: #FBF9D1;
   border: none;
   font-size: 2rem;
   padding: 0.5rem 1rem;
@@ -1430,8 +1434,8 @@ main {
 .btn-read-slide {
   margin-top: 1rem;
   align-self: flex-end;        /* push to the right */
-  background-color: var(--beige);
-  color: var(--dusty);
+  background-color: #E6CFA9;
+  color: #9A3F3F;
   font-weight: 600;
   border: none;
   border-radius: 8px;
@@ -1442,8 +1446,8 @@ main {
 }
 
 .btn-read-slide:hover {
-  background-color: var(--dusty);
-  color: var(--white);
+  background-color: #9A3F3F;
+  color: #E6CFA9;
   box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
 
@@ -1502,7 +1506,7 @@ main {
 }
 
 .btn-view-all:hover {
-  color: var(--beige);
+  color: #9A3F3F;
   text-decoration: underline;
 }
 
@@ -1516,7 +1520,7 @@ main {
 
 /* 📖 Individual Book Card */
 .book {
-  background: var(--white);
+  background: #9A3F3F;
   border-radius: 10px;
   overflow: hidden;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -1558,7 +1562,7 @@ main {
 }
 
 .continue-reading .book {
-  background: var(--white);
+  background: #9A3F3F;
   border-radius: 10px;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -1662,7 +1666,8 @@ main {
   margin-top: 0.8rem;
   padding: 0.6rem;
   border: none;
-  color: var(--white);
+  background-color: #E6CFA9;
+  color: #9A3F3F;
   font-weight: 600;
   border-radius: 8px;
   cursor: pointer;
@@ -1670,7 +1675,8 @@ main {
 }
 
 .logout-btn:hover {
-  background: var(--dusty);
+  background: #9A3F3F;
+  color: #E6CFA9;
 }
 
 #dropdownEmail{
@@ -1699,6 +1705,42 @@ main {
 #conversionBooks {
   position: relative;
   z-index: 1;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  color: #2B2B2B;
+  padding: 1.5rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+.btn-danger {
+  background-color: var(--maroon);
+  color: white;
 }
 
 

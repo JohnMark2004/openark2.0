@@ -7,7 +7,7 @@
 
 body {
     font-family: 'Montserrat', sans-serif;
-    background: #e7e7e7;
+    background: #F9F6F0;
     min-height: 100vh;
     line-height: 1.5;
 }
@@ -47,7 +47,7 @@ header{
     justify-content: space-between;
     align-items: center;
     padding: 1rem 5rem;
-    background-color: #e4cea2;
+    background-color: #9A3F3F;
     border-bottom-left-radius: 10px;
     border-bottom-right-radius: 10px;
 }
@@ -56,7 +56,7 @@ header{
     font-size: 2rem;
     font-weight: 700;
     letter-spacing: 0.1rem;
-    color: #2E2E2E;
+    color: #C9A227;
     cursor: pointer;
 }
 
@@ -156,7 +156,7 @@ main {
     letter-spacing: 0.1rem;
     margin: 2rem 0;
     line-height: 1.2;
-    color: #2E2E2E;
+    color: #2e2e2e;
     text-shadow: 0 0 10px rgb(255, 255, 255, 0.2);
 }
 
@@ -164,7 +164,7 @@ main {
     font-size: 1.2rem;
     letter-spacing: 0.05rem;
     max-width: 35rem;
-    color: #555555;
+    color: #2B2B2B;
 }
 
 .buttons{
@@ -178,8 +178,8 @@ main {
     padding: 0.75rem 2rem;
     border-radius: 50px;
     box-shadow: 0 0 15px rgb(156, 149, 149, 0.3);
-    background-color: #e4dac5;
-    color: #2E2E2E;
+    background-color: #E6CFA9;
+    color: #9A3F3F;
     font-weight: 600;
     letter-spacing: 0.1rem;
     text-decoration: none;
@@ -188,8 +188,8 @@ main {
 
 .btn-login:hover{
     background-size: 200%;
-    background-color: #2E2E2E;
-    color: #e4dac5;
+    background-color: #9A3F3F;
+    color: #E6CFA9;
     box-shadow: 0 0 15px rgb(255, 255, 255, 0.3);
 }  
 
@@ -229,7 +229,7 @@ main {
   margin: 0 10px;
   object-fit: cover;
   border-radius: 6px;
-  border: 3px solid #e4dac5; 
+  border: 3px solid #9A3F3F; 
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
   transition: transform 0.4s ease, box-shadow 0.3s ease;
   cursor: pointer;
@@ -392,7 +392,7 @@ main {
     line-height: 1;
     font-size: 1.8rem;
     font-weight: 700;
-    color: #2E2E2E;
+    color: #C1856D;
     letter-spacing: 0.05rem;
 }
 
@@ -415,16 +415,16 @@ main {
     padding: 0.75rem;
     border: none;
     border-radius: 8px;
-    background: #e4dac5;
-    color: #2E2E2E;
+    background: #E6CFA9;
+    color: #9A3F3F;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .button:hover {
-    background: #2E2E2E;
-    color: #e4dac5;
+    background: #9A3F3F;
+    color: #E6CFA9;
     box-shadow: 0 0 15px rgb(255, 255, 255, 0.3);
 }
 
@@ -436,14 +436,14 @@ main {
 }
 
 .signup-link a {
-    color: #2E2E2E;
+    color: #C1856D;
     text-decoration: none;
     font-weight: bold;
     transition: color 0.2s;
 }
 
 .signup-link a:hover {
-    color: #2E2E2E;
+    color: #E6CFA9;
     text-decoration: underline;
 }
 
@@ -522,7 +522,7 @@ body, html {
     line-height: 1;          
     font-size: 1.8rem;
     font-weight: 700;
-    color: #2E2E2E;
+    color: #C1856D;
     letter-spacing: 0.05rem;
 }
 
@@ -538,16 +538,16 @@ body, html {
     padding: 0.75rem;
     border: none;
     border-radius: 8px;
-    background: #e4dac5;
-    color: #2E2E2E;
+    background: #E6CFA9;
+    color: #9A3F3F;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.2s;
 }
 
 .signup-form button:hover {
-    background: #2E2E2E;
-    color: #e4dac5;
+    background: #9A3F3F;
+    color: #E6CFA9;
     box-shadow: 0 0 15px rgb(255, 255, 255, 0.3);
 }
 
@@ -559,14 +559,14 @@ body, html {
 }
 
 .login-link a {
-    color: #2E2E2E;
+    color: #C1856D;
     text-decoration: none;
     font-weight: bold;
     transition: color 0.2s;
 }
 
 .login-link a:hover {
-    color: #2E2E2E;
+      color: #E6CFA9;
     text-decoration: underline;
 }
 
@@ -620,14 +620,41 @@ body, html {
   display: inline-block;
   padding: 0.6rem 1.5rem;
   border-radius: 50px;
-  background-color: #e4dac5;
-  color: #2E2E2E;
+  background-color: #E6CFA9;
+  color: #9A3F3F;
   font-weight: 600;
   letter-spacing: 0.05rem;
   box-shadow: 0 0 10px rgba(156, 149, 149, 0.3);
   cursor: default; /* looks like a button but not clickable */
   user-select: none; /* prevent text selection */
 }
+
+.password-field {
+  position: relative;
+  width: 100%;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 40px; /* space for the eye icon */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.toggle-password:hover {
+  opacity: 1;
+}
+
 
 
 /* ===============================

@@ -120,7 +120,7 @@
                         <div class="book-stats">
             <span><strong>Views:</strong> <span id="detailViews">0</span></span>
             </div>
-            <p class="author-info">by <span id="detailAuthor">Author Name</span></p>
+            <p class="author-info"><span id="detailAuthor">Author Name</span></p>
             
             <div class="action-buttons">
               <button id="readBookBtn" class="btn btn-read">READ</button>
@@ -349,17 +349,17 @@
 
   </main>
 
-<!-- 🗑️ Delete Comment Confirmation Modal -->
-<div id="deleteCommentModal" class="modal hidden">
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal hidden">
   <div class="modal-content">
-    <h3>Delete Comment?</h3>
-    <p id="deleteCommentMessage">Are you sure you want to delete this comment?</p>
-    <div class="modal-buttons">
-      <button id="cancelDeleteCommentBtn" class="btn cancel-btn">Cancel</button>
-      <button id="confirmDeleteCommentBtn" class="btn delete-btn">Delete</button>
+    <p id="deleteModalMessage">Are you sure you want to delete this book?</p>
+    <div class="modal-actions">
+      <button id="confirmDeleteBtn" class="btn danger">Delete</button>
+      <button id="cancelDeleteBtn" class="btn">Cancel</button>
     </div>
   </div>
 </div>
+
 
 
   <div id="popup" class="popup hidden"></div>
