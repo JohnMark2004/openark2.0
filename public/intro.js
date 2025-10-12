@@ -120,6 +120,8 @@ if (!passwordRegex.test(password)) {
     });
 
     const data = await res.json();
+    console.log("Login response:", data);
+
     showPopup(data.message || data.error, res.ok ? "success" : "error");
 
     if (res.ok) {
@@ -161,6 +163,8 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
       localStorage.setItem("collegeYear", data.collegeYear || "N/A");
       localStorage.setItem("userId", data.id || data.userId || "");
       localStorage.setItem("pfp", data.profilePic || "assets/default-pfp.png");
+  const userId = data._id || data.id || data.userId || data.user?._id || "";
+  localStorage.setItem("userId", userId);
       closeModal(loginModal);
       window.location.href = "dashboard.html";
     }

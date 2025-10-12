@@ -345,6 +345,7 @@ if (matchedLibrarian) {
   return res.json({
     message: "Login successful",
     token,
+    _id: librarianUser._id,
     role: "librarian",
     email: librarianUser.email,
     username: librarianUser.username,
@@ -369,6 +370,7 @@ if (matchedLibrarian) {
     res.json({
       message: "Login successful",
       token,
+      _id: user._id,
       role: "student",
       email: user.email,
       username: user.username,
