@@ -1,7 +1,6 @@
 // ===============================
-// server.js (Merged: Multer + Users + Static Librarian)
+// server.js (CommonJS syntax)
 // ===============================
-
 
 require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
@@ -13,8 +12,15 @@ const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const http = require("http");  
-const { Server } = require("socket.io"); 
+const http = require("http");
+const { Server } = require("socket.io");
+
+// ✅ Gemini import MUST come before it's used
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// ✅ Now safely create the Gemini client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const gemini = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -108,6 +114,34 @@ const commentSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 const Comment = mongoose.model("Comment", commentSchema);
+
+app.post("/api/ocr", async (req, res) => {
+  try {
+    const { imageBase64, mimeType } = req.body;
+
+    const result = await gemini.generateContent({
+      contents: [
+        {
+          role: "user",
+          parts: [
+            {
+              inlineData: { data: imageBase64, mimeType },
+            },
+            {
+              text: "Extract all readable text from this image clearly and accurately.",
+            },
+          ],
+        },
+      ],
+    });
+
+    const text = result.response.text();
+    res.json({ text });
+  } catch (err) {
+    console.error("❌ OCR error:", err);
+    res.status(500).json({ error: "OCR failed" });
+  }
+});
 
 // POST a comment to a book (authenticated)
 app.post("/api/books/:id/comments", async (req, res) => {

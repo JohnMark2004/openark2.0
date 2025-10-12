@@ -121,45 +121,63 @@ if (pageUpload && pageFileName) {
   });
 }
 
-// handle add page button
 if (addPageBtn) {
-  addPageBtn.addEventListener("click", () => {
+  addPageBtn.addEventListener("click", async () => {
     const file = pageUpload.files[0];
     if (!file) {
       showPopup("⚠️ Please choose a page file first", "error");
       return;
     }
 
-    // Run OCR with Tesseract
-    Tesseract.recognize(file, "eng")
-      .then(({ data: { text } }) => {
-        if (!bookData.pageFiles) bookData.pageFiles = [];
-        bookData.pageFiles.push({ file, text });
-
-        // Show preview
-        const div = document.createElement("div");
-        div.className = "page-preview";
-        div.innerHTML = `
-          <span>${file.name} OCR ready</span>
-          <button class="remove-page-btn">Remove</button>
-        `;
-
-        div.querySelector(".remove-page-btn").addEventListener("click", () => {
-          bookData.pageFiles = bookData.pageFiles.filter(p => p.file !== file);
-          pageList.removeChild(div);
-        });
-
-        pageList.appendChild(div);
-
-        pageUpload.value = "";
-        pageFileName.textContent = "No file chosen";
-      })
-      .catch(err => {
-        console.error("OCR error:", err);
-        showPopup("⚠️ OCR failed, page saved without text", "error");
-        if (!bookData.pageFiles) bookData.pageFiles = [];
-        bookData.pageFiles.push({ file, text: "" });
+    async function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(",")[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
+    }
+
+    showPopup("⏳ Sending to Gemini OCR…");
+    try {
+      const base64 = await fileToBase64(file);
+
+      const res = await fetch(`${API_URL}/api/ocr`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: base64,
+          mimeType: file.type,
+        }),
+      });
+
+      const data = await res.json();
+      const text = data.text || "";
+
+      if (!bookData.pageFiles) bookData.pageFiles = [];
+      bookData.pageFiles.push({ file, text });
+
+      const div = document.createElement("div");
+      div.className = "page-preview";
+      div.innerHTML = `
+        <span>${file.name} OCR ready</span>
+        <button class="remove-page-btn">Remove</button>
+      `;
+      div.querySelector(".remove-page-btn").addEventListener("click", () => {
+        bookData.pageFiles = bookData.pageFiles.filter(p => p.file !== file);
+        pageList.removeChild(div);
+      });
+      pageList.appendChild(div);
+
+      pageUpload.value = "";
+      pageFileName.textContent = "No file chosen";
+      showPopup("✅ Gemini OCR finished!", "success");
+    } catch (err) {
+      console.error("OCR error:", err);
+      showPopup("⚠️ OCR failed, page saved without text", "error");
+      if (!bookData.pageFiles) bookData.pageFiles = [];
+      bookData.pageFiles.push({ file, text: "" });
+    }
   });
 }
 
