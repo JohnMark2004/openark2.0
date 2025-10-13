@@ -18,7 +18,14 @@
     </div>
     <nav data-aos="fade-down" data-aos-duration="1200">
       <a href="#" id="homeTab">Home</a>
-      <a href="#" id="conversionTab">Conversion</a>
+<div class="nav-dropdown" id="conversionMenu">
+  <a href="#" id="conversionTab">Conversion ▾</a>
+  <div class="nav-dropdown-menu hidden">
+    <div class="nav-option" data-value="organization">Book Creation (Add Book)</div>
+    <div class="nav-option" data-value="project">Book Management (Books)</div>
+  </div>
+</div>
+
       <a href="#" id="browseTab">Browse</a>
       <a href="#" id="bookmarksTab">MyBookmarks</a>
     </nav>
@@ -88,16 +95,21 @@
 <div id="loadingSpinnerHome" class="spinner hidden"></div>
     </section>
 
-    <section id="conversionSection" class="hidden">
-      <h2>Library Book Management</h2>
-        <div id="loadingSpinnerConversion" class="spinner hidden"></div>
-      <div class="featured-grid" id="conversionBooks">
-        <div class="book add-book" id="addBookBtn">
-          <span>＋</span>
-          <p>Add Book</p>
-        </div>
-      </div>
-    </section>
+<section id="conversionSection" class="hidden">
+  <h2>Library Book Management</h2>
+
+  <div class="conversion-dropdown">
+    <!-- <select id="conversionDropdown" class="dropdown-select">
+      <option value="">Select Access Type...</option>
+      <option value="organization">Organization Access (Add Book)</option>
+      <option value="project">Project Access (Books)</option>
+    </select> -->
+  </div>
+
+  <div id="loadingSpinnerConversion" class="spinner hidden"></div>
+
+  <div id="conversionBooks" class="featured-grid hidden"></div>
+</section>
 
     <section id="bookDetailsSection" class="hidden">
       <div class="book-read-container">
@@ -186,12 +198,23 @@
       <div class="creation-step" id="step1">
         <h3>Step 1: Book Information</h3>
         <form id="bookMetaForm">
-          <p><label>Book Title:<br><input type="text" name="title" required></label></p>
-          <p><label>Author:<br><input type="text" name="author" required></label></p>
-          <p><label>Publisher:<br><input type="text" name="publisher" required></label></p>
-          <p><label>Year:<br><input type="number" name="year" required></label></p>
+<p><label>Book Title: <span style="color:red">*</span><br>
+  <input type="text" name="title" required>
+</label></p>
+
+<p><label>Author: <span style="color:red">*</span><br>
+  <input type="text" name="author" required>
+</label></p>
+
+<p><label>Publisher: <span style="color:red">*</span><br>
+  <input type="text" name="publisher" required>
+</label></p>
+
+<p><label>Year: <span style="color:red">*</span><br>
+  <input type="number" name="year" required>
+</label></p>
           <p>
-<label>Genres:<br></label>
+  <label>Genres: <span style="color:red">*</span><br></label>
 <div id="categoriesButtons" class="genres-buttons">
   <h4>Subjects (Academic Focus)</h4>
   <button type="button" data-genre="Mathematics">Mathematics</button>
@@ -234,37 +257,45 @@
 </div>
 
           </p>
-          <p><label>Description:<br><textarea name="description"></textarea></label></p>
-          <p>
-            <label>Cover Image:<br>
-              <div class="file-input-wrapper">
-                <input type="file" id="coverUpload" accept="image/*">
-                <span class="file-label">Choose Cover</span>
-              </div>
-              <span id="coverFileName" class="file-name">No file chosen</span>
-            </label>
-          </p>
+<p><label>Description: <span style="color:red">*</span><br>
+  <textarea name="description" required></textarea>
+</label></p>
+<p>
+  <label>Cover Image: <span style="color:red">*</span><br>
+    <div class="file-input-wrapper">
+      <input type="file" id="coverUpload" accept="image/*" required>
+      <span class="file-label">Choose Cover</span>
+    </div>
+    <span id="coverFileName" class="file-name">No file chosen</span>
+  </label>
+</p>
           <div class="form-actions">
             <button type="button" class="btn" id="backToConversion">← Back</button>
             <button type="button" class="btn" id="nextToStep2">Next →</button>
           </div>
         </form>
       </div>
-
+      <div id="ocrSpinner" class="spinner hidden" style="margin: 10px auto;"></div>
       <div class="creation-step hidden" id="step2">
         <h3>Step 2: Upload Pages</h3>
         <div id="pageList"></div>
-        <div class="file-input-wrapper">
-          <input type="file" id="pageUpload" accept="image/*">
-          <span class="file-label">Choose Page</span>
-        </div>
-        <span id="pageFileName" class="file-name">No file chosen</span>
-        <button type="button" class="btn" id="addPageBtn">Add Page</button>
+<div class="file-input-wrapper">
+  <input type="file" id="pageUpload" accept="image/*">
+  <span class="file-label">Choose Page</span>
+</div>
+<span id="pageFileName" class="file-name">No file chosen</span>
+
+<!-- ✅ OCR Loading Spinner -->
+<div id="ocrSpinner" class="spinner hidden" style="margin: 10px auto;"></div>
+
+<button type="button" class="btn" id="addPageBtn">Add Page</button>
+
         <div class="form-actions">
           <button type="button" class="btn" id="backToStep1">← Back</button>
           <button type="button" class="btn" id="nextToStep3">Next →</button>
         </div>
       </div>
+      <div id="publishSpinner" class="spinner hidden"></div>
 
       <div class="creation-step hidden" id="step3">
         <h3>Step 3: Publish</h3>

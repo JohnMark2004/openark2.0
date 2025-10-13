@@ -77,7 +77,53 @@ function hideLoader(id = "globalLoader") {
 
   // --- Nav Tabs ---
   const homeTab = document.getElementById("homeTab");
-  const conversionTab = document.getElementById("conversionTab");
+const conversionTab = document.getElementById("conversionTab");
+const conversionMenu = document.querySelector(".nav-dropdown-menu");
+
+conversionTab.addEventListener("click", (e) => {
+  e.preventDefault();
+  conversionMenu.classList.toggle("hidden");
+});
+
+document.addEventListener("click", (e) => {
+  if (!conversionMenu.contains(e.target) && e.target !== conversionTab) {
+    conversionMenu.classList.add("hidden");
+  }
+});
+
+document.querySelectorAll(".nav-option").forEach(option => {
+  option.addEventListener("click", async () => {
+    const value = option.dataset.value;
+    conversionMenu.classList.add("hidden");
+
+    if (value === "organization") {
+      openAddBookForm();
+    } else if (value === "project") {
+  // ✅ Hide the Add Book steps if they were open
+  bookCreationSection.classList.add("hidden");
+
+  // Show only the Books section
+  conversionSection.classList.remove("hidden");
+  homeSection.classList.add("hidden");
+  browseSection.classList.add("hidden");
+  bookDetailsSection.classList.add("hidden");
+  bookReaderSection.classList.add("hidden");
+  bookmarksSection.classList.add("hidden");
+
+  // ✅ Show the container
+  const conversionBooks = document.getElementById("conversionBooks");
+  conversionBooks.classList.remove("hidden");
+
+  // ✅ Load books with delete buttons
+  await loadConversionBooks();
+
+  // ✅ Remove the "+ Add Book" card
+  const addBookCard = document.getElementById("addBookBtn");
+  if (addBookCard) addBookCard.remove();
+}
+  });
+});
+
   const browseTab = document.getElementById("browseTab");
 
   // --- Role-based UI ---
@@ -129,6 +175,9 @@ if (addPageBtn) {
       return;
     }
 
+    const ocrSpinner = document.getElementById("ocrSpinner");
+    ocrSpinner.classList.remove("hidden"); // 👈 show spinner
+
     async function fileToBase64(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -177,6 +226,8 @@ if (addPageBtn) {
       showPopup("⚠️ OCR failed, page saved without text", "error");
       if (!bookData.pageFiles) bookData.pageFiles = [];
       bookData.pageFiles.push({ file, text: "" });
+    } finally {
+      ocrSpinner.classList.add("hidden"); // 👈 hide spinner
     }
   });
 }
@@ -195,18 +246,101 @@ if (addPageBtn) {
     });
   }
 
-  if (conversionTab) {
-    conversionTab.addEventListener("click", (e) => {
-      e.preventDefault();
-      conversionSection.classList.remove("hidden");
-      homeSection.classList.add("hidden");
-      browseSection.classList.add("hidden");
-      bookDetailsSection.classList.add("hidden");
-      bookCreationSection.classList.add("hidden");
-      bookReaderSection.classList.add("hidden");
-      bookmarksSection.classList.add("hidden");
+// if (conversionTab) {
+//   conversionTab.addEventListener("click", (e) => {
+//     e.preventDefault();
+//     conversionSection.classList.remove("hidden");
+//     homeSection.classList.add("hidden");
+//     browseSection.classList.add("hidden");
+//     bookDetailsSection.classList.add("hidden");
+//     bookCreationSection.classList.add("hidden");
+//     bookReaderSection.classList.add("hidden");
+//     bookmarksSection.classList.add("hidden");
+
+//     // Reset dropdown view
+//     document.getElementById("conversionDropdown").value = "";
+//     document.getElementById("conversionAddBook").classList.add("hidden");
+//     document.getElementById("conversionBooks").classList.add("hidden");
+//   });
+// }
+
+
+function openAddBookForm() {
+  // Hide all sections except book creation
+  document.getElementById("homeSection").classList.add("hidden");
+  document.getElementById("conversionSection").classList.add("hidden");
+  document.getElementById("browseSection").classList.add("hidden");
+  document.getElementById("bookDetailsSection").classList.add("hidden");
+  document.getElementById("bookReaderSection").classList.add("hidden");
+  document.getElementById("bookCreationSection").classList.remove("hidden");
+
+  // Reset dropdown to default
+  document.getElementById("conversionDropdown").value = "";
+
+  // ✅ Always reset wizard to Step 1
+  document.querySelectorAll(".creation-step").forEach((s) =>
+    s.classList.add("hidden")
+  );
+  const firstStep = document.getElementById("step1");
+  if (firstStep) firstStep.classList.remove("hidden");
+
+  // ✅ Reset form + file names + page list
+  document.getElementById("bookMetaForm").reset();
+  document.getElementById("coverFileName").textContent = "No file chosen";
+  document.getElementById("pageFileName").textContent = "No file chosen";
+  document.getElementById("pageList").innerHTML = "";
+
+  // Clear stored bookData
+  bookData = {};
+}
+
+// Load books with delete buttons
+async function loadBooksForDeletion() {
+  const loadingSpinner = document.getElementById("loadingSpinnerConversion");
+  if (loadingSpinner) loadingSpinner.classList.remove("hidden");
+
+  try {
+    const res = await fetch(`${API_URL}/api/books`);
+    const books = await res.json();
+
+    const container = document.getElementById("conversionBooks");
+    container.innerHTML = "";
+
+    books.forEach((book) => {
+      const div = document.createElement("div");
+      div.className = "book";
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <h4>${book.title}</h4>
+        <p class="genre-label">(${book.category[0] || "N/A"})</p>
+        <button class="btn btn-delete" data-id="${book._id}">Delete</button>
+      `;
+      container.appendChild(div);
     });
+
+    // Delete button logic
+    document.querySelectorAll(".btn-delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id;
+        if (confirm("Are you sure you want to delete this book?")) {
+          const token = sessionStorage.getItem("token");
+          const res = await fetch(`${API_URL}/api/books/${id}`, {
+            method: "DELETE",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          showPopup(data.message || "Book deleted", res.ok ? "success" : "error");
+          await loadBooksForDeletion();
+        }
+      });
+    });
+  } catch (err) {
+    console.error("Failed to load books:", err);
+  } finally {
+    if (loadingSpinner) loadingSpinner.classList.add("hidden");
   }
+}
+
 
   if (browseTab) {
     browseTab.addEventListener("click", (e) => {
@@ -561,7 +695,7 @@ loadBookSlideshow();
         const addBookCard = document.createElement("div");
         addBookCard.className = "book add-book";
         addBookCard.id = "addBookBtn";
-        addBookCard.innerHTML = `<span>＋</span><p>Add Book</p>`;
+        // addBookCard.innerHTML = `<span>＋</span><p>Add Book</p>`;
         conversionBooks.appendChild(addBookCard);
 
         // Book cards
@@ -622,7 +756,7 @@ if (confirmDeleteBtn) {
 
       if (!res.ok) {
         const errText = await res.text();
-        throw new Error(errText || "Failed to delete book");
+        // throw new Error(errText || "Failed to delete book");
       }
 
       await res.json().catch(() => {});
@@ -656,6 +790,10 @@ if (confirmDeleteBtn) {
     } catch (err) {
       console.error("❌ Error loading conversion books:", err);
     }
+    // ✅ Force remove Add Book button if it ever exists
+const leftoverAddBook = document.getElementById("addBookBtn");
+if (leftoverAddBook) leftoverAddBook.remove();
+
         hideLoader("loadingSpinnerConversion");
   }
 
@@ -953,19 +1091,30 @@ if (nextToStep2) {
   nextToStep2.addEventListener("click", () => {
     const fd = new FormData(bookMetaForm);
 
-    // Save metadata + genres
+    const title = fd.get("title")?.trim();
+    const author = fd.get("author")?.trim();
+    const publisher = fd.get("publisher")?.trim();
+    const year = fd.get("year")?.trim();
+    const description = fd.get("description")?.trim();
+    const categories = Array.from(
+      document.querySelectorAll("#categoriesButtons button.active")
+    ).map(btn => btn.dataset.genre);
+
+    if (!title || !author || !publisher || !year || !description || categories.length === 0) {
+      showPopup("⚠️ Please fill out all required fields", "error");
+      return;
+    }
+
     bookData = {
-      title: fd.get("title"),
-      author: fd.get("author"),
-      publisher: fd.get("publisher"),
-      year: Number(fd.get("year")),
-      categories: Array.from(
-        document.querySelectorAll("#categoriesButtons button.active")
-      ).map(btn => btn.dataset.genre),
-      description: fd.get("description"),
+      title,
+      author,
+      publisher,
+      year: Number(year),
+      categories,
+      description,
       pages: [],
       pageFiles: [],
-      coverFile: document.getElementById("coverUpload").files[0] || null // ✅ store cover
+      coverFile: document.getElementById("coverUpload").files[0] || null
     };
 
     document.getElementById("step1").classList.add("hidden");
@@ -997,7 +1146,12 @@ if (nextToStep2) {
 
 if (publishBookBtn) {
   publishBookBtn.addEventListener("click", async () => {
+    const spinner = document.getElementById("ocrSpinner"); // ✅ reuse Step 2 loader
     try {
+      // ✅ Show spinner + disable button
+      if (spinner) spinner.classList.remove("hidden");
+      publishBookBtn.disabled = true;
+
       const fd = new FormData();
 
       // --- Required fields ---
@@ -1005,13 +1159,11 @@ if (publishBookBtn) {
       fd.append("author", bookData.author || "");
       fd.append("publisher", bookData.publisher || "");
       fd.append("year", bookData.year || "");
-      // join multiple selected genres into a single string
-if (bookData.categories && bookData.categories.length > 0) {
-  bookData.categories.forEach(c => fd.append("category", c));
-} else {
-  fd.append("category", "");
-}
-
+      if (bookData.categories && bookData.categories.length > 0) {
+        bookData.categories.forEach(c => fd.append("category", c));
+      } else {
+        fd.append("category", "");
+      }
       fd.append("description", bookData.description || "");
 
       // --- Cover file ---
@@ -1020,16 +1172,15 @@ if (bookData.categories && bookData.categories.length > 0) {
       }
 
       // --- Page files ---
-if (bookData.pageFiles && bookData.pageFiles.length > 0) {
-  const texts = [];
-  bookData.pageFiles.forEach((p) => {
-    fd.append("pages", p.file);
-    texts.push(p.text || "");
-  });
-  fd.append("pageTexts", JSON.stringify(texts));
-}
+      if (bookData.pageFiles && bookData.pageFiles.length > 0) {
+        const texts = [];
+        bookData.pageFiles.forEach((p) => {
+          fd.append("pages", p.file);
+          texts.push(p.text || "");
+        });
+        fd.append("pageTexts", JSON.stringify(texts));
+      }
 
-      // --- Debug log (optional) ---
       for (let pair of fd.entries()) {
         console.log(pair[0], pair[1]);
       }
@@ -1037,7 +1188,7 @@ if (bookData.pageFiles && bookData.pageFiles.length > 0) {
       const token = sessionStorage.getItem("token");
       const res = await fetch(`${API_URL}/api/books`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }, // ✅ only auth header, no content-type
+        headers: { Authorization: `Bearer ${token}` },
         body: fd,
       });
 
@@ -1046,25 +1197,34 @@ if (bookData.pageFiles && bookData.pageFiles.length > 0) {
         throw new Error(`Failed to publish book: ${errMsg}`);
       }
 
-showPopup("✅ Book published successfully");
-bookCreationSection.classList.add("hidden");
-conversionSection.classList.remove("hidden");
+      showPopup("✅ Book published successfully");
 
-// ✅ clear bookData + reset form
-bookData = {};
-document.getElementById("bookMetaForm").reset();
-document.getElementById("coverFileName").textContent = "No file chosen";
-document.getElementById("pageFileName").textContent = "No file chosen";
-document.getElementById("pageList").innerHTML = "";
+      // ✅ Hide creation form
+      bookCreationSection.classList.add("hidden");
 
-// refresh all book views
-await loadConversionBooks();
-await loadBooks();
-await loadBrowseBooks();
+      // ✅ Show the books list again
+      conversionSection.classList.remove("hidden");
+      document.getElementById("conversionBooks").classList.remove("hidden");
+
+      // ✅ Reset forms
+      bookData = {};
+      document.getElementById("bookMetaForm").reset();
+      document.getElementById("coverFileName").textContent = "No file chosen";
+      document.getElementById("pageFileName").textContent = "No file chosen";
+      document.getElementById("pageList").innerHTML = "";
+
+      // ✅ Refresh UI
+      await loadConversionBooks();
+      await loadBooks();
+      await loadBrowseBooks();
 
     } catch (err) {
       console.error("❌ Publish failed:", err);
       showPopup("❌ Failed to publish book", "error");
+    } finally {
+      // ✅ Hide spinner + re-enable button
+      if (spinner) spinner.classList.add("hidden");
+      publishBookBtn.disabled = false;
     }
   });
 }
@@ -1086,10 +1246,18 @@ document.getElementById("backToHomeBtn").addEventListener("click", () => {
     bookDetailsSection.classList.remove("hidden");
   });
 
-  document.getElementById("backToConversion").addEventListener("click", () => {
-    bookCreationSection.classList.add("hidden");
-    conversionSection.classList.remove("hidden");
-  });
+document.getElementById("backToConversion").addEventListener("click", () => {
+  // Hide whatever was open
+  bookCreationSection.classList.add("hidden");
+  browseSection.classList.add("hidden");
+  bookDetailsSection.classList.add("hidden");
+  bookReaderSection.classList.add("hidden");
+  conversionSection.classList.add("hidden");
+
+  // ✅ Always return to Home
+  homeSection.classList.remove("hidden");
+});
+
 
 // --- Reader ---
 const readBookBtn = document.getElementById("readBookBtn");
@@ -1557,7 +1725,6 @@ if (browseTab) {
 
   loadBooks();
   loadContinueReading();
-  loadConversionBooks();
   updateCommentFormVisibility();
 
 });
