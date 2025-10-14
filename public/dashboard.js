@@ -1458,12 +1458,17 @@ const outlineSection = document.createElement("div");
 outlineSection.className = "ppt-outline-section";
 outlineSection.innerHTML = `
   <div class="ppt-outline-box">
-    <p><strong>Want an outline for a PPT presentation?</strong><br>Just click <b>Yes</b> if you want.</p>
+    <p>
+      <strong>Want an outline for a PPT presentation?</strong><br>
+      Just click <b>Yes</b> if you want.<br>
+      <small style="color: red; font-weight: 600;">(Warning: AI-generated)</small>
+    </p>
     <button id="generateOutlineBtn" class="btn">Yes</button>
     <div id="outlineLoader" class="spinner hidden"></div>
     <div id="outlineResult" class="outline-result"></div>
   </div>
 `;
+
 readerContent.insertAdjacentElement("afterend", outlineSection);
 
 // 🎯 Event: Generate Outline
