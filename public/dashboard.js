@@ -312,6 +312,13 @@ async function loadBooksForDeletion() {
         <p class="genre-label">(${book.category[0] || "N/A"})</p>
         <button class="btn btn-delete" data-id="${book._id}">Delete</button>
       `;
+
+      // ✅ Make entire card clickable (except the delete button)
+      div.addEventListener("click", (e) => {
+        if (e.target.classList.contains("btn-delete")) return; // ignore delete button clicks
+        showBookDetails(book, conversionSection);
+      });
+
       container.appendChild(div);
     });
 
@@ -337,7 +344,6 @@ async function loadBooksForDeletion() {
     if (loadingSpinner) loadingSpinner.classList.add("hidden");
   }
 }
-
 
   if (browseTab) {
     browseTab.addEventListener("click", (e) => {
