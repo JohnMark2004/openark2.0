@@ -260,25 +260,6 @@ if (addPageBtn) {
     });
   }
 
-// if (conversionTab) {
-//   conversionTab.addEventListener("click", (e) => {
-//     e.preventDefault();
-//     conversionSection.classList.remove("hidden");
-//     homeSection.classList.add("hidden");
-//     browseSection.classList.add("hidden");
-//     bookDetailsSection.classList.add("hidden");
-//     bookCreationSection.classList.add("hidden");
-//     bookReaderSection.classList.add("hidden");
-//     bookmarksSection.classList.add("hidden");
-
-//     // Reset dropdown view
-//     document.getElementById("conversionDropdown").value = "";
-//     document.getElementById("conversionAddBook").classList.add("hidden");
-//     document.getElementById("conversionBooks").classList.add("hidden");
-//   });
-// }
-
-
 function openAddBookForm() {
   // Hide all sections except book creation
   document.getElementById("homeSection").classList.add("hidden");
@@ -288,8 +269,8 @@ function openAddBookForm() {
   document.getElementById("bookReaderSection").classList.add("hidden");
   document.getElementById("bookCreationSection").classList.remove("hidden");
 
-  // Reset dropdown to default
-  document.getElementById("conversionDropdown").value = "";
+  // ✅ Remove this line (no such element anymore)
+  // document.getElementById("conversionDropdown").value = "";
 
   // ✅ Always reset wizard to Step 1
   document.querySelectorAll(".creation-step").forEach((s) =>
@@ -307,7 +288,6 @@ function openAddBookForm() {
   // Clear stored bookData
   bookData = {};
 }
-
 
 // Load books with delete buttons
 async function loadBooksForDeletion() {
@@ -831,14 +811,20 @@ async function loadBrowseBooks({ search = "", sort = "newest", genre = "all" } =
       );
     }
 
-    // 🔹 Filter by search
-    if (search) {
-      filtered = filtered.filter(
-        (book) =>
-          book.title.toLowerCase().includes(search.toLowerCase()) ||
-          book.author.toLowerCase().includes(search.toLowerCase())
-      );
-    }
+// 🔹 Filter by search (Title, Author, Publisher, Year)
+if (search) {
+  const query = search.toLowerCase();
+  filtered = filtered.filter((book) => {
+    const yearStr = String(book.year || "");
+    return (
+      book.title?.toLowerCase().includes(query) ||
+      book.author?.toLowerCase().includes(query) ||
+      book.publisher?.toLowerCase().includes(query) ||
+      yearStr.includes(query)
+    );
+  });
+}
+
 
     // 🔹 Sort
     if (sort === "az") filtered.sort((a, b) => a.title.localeCompare(b.title));
