@@ -130,7 +130,9 @@ document.querySelectorAll(".nav-option").forEach(option => {
   conversionBooks.classList.remove("hidden");
 
   // ✅ Load books with delete buttons
-  await loadConversionBooks();
+    // ✅ Load books with delete buttons
+  await loadBooksForDeletion();  // ✅ Correct function name
+
 
   // ✅ Remove the "+ Add Book" card
   const addBookCard = document.getElementById("addBookBtn");
