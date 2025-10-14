@@ -1343,7 +1343,8 @@ showPopup("🔊 Reading aloud!");
           <button class="tts-pause-btn">⏸ Pause</button>
           <button class="tts-restart-btn">🔁 Restart</button>
         `;
-        textDiv.after(controlsDiv);
+btn.insertAdjacentElement("afterend", controlsDiv);
+
       }
 
       // 🧭 Pause button
