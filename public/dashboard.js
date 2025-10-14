@@ -77,19 +77,34 @@ function hideLoader(id = "globalLoader") {
 
   // --- Nav Tabs ---
   const homeTab = document.getElementById("homeTab");
+// --- Role-based Conversion Access ---
 const conversionTab = document.getElementById("conversionTab");
 const conversionMenu = document.querySelector(".nav-dropdown-menu");
+const conversionLink = document.querySelector("nav a:nth-child(2)");
+const role = localStorage.getItem("role") || "student";
 
-conversionTab.addEventListener("click", (e) => {
-  e.preventDefault();
-  conversionMenu.classList.toggle("hidden");
-});
+// ✅ Hide conversion features completely for students
+if (role !== "librarian") {
+  if (conversionTab) conversionTab.style.display = "none";
+  if (conversionMenu) conversionMenu.classList.add("hidden");
+  if (conversionLink) conversionLink.style.display = "none";
+  if (conversionSection) conversionSection.classList.add("hidden");
+} else {
+  // ✅ Librarian: enable normal dropdown
+  if (conversionTab && conversionMenu) {
+    conversionTab.addEventListener("click", (e) => {
+      e.preventDefault();
+      conversionMenu.classList.toggle("hidden");
+    });
 
-document.addEventListener("click", (e) => {
-  if (!conversionMenu.contains(e.target) && e.target !== conversionTab) {
-    conversionMenu.classList.add("hidden");
+    document.addEventListener("click", (e) => {
+      if (!conversionMenu.contains(e.target) && e.target !== conversionTab) {
+        conversionMenu.classList.add("hidden");
+      }
+    });
   }
-});
+}
+
 
 document.querySelectorAll(".nav-option").forEach(option => {
   option.addEventListener("click", async () => {
@@ -127,11 +142,10 @@ document.querySelectorAll(".nav-option").forEach(option => {
   const browseTab = document.getElementById("browseTab");
 
   // --- Role-based UI ---
-  const role = localStorage.getItem("role") || "student";
-  const conversionLink = document.querySelector("nav a:nth-child(2)");
-  if (role !== "librarian" && conversionLink) {
-    conversionLink.style.display = "none";
-  }
+if (role !== "librarian" && conversionLink) {
+  conversionLink.style.display = "none";
+}
+
 
   // --- Logout ---
   document.getElementById("logoutBtn").addEventListener("click", () => {
@@ -1720,6 +1734,9 @@ updateCommentFormVisibility();
 // After that call (or within it) call loadCommentsForBook(book._id) and updateCommentFormVisibility().
 // Example: (if you already override showBookDetails) add:
 
+if (role === "librarian" && conversionSection) {
+  conversionSection.style.display = "";
+}
 
 
 // --- Load bookmarks ---
