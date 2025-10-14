@@ -1443,6 +1443,67 @@ btn.insertAdjacentElement("afterend", controlsDiv);
   });
 }
 
+// ===============================
+// 🧠 Gemini PPT Outline Feature
+// ===============================
+const outlineSection = document.createElement("div");
+outlineSection.className = "ppt-outline-section";
+outlineSection.innerHTML = `
+  <div class="ppt-outline-box">
+    <p><strong>Want an outline for a PPT presentation?</strong><br>Just click <b>Yes</b> if you want.</p>
+    <button id="generateOutlineBtn" class="btn">Yes</button>
+    <div id="outlineLoader" class="spinner hidden"></div>
+    <div id="outlineResult" class="outline-result"></div>
+  </div>
+`;
+readerContent.insertAdjacentElement("afterend", outlineSection);
+
+// 🎯 Event: Generate Outline
+document.getElementById("generateOutlineBtn").addEventListener("click", async () => {
+  const outlineBtn = document.getElementById("generateOutlineBtn");
+  const outlineLoader = document.getElementById("outlineLoader");
+  const outlineResult = document.getElementById("outlineResult");
+
+  outlineBtn.disabled = true;
+  outlineLoader.classList.remove("hidden");
+  outlineResult.innerHTML = "";
+
+  try {
+    // Combine all OCR text from book pages
+    const fullText = (window.currentBook.pages || [])
+      .map(p => p.text || "")
+      .join("\n\n");
+
+    if (!fullText.trim()) {
+      showPopup("⚠️ No OCR text found in this book", "error");
+      return;
+    }
+
+    const res = await fetch(`${API_URL}/api/gemini-outline`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: fullText }),
+    });
+
+    const data = await res.json();
+    if (res.ok && data.outline) {
+      outlineResult.innerHTML = `
+        <h4>📋 Suggested PPT Outline</h4>
+        <pre>${data.outline}</pre>
+      `;
+    } else {
+      showPopup("❌ Failed to generate outline", "error");
+    }
+  } catch (err) {
+    console.error("❌ Outline generation failed:", err);
+    showPopup("Failed to generate outline", "error");
+  } finally {
+    outlineBtn.disabled = false;
+    outlineLoader.classList.add("hidden");
+  }
+});
+
+
   const bookmarksTab = document.getElementById("bookmarksTab");
 const bookmarksSection = document.getElementById("bookmarksSection");
 const bookmarksGrid = document.getElementById("bookmarksGrid");

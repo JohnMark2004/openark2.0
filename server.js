@@ -919,6 +919,39 @@ app.post('/api/tts', async (req, res) => {
   }
 });
 
+// ===============================
+// 🧠 Gemini Outline Generator (PPT summary)
+// ===============================
+app.post("/api/gemini-outline", async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: "No OCR text provided" });
+    }
+
+    const prompt = `
+You are an academic assistant. Read the following OCR text and create an outline for a PowerPoint presentation.
+
+Guidelines:
+- Create 5–8 slide titles.
+- Under each slide title, list 2–4 bullet points.
+- Focus on summarizing and organizing key ideas clearly.
+- Keep the tone professional and concise.
+
+Text:
+${text}
+`;
+
+    const result = await gemini.generateContent(prompt);
+    const outline = result.response.text();
+
+    res.json({ outline });
+  } catch (err) {
+    console.error("❌ Gemini outline generation failed:", err);
+    res.status(500).json({ error: "Failed to generate PPT outline" });
+  }
+});
+
 
 // ===============================
 // Start Server
