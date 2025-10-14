@@ -1867,6 +1867,26 @@ main {
   100% { transform: rotate(360deg); }
 }
 
+.tts-controls {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.tts-controls button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.tts-controls button:hover {
+  background: #0056b3;
+}
+
 
 /* Responsive */
 @media (max-width: 768px) {

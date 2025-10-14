@@ -1298,38 +1298,85 @@ if (readBookBtn) {
         readerContent.appendChild(div);
       });
 
-      // 🗣️ Handle TTS clicks
-      document.querySelectorAll(".tts-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const idx = btn.dataset.index;
-          const textDiv = document.getElementById(`ocr-text-${idx}`);
-          const text = textDiv.textContent.trim();
-          if (!text) {
-            showPopup("⚠️ No text found on this page", "error");
-            return;
-          }
+document.querySelectorAll(".tts-btn").forEach(btn => {
+  btn.addEventListener("click", async () => {
+    const idx = btn.dataset.index;
+    const textDiv = document.getElementById(`ocr-text-${idx}`);
+    const text = textDiv.textContent.trim();
+    if (!text) {
+      showPopup("⚠️ No text found on this page", "error");
+      return;
+    }
 
-          showPopup("🎧 Generating voice...");
-          try {
-            const res = await fetch(`${API_URL}/api/tts`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ text }),
-            });
-            const data = await res.json();
-            if (res.ok && data.url) {
-              const audio = new Audio(data.url);
-              audio.play();
-              showPopup("🔊 Reading aloud!");
-            } else {
-              showPopup("❌ TTS failed", "error");
-            }
-          } catch (err) {
-            console.error("TTS error:", err);
-            showPopup("❌ Could not generate voice", "error");
-          }
-        });
+    showPopup("🎧 Generating voice...");
+    try {
+      const res = await fetch(`${API_URL}/api/tts`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
       });
+
+      const data = await res.json();
+      if (!res.ok || !data.url) {
+        showPopup("❌ TTS failed", "error");
+        return;
+      }
+
+// 🧠 Stop any currently playing audio before starting a new one
+if (window.activeTTS && !window.activeTTS.paused) {
+  window.activeTTS.pause();
+}
+
+const audio = new Audio(data.url);
+window.activeTTS = audio;
+audio.play();
+showPopup("🔊 Reading aloud!");
+
+
+      // 🎛️ Create control buttons (Pause / Restart)
+      let controlsDiv = document.getElementById(`tts-controls-${idx}`);
+      if (!controlsDiv) {
+        controlsDiv = document.createElement("div");
+        controlsDiv.id = `tts-controls-${idx}`;
+        controlsDiv.className = "tts-controls";
+        controlsDiv.innerHTML = `
+          <button class="tts-pause-btn">⏸ Pause</button>
+          <button class="tts-restart-btn">🔁 Restart</button>
+        `;
+        textDiv.after(controlsDiv);
+      }
+
+      // 🧭 Pause button
+      const pauseBtn = controlsDiv.querySelector(".tts-pause-btn");
+      pauseBtn.onclick = () => {
+        if (audio.paused) {
+          audio.play();
+          pauseBtn.textContent = "⏸ Pause";
+        } else {
+          audio.pause();
+          pauseBtn.textContent = "▶ Resume";
+        }
+      };
+
+      // 🔄 Restart button
+      const restartBtn = controlsDiv.querySelector(".tts-restart-btn");
+      restartBtn.onclick = () => {
+        audio.currentTime = 0;
+        audio.play();
+        pauseBtn.textContent = "⏸ Pause";
+      };
+
+      // 🎧 Auto-reset buttons when finished
+      audio.addEventListener("ended", () => {
+        pauseBtn.textContent = "▶ Play Again";
+      });
+
+    } catch (err) {
+      console.error("TTS error:", err);
+      showPopup("❌ Could not generate voice", "error");
+    }
+  });
+});
 
       // 🧾 Librarian: Edit Page feature
       if (role === "librarian") {
