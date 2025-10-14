@@ -14,6 +14,7 @@ const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const { Server } = require("socket.io");
+const gTTS = require('gtts');
 
 // ✅ Gemini import MUST come before it's used
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -892,6 +893,29 @@ app.post("/api/uploadProfilePic", upload.single("profilePic"), async (req, res) 
   } catch (err) {
     console.error("❌ Profile pic upload error:", err);
     res.status(500).json({ error: "Failed to upload profile picture" });
+  }
+});
+
+// === Simple GTTS endpoint ===
+app.post('/api/tts', async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !text.trim()) {
+      return res.status(400).json({ error: 'No text provided' });
+    }
+
+    const filename = `uploads/tts-${Date.now()}.mp3`;
+    const gtts = new gTTS(text, 'en');
+    gtts.save(path.join(__dirname, filename), (err) => {
+      if (err) {
+        console.error('gTTS Error:', err);
+        return res.status(500).json({ error: 'Failed to generate speech' });
+      }
+      res.json({ url: `/${filename}` });
+    });
+  } catch (err) {
+    console.error('TTS error:', err);
+    res.status(500).json({ error: 'TTS failed' });
   }
 });
 

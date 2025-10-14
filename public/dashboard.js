@@ -294,6 +294,7 @@ function openAddBookForm() {
   bookData = {};
 }
 
+
 // Load books with delete buttons
 async function loadBooksForDeletion() {
   const loadingSpinner = document.getElementById("loadingSpinnerConversion");
@@ -1285,9 +1286,10 @@ if (readBookBtn) {
             <h4 class="page-label">Page ${idx + 1}</h4>
             ${
               role === "librarian"
-                ? `<button class="edit-page-btn" data-index="${idx}"> Edit Page</button>`
+                ? `<button class="edit-page-btn" data-index="${idx}">Edit Page</button>`
                 : ""
             }
+            <button class="tts-btn" data-index="${idx}">🔊 Read Aloud</button>
           </div>
           <div class="ocr-text" id="ocr-text-${idx}">
             ${page.text || "No text detected."}
@@ -1296,73 +1298,95 @@ if (readBookBtn) {
         readerContent.appendChild(div);
       });
 
-      // Librarian edit feature
+      // 🗣️ Handle TTS clicks
+      document.querySelectorAll(".tts-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const idx = btn.dataset.index;
+          const textDiv = document.getElementById(`ocr-text-${idx}`);
+          const text = textDiv.textContent.trim();
+          if (!text) {
+            showPopup("⚠️ No text found on this page", "error");
+            return;
+          }
+
+          showPopup("🎧 Generating voice...");
+          try {
+            const res = await fetch(`${API_URL}/api/tts`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ text }),
+            });
+            const data = await res.json();
+            if (res.ok && data.url) {
+              const audio = new Audio(data.url);
+              audio.play();
+              showPopup("🔊 Reading aloud!");
+            } else {
+              showPopup("❌ TTS failed", "error");
+            }
+          } catch (err) {
+            console.error("TTS error:", err);
+            showPopup("❌ Could not generate voice", "error");
+          }
+        });
+      });
+
+      // 🧾 Librarian: Edit Page feature
       if (role === "librarian") {
-        document.querySelectorAll(".edit-page-btn").forEach((btn) => {
+        document.querySelectorAll(".edit-page-btn").forEach(btn => {
           btn.addEventListener("click", async () => {
             const idx = btn.dataset.index;
             const textDiv = document.getElementById(`ocr-text-${idx}`);
             const oldText = textDiv.textContent.trim();
 
-            // Replace text area with large editable field
             textDiv.innerHTML = `
               <textarea id="edit-textarea-${idx}" class="edit-textarea">${oldText}</textarea>
               <div class="edit-controls">
-                <button id="save-text-${idx}" class="save-page-btn"> Save Changes</button>
-                <button id="cancel-edit-${idx}" class="cancel-page-btn"> Cancel</button>
+                <button id="save-text-${idx}" class="save-page-btn">Save Changes</button>
+                <button id="cancel-edit-${idx}" class="cancel-page-btn">Cancel</button>
               </div>
             `;
 
-            // Save handler
-            document
-              .getElementById(`save-text-${idx}`)
-              .addEventListener("click", async () => {
-                const newText = document.getElementById(
-                  `edit-textarea-${idx}`
-                ).value;
-                const token = sessionStorage.getItem("token");
+            document.getElementById(`save-text-${idx}`).addEventListener("click", async () => {
+              const newText = document.getElementById(`edit-textarea-${idx}`).value;
+              const token = sessionStorage.getItem("token");
+              try {
+                const res = await fetch(`${API_URL}/api/books/${window.currentBook._id}/pages/${idx}`, {
+                  method: "PATCH",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({ newText }),
+                });
 
-                try {
-                  const res = await fetch(
-                    `${API_URL}/api/books/${window.currentBook._id}/pages/${idx}`,
-                    {
-                      method: "PATCH",
-                      headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`,
-                      },
-                      body: JSON.stringify({ newText }),
-                    }
-                  );
-
-                  const data = await res.json();
-                  if (res.ok) {
-                    showPopup("✅ Page text updated successfully", "success");
-                    window.currentBook.pages[idx].text = newText;
-                    textDiv.innerHTML = newText;
-                  } else {
-                    showPopup(`❌ ${data.error}`, "error");
-                  }
-                } catch (err) {
-                  console.error("❌ Save failed:", err);
-                  showPopup("Failed to update page text", "error");
+                const data = await res.json();
+                if (res.ok) {
+                  showPopup("✅ Page text updated successfully", "success");
+                  window.currentBook.pages[idx].text = newText;
+                  textDiv.innerHTML = newText;
+                } else {
+                  showPopup(`❌ ${data.error}`, "error");
                 }
-              });
+              } catch (err) {
+                console.error("❌ Save failed:", err);
+                showPopup("Failed to update page text", "error");
+              }
+            });
 
-            // Cancel handler
-            document
-              .getElementById(`cancel-edit-${idx}`)
-              .addEventListener("click", () => {
-                textDiv.innerHTML = oldText;
-              });
+            document.getElementById(`cancel-edit-${idx}`).addEventListener("click", () => {
+              textDiv.innerHTML = oldText;
+            });
           });
         });
       }
+
     } else {
       readerContent.innerHTML = "<p>No pages available for this book.</p>";
     }
   });
 }
+
   const bookmarksTab = document.getElementById("bookmarksTab");
 const bookmarksSection = document.getElementById("bookmarksSection");
 const bookmarksGrid = document.getElementById("bookmarksGrid");
