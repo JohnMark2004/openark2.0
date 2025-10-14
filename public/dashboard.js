@@ -1240,6 +1240,7 @@ if (publishBookBtn) {
 
   // --- Back buttons ---
 document.getElementById("backToHomeBtn").addEventListener("click", () => {
+    document.querySelectorAll(".ppt-outline-section").forEach(el => el.remove());
   bookDetailsSection.classList.add("hidden");
 
   // ✅ return to last section (Browse or Home)
@@ -1251,11 +1252,13 @@ document.getElementById("backToHomeBtn").addEventListener("click", () => {
 });
 
   document.getElementById("backToDetailsBtn").addEventListener("click", () => {
+      document.querySelectorAll(".ppt-outline-section").forEach(el => el.remove());
     bookReaderSection.classList.add("hidden");
     bookDetailsSection.classList.remove("hidden");
   });
 
 document.getElementById("backToConversion").addEventListener("click", () => {
+    document.querySelectorAll(".ppt-outline-section").forEach(el => el.remove());
   // Hide whatever was open
   bookCreationSection.classList.add("hidden");
   browseSection.classList.add("hidden");
@@ -1282,6 +1285,11 @@ if (readBookBtn) {
 
     const readerContent = document.getElementById("readerContent");
     readerContent.innerHTML = "";
+// Clean previous outline section (if still there)
+document.querySelectorAll(".ppt-outline-section").forEach(el => el.remove());
+
+// Insert new one
+readerContent.insertAdjacentElement("afterend", outlineSection);
 
     const role = localStorage.getItem("role") || "student";
 

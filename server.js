@@ -933,6 +933,12 @@ app.post("/api/gemini-outline", async (req, res) => {
 You are an academic assistant. Read the following OCR text and create an outline for a PowerPoint presentation.
 
 Guidelines:
+- Add Introduction and Conclusion slides.
+- Each slide should have a clear title.
+- Use concise bullet points (no full sentences).
+- Avoid overly technical jargon;
+- Ensure logical flow between slides.
+- Focus on key concepts and main ideas.
 - Create 5–8 slide titles.
 - Under each slide title, list 2–4 bullet points.
 - Focus on summarizing and organizing key ideas clearly.
