@@ -137,6 +137,19 @@ const commentSchema = new mongoose.Schema({
 });
 const Comment = mongoose.model("Comment", commentSchema);
 
+// ===============================
+// 📄 ACTIVITY LOG MODEL
+// ===============================
+const activitySchema = new mongoose.Schema({
+  user: { type: String, required: true }, // username or role
+  action: { type: String, required: true }, // e.g. "Added Book", "Deleted User"
+  details: { type: String },
+  date: { type: Date, default: Date.now },
+});
+
+const Activity = mongoose.model("Activity", activitySchema);
+
+
 app.post("/api/ocr", async (req, res) => {
   try {
     const { imageBase64, mimeType } = req.body;
@@ -359,8 +372,14 @@ app.post("/api/signup", async (req, res) => {
       collegeYear,
       role: "student",
     });
-    await newUser.save();
+        await newUser.save();
 
+    // ✅ Log activity AFTER saving
+    await Activity.create({
+      user: username,
+      action: "Registered Account",
+      details: `New user registered (${email})`,
+    });
     res.json({ message: "Signup successful" });
   } catch (err) {
     console.error("❌ Signup error:", err);
@@ -569,6 +588,7 @@ app.delete("/api/users/:id", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     if (decoded.role !== "admin") return res.status(403).json({ error: "Access denied" });
@@ -577,13 +597,18 @@ app.delete("/api/users/:id", async (req, res) => {
     const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser) return res.status(404).json({ error: "User not found" });
 
+    await Activity.create({
+      user: "Admin",
+      action: "Deleted User",
+      details: `Removed account: ${deletedUser.username} (${deletedUser.email})`,
+    });
+
     res.json({ message: "User account deleted successfully" });
   } catch (err) {
     console.error("❌ Error deleting user:", err);
     res.status(500).json({ error: "Failed to delete user" });
   }
 });
-
 
 // ===============================
 // Upload Profile Picture (Students only)
@@ -707,6 +732,12 @@ parsedCategories = parsedCategories
       });
 
       await newBook.save();
+      await Activity.create({
+  user: "Librarian",
+  action: "Added Book",
+  details: `Added "${newBook.title}" by ${newBook.author}`,
+});
+
       res.status(201).json(newBook);
     } catch (err) {
       console.error("❌ Error creating book:", err);
@@ -734,6 +765,12 @@ app.delete("/api/books/:id", async (req, res) => {
 
     const deleted = await Book.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: "Book not found" });
+    await Activity.create({
+  user: "Librarian",
+  action: "Deleted Book",
+  details: `Removed "${deleted.title}" by ${deleted.author}`,
+});
+
 
     res.json({ message: "Book deleted successfully" });
   } catch (err) {
@@ -1129,6 +1166,12 @@ ${text}
 
     const result = await gemini.generateContent(prompt);
     const outline = result.response.text();
+    await Activity.create({
+  user: "Librarian",
+  action: "Generated Gemini Outline",
+  details: "Created PowerPoint outline from OCR text",
+});
+
 
     res.json({ outline });
   } catch (err) {
@@ -1204,6 +1247,19 @@ io.on("connection", (socket) => {
 function broadcastUserStatus(userId, isActive) {
   io.emit("userStatusChange", { userId, active: isActive });
 }
+
+// ===============================
+// 📊 GET RECENT ACTIVITY LOGS
+// ===============================
+app.get("/api/activity", async (req, res) => {
+  try {
+    const logs = await Activity.find().sort({ date: -1 }).limit(10).lean();
+    res.json(logs);
+  } catch (err) {
+    console.error("Error fetching activity logs:", err);
+    res.status(500).json({ message: "Failed to load activity logs" });
+  }
+});
 
 
 // ===============================

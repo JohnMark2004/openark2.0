@@ -379,3 +379,27 @@ body {
   border-color: var(--gold);
 }
 
+.modal.show {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.modal-content img {
+  display: block;
+  margin: 0 auto 1rem;
+}
+.modal-content p {
+  margin: 0.3rem 0;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.stat-card:nth-child(4) {
+  background: linear-gradient(135deg, #ffe7d6, #fff2ea);
+  border: 2px solid #ff9a6b;
+}

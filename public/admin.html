@@ -14,10 +14,12 @@
       <img src="img/logo.png" class="logo" alt="Logo">
       <h1>OpenArk Admin</h1>
     </div>
-    <nav>
-      <a href="#" id="userTab" class="active">Users</a>
-      <a href="#" id="booksTab">Books</a>
-    </nav>
+<nav>
+  <a href="#" id="userTab" class="active">Users</a>
+  <a href="#" id="booksTab">Books</a>
+  <a href="#" id="reportsTab">Reports</a>
+</nav>
+
     <div class="right">
       <button id="logoutBtn" class="btn">Logout</button>
     </div>
@@ -98,11 +100,123 @@
 </div>
 
 
-    <!-- BOOKS TAB (placeholder for later) -->
-    <section id="booksSection" class="tab-content hidden">
-      <h2>Books Management (Coming Soon)</h2>
-    </section>
-  </main>
+<!-- BOOKS TAB -->
+<section id="booksSection" class="tab-content hidden">
+  <h2>Books Management</h2>
+
+  <!-- Stats -->
+  <div class="stats-container">
+    <div class="stat-card">
+      <h3 id="totalBooks">0</h3>
+      <p>Total Books</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="recentBooks">0</h3>
+      <p>Recently Added</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="deletedBooks">0</h3>
+      <p>Deleted Books (Session)</p>
+    </div>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="search-sort-bar">
+    <div class="search-bar">
+      <input type="text" id="bookSearch" placeholder="Search books by title or author...">
+    </div>
+    <div class="sort-dropdown">
+      <select id="categoryFilter">
+        <option value="all">All Categories</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Books Table -->
+  <table class="user-table">
+    <thead>
+      <tr>
+        <th>Cover</th>
+        <th>Title</th>
+        <th>Author</th>
+        <th>Category</th>
+        <th>Publisher</th>
+        <th>Year</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="bookTableBody">
+      <tr><td colspan="6" style="text-align:center;">Loading books...</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- =============================== -->
+<!-- 📊 REPORTS TAB -->
+<!-- =============================== -->
+<section id="reportsSection" class="tab-content hidden">
+  <h2>Reports Dashboard</h2>
+
+  <!-- Summary Cards -->
+  <div class="stats-container">
+    <div class="stat-card">
+      <h3 id="reportTotalUsers">0</h3>
+      <p>Total Users</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="reportTotalBooks">0</h3>
+      <p>Total Books</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="reportTopCategory">-</h3>
+      <p>Top Category</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="reportTopBook">-</h3>
+      <p>Most Read Book</p>
+    </div>
+  </div>
+
+  <!-- Charts Placeholder -->
+  <div class="charts">
+    <canvas id="booksCategoryChart"></canvas>
+    <canvas id="booksPerMonthChart"></canvas>
+  </div>
+
+  <!-- Activity Log -->
+  <h3>Recent Activity</h3>
+  <table class="user-table">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>User</th>
+        <th>Action</th>
+        <th>Details</th>
+      </tr>
+    </thead>
+    <tbody id="activityTableBody">
+      <tr><td colspan="4" style="text-align:center;">No recent activity.</td></tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- View/Edit Modal -->
+<div id="bookModal" class="modal hidden">
+  <div class="modal-content">
+    <h3 id="modalTitle">Book Details</h3>
+    <img id="modalCover" src="img/default-book.png" style="width:100px;height:150px;border-radius:6px;margin-bottom:1rem;">
+    <p><strong>Title:</strong> <span id="modalBookTitle"></span></p>
+    <p><strong>Author:</strong> <span id="modalBookAuthor"></span></p>
+    <p><strong>Category:</strong> <span id="modalBookCategory"></span></p>
+    <p><strong>Year:</strong> <span id="modalBookYear"></span></p>
+    <div class="modal-buttons">
+      <button id="closeBookModal" class="btn cancel">Close</button>
+      <button id="deleteBookBtn" class="btn delete">Delete</button>
+    </div>
+  </div>
+</div>
+
 
   <div id="popup" class="popup"></div>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
