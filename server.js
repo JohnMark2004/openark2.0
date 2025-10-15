@@ -413,9 +413,8 @@ if (matchedLibrarian) {
     await librarianUser.save();
   }
 
-  // ✅ Mark active INSIDE here
   librarianUser.active = true;
-  await librarianUser.save();
+await librarianUser.save();
 
   const token = jwt.sign(
     { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },

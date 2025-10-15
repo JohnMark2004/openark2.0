@@ -184,6 +184,7 @@ if (res.ok) {
 
   // ✅ Redirect by role
   if (data.role === "admin") {
+    localStorage.setItem("token", data.token);
     window.location.href = "admin.html";
   } else {
     window.location.href = "dashboard.html"; // librarians & students share dashboard
