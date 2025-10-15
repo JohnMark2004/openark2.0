@@ -37,6 +37,25 @@ if (!fs.existsSync(path.join(__dirname, "uploads"))) {
 const app = express();
 
 // ===============================
+// HTTP & Socket.IO Server Setup
+// ===============================
+const httpServer = http.createServer(app);
+
+const io = new Server(httpServer, {
+  cors: {
+    origin: [
+      "http://localhost:5500",   // VS Code Live Server
+      "http://127.0.0.1:5500",
+      "http://localhost:3000",   // React/Vite local
+      "https://openark2-0.onrender.com" // deployed domain
+    ],
+    methods: ["GET", "POST"],
+    credentials: true,
+  },
+});
+
+
+// ===============================
 // Middleware
 // ===============================
 app.use(
@@ -513,10 +532,21 @@ app.post("/api/logout", async (req, res) => {
 // 👑 Admin: Manage Users
 // ===============================
 
-// Get all users
+// 👑 Admin: Manage Users (Protected)
 app.get("/api/users", async (req, res) => {
   try {
-    const users = await User.find({}, "-password"); // exclude password
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    // ✅ Ensure it's an admin account
+    if (decoded.role !== "admin") {
+      return res.status(403).json({ error: "Access denied: Admins only" });
+    }
+
+    const users = await User.find({}, "-password");
     res.json(users);
   } catch (err) {
     console.error("❌ Error fetching users:", err);
@@ -1117,23 +1147,6 @@ ${text}
   }
 });
 
-
-// ===============================
-// Start Server
-// ===============================
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: [
-      "http://localhost:5500",
-      "http://127.0.0.1:5500",
-      "http://localhost:3000",
-      "https://openark2-0.onrender.com"
-    ],
-    methods: ["GET", "POST", "DELETE"],
-  },
-});
-
 // ===============================
 // 🔌 Socket.IO Real-Time User Status
 // ===============================
@@ -1181,6 +1194,11 @@ function broadcastComment(bookId, type, payload) {
   io.to(bookId.toString()).emit("commentUpdate", { type, payload });
 }
 
-// Start the server
+// ===============================
+// ✅ Start the unified HTTP + Socket.IO server
+// ===============================
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
+
+httpServer.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+});
