@@ -162,31 +162,32 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
     const data = await res.json();
     showPopup(data.message || data.error, res.ok ? "success" : "error");
 
-    if (res.ok) {
-      sessionStorage.setItem("token", data.token);
-      localStorage.setItem("role", data.role || "student");
-      localStorage.setItem("username", data.username || "User");
-      localStorage.setItem("email", data.email || email);
-      localStorage.setItem("collegeYear", data.collegeYear || "N/A");
-      localStorage.setItem("userId", data.id || data.userId || "");
-      localStorage.setItem("pfp", data.profilePic || "assets/default-pfp.png");
+if (res.ok) {
+  sessionStorage.setItem("token", data.token);
+  localStorage.setItem("role", data.role || "student");
+  localStorage.setItem("username", data.username || "User");
+  localStorage.setItem("email", data.email || email);
+  localStorage.setItem("collegeYear", data.collegeYear || "N/A");
+  localStorage.setItem("pfp", data.profilePic || "assets/default-pfp.png");
+
+  // ✅ Always use the correct userId
   const userId = data._id || data.id || data.userId || data.user?._id || "";
   localStorage.setItem("userId", userId);
-      closeModal(loginModal);
-      // ✅ Real-time active user registration
-if (userId) {
-  socket.emit("registerUser", userId);
-  console.log("🟢 User registered for real-time updates:", userId);
-}
-if (data.role === "admin") {
-  localStorage.setItem("token", data.token);
-  window.location.href = "admin.html";
-} else if (data.role === "librarian") {
-  window.location.href = "dashboard.html";  // librarians use same dashboard
-} else if (data.role === "student") {
-  window.location.href = "dashboard.html";
-}
 
+  closeModal(loginModal);
+
+  // ✅ Register all roles except admin
+  if (userId && data.role !== "admin") {
+    socket.emit("registerUser", userId);
+    console.log(`🟢 ${data.role} registered for real-time updates:`, userId);
+  }
+
+  // ✅ Redirect by role
+  if (data.role === "admin") {
+    window.location.href = "admin.html";
+  } else {
+    window.location.href = "dashboard.html"; // librarians & students share dashboard
+  }
 
     }
   } catch (err) {

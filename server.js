@@ -1153,6 +1153,71 @@ function broadcastComment(bookId, type, payload) {
 }
 
 // ===============================
+// 🧩 SOCKET.IO REAL-TIME USER STATUS
+// ===============================
+
+io.on("connection", (socket) => {
+  console.log("🔌 Client connected:", socket.id);
+
+  // When a user (student or librarian) connects
+  socket.on("registerUser", async (userId) => {
+    if (!userId) return;
+    socket.userId = userId;
+    console.log(`👤 Registered for updates: ${userId}`);
+
+    try {
+      const user = await User.findById(userId);
+      if (user) {
+        user.active = true;
+        await user.save();
+        broadcastUserStatus(userId, true);
+      } else {
+        console.warn(`⚠️ User ${userId} not found in DB`);
+      }
+    } catch (err) {
+      console.error("❌ registerUser error:", err);
+    }
+  });
+
+  // When user disconnects
+  socket.on("disconnect", async () => {
+    if (!socket.userId) return;
+    try {
+      const user = await User.findById(socket.userId);
+      if (user) {
+        user.active = false;
+        await user.save();
+        broadcastUserStatus(socket.userId, false);
+      }
+      console.log(`🔴 User disconnected: ${socket.userId}`);
+    } catch (err) {
+      console.error("❌ Disconnect error:", err);
+    }
+  });
+
+  // Mark user inactive manually (logout)
+  socket.on("userLoggedOut", async (userId) => {
+    try {
+      const user = await User.findById(userId);
+      if (user) {
+        user.active = false;
+        await user.save();
+        broadcastUserStatus(userId, false);
+      }
+      console.log(`🚪 User logged out: ${userId}`);
+    } catch (err) {
+      console.error("❌ userLoggedOut error:", err);
+    }
+  });
+});
+
+// Helper: tell all admins that a user’s active state changed
+function broadcastUserStatus(userId, isActive) {
+  io.emit("userStatusChange", { userId, active: isActive });
+}
+
+
+// ===============================
 // ✅ Start the unified HTTP + Socket.IO server
 // ===============================
 const PORT = process.env.PORT || 5000;
