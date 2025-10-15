@@ -15,26 +15,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const activeUsers = document.getElementById("activeUsers");
   const inactiveUsers = document.getElementById("inactiveUsers");
 
-  const socket = io(API_URL);
-
-// ✅ Redirect non-admins away
-if (localStorage.getItem("role") !== "admin") {
-  window.location.href = "intro.html";
-}
-
-
-// Admin joins the "admins" room
-socket.emit("registerAdmin", "admin");
-
-// Listen for real-time updates
-socket.on("userStatusChange", ({ userId, active }) => {
-  const row = document.querySelector(`[data-id="${userId}"]`);
-  if (row) {
-    const statusEl = row.querySelector(".status");
-    statusEl.textContent = active ? "Active" : "Inactive";
-    statusEl.className = `status ${active ? "active" : "inactive"}`;
+  // ✅ Redirect non-admins away
+  if (localStorage.getItem("role") !== "admin") {
+    window.location.href = "intro.html";
+    return;
   }
-});
 
   // --- Popup ---
   function showPopup(message) {
@@ -106,6 +91,8 @@ socket.on("userStatusChange", ({ userId, active }) => {
       const res = await fetch(`${API_URL}/api/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (!res.ok) throw new Error("Failed to load users");
       const users = await res.json();
       renderUsers(users);
     } catch (err) {
@@ -159,55 +146,49 @@ socket.on("userStatusChange", ({ userId, active }) => {
     });
   }
 
-function applyFilters() {
-  const searchValue = document.getElementById("searchInput").value.toLowerCase();
-  const selectedRole = document.getElementById("roleFilter").value.toLowerCase();
-  const selectedStatus = document.getElementById("statusFilter").value.toLowerCase();
+  // --- Filters ---
+  function applyFilters() {
+    const searchValue = document.getElementById("searchInput").value.toLowerCase();
+    const selectedRole = document.getElementById("roleFilter").value.toLowerCase();
+    const selectedStatus = document.getElementById("statusFilter").value.toLowerCase();
 
-  document.querySelectorAll("#userTableBody tr").forEach((row) => {
-    const name = row.children[1]?.textContent.toLowerCase() || "";
-    const email = row.children[2]?.textContent.toLowerCase() || "";
-    const role = row.children[3]?.textContent.toLowerCase() || "";
-    const status = row.children[4]?.textContent.toLowerCase() || "";
+    document.querySelectorAll("#userTableBody tr").forEach((row) => {
+      const name = row.children[1]?.textContent.toLowerCase() || "";
+      const email = row.children[2]?.textContent.toLowerCase() || "";
+      const role = row.children[3]?.textContent.toLowerCase() || "";
+      const status = row.children[4]?.textContent.toLowerCase() || "";
 
-    const matchesSearch = name.includes(searchValue) || email.includes(searchValue);
-    const matchesRole = selectedRole === "all" || role === selectedRole;
-    const matchesStatus = selectedStatus === "all" || status === selectedStatus;
+      const matchesSearch = name.includes(searchValue) || email.includes(searchValue);
+      const matchesRole = selectedRole === "all" || role === selectedRole;
+      const matchesStatus = selectedStatus === "all" || status === selectedStatus;
 
-    row.style.display = matchesSearch && matchesRole && matchesStatus ? "" : "none";
-  });
-}
-
-document.getElementById("searchInput").addEventListener("input", applyFilters);
-document.getElementById("roleFilter").addEventListener("change", applyFilters);
-document.getElementById("statusFilter").addEventListener("change", applyFilters);
+      row.style.display = matchesSearch && matchesRole && matchesStatus ? "" : "none";
+    });
+  }
 
   document.getElementById("searchInput")?.addEventListener("input", applyFilters);
   document.getElementById("roleFilter")?.addEventListener("change", applyFilters);
+  document.getElementById("statusFilter")?.addEventListener("change", applyFilters);
 
   // --- Logout ---
-document.getElementById("logoutBtn").addEventListener("click", async () => {
-  const token = sessionStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
+    const token = sessionStorage.getItem("token");
 
-  if (userId) socket.emit("userLoggedOut", userId);
-
-  if (token) {
-    try {
-      await fetch(`${API_URL}/api/logout`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-    } catch (err) {
-      console.error("Logout error:", err);
+    if (token) {
+      try {
+        await fetch(`${API_URL}/api/logout`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } catch (err) {
+        console.error("Logout error:", err);
+      }
     }
-  }
 
-  sessionStorage.removeItem("token");
-  localStorage.clear();
-  window.location.href = "intro.html";
-});
-
+    sessionStorage.removeItem("token");
+    localStorage.clear();
+    window.location.href = "intro.html";
+  });
 
   // --- Initial Load ---
   loadUsers();

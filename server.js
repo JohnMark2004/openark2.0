@@ -1147,48 +1147,6 @@ ${text}
   }
 });
 
-// ===============================
-// 🔌 Socket.IO Real-Time User Status
-// ===============================
-io.on("connection", (socket) => {
-  console.log("🔌 A user connected:", socket.id);
-
-  // User registers their ID for real-time updates
-  socket.on("registerUser", async (userId) => {
-    if (!userId) return;
-    socket.userId = userId;
-    socket.join("admins");
-
-    console.log(`👤 User ${userId} registered for real-time updates`);
-    await User.findByIdAndUpdate(userId, { active: true });
-
-    broadcastUserStatus(userId, true);
-  });
-
-  // Manual logout
-  socket.on("userLoggedOut", async (userId) => {
-    if (!userId) return;
-    await User.findByIdAndUpdate(userId, { active: false });
-    broadcastUserStatus(userId, false);
-    console.log(`🚪 User ${userId} logged out`);
-  });
-
-  // When socket disconnects (tab closed, network lost)
-  socket.on("disconnect", async () => {
-    if (socket.userId) {
-      await User.findByIdAndUpdate(socket.userId, { active: false });
-      broadcastUserStatus(socket.userId, false);
-      console.log(`❌ User ${socket.userId} disconnected`);
-    }
-  });
-});
-
-// ✅ Helper to emit to admins
-function broadcastUserStatus(userId, active) {
-  io.to("admins").emit("userStatusChange", { userId, active });
-}
-
-
 // Helper: broadcast new or deleted comment
 function broadcastComment(bookId, type, payload) {
   io.to(bookId.toString()).emit("commentUpdate", { type, payload });

@@ -180,10 +180,13 @@ if (userId) {
 }
 if (data.role === "admin") {
   localStorage.setItem("token", data.token);
-  window.location.href = "admin.html"; // ✅ relative, not full URL
+  window.location.href = "admin.html";
+} else if (data.role === "librarian") {
+  window.location.href = "dashboard.html";  // librarians use same dashboard
 } else if (data.role === "student") {
   window.location.href = "dashboard.html";
 }
+
 
     }
   } catch (err) {
