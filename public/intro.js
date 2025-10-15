@@ -11,6 +11,9 @@ window.showPopup = function (message, type = "success") {
 // API BASE URL
 const API_URL = "https://openark2-0.onrender.com";
 
+// ✅ Initialize socket connection for real-time updates
+const socket = io(API_URL);
+
 // --- Typewriter Effect (placeholder only) ---
 const input = document.getElementById("searchInput");
 const phrases = ["Novels","Mangas","Comics","Textbooks","Magazines","Research Papers","Biographies","Science Fiction","Fantasy","Mystery","Romance"];
@@ -166,7 +169,17 @@ document.querySelector(".login-form").addEventListener("submit", async (e) => {
   const userId = data._id || data.id || data.userId || data.user?._id || "";
   localStorage.setItem("userId", userId);
       closeModal(loginModal);
-      window.location.href = "dashboard.html";
+      // ✅ Real-time active user registration
+if (userId) {
+  socket.emit("registerUser", userId);
+  console.log("🟢 User registered for real-time updates:", userId);
+}
+        // ✅ Redirect based on role
+  if (data.role === "admin") {
+    window.location.href = "admin.html";
+  } else {
+    window.location.href = "dashboard.html";
+  }
     }
   } catch (err) {
     console.error("Login failed:", err);
@@ -262,3 +275,9 @@ if (token) {
 console.log("✅ User already logged in, JWT found in sessionStorage");
 }
 })();
+
+// ✅ Real-time: Mark user inactive when leaving
+window.addEventListener("beforeunload", () => {
+  const userId = localStorage.getItem("userId");
+  if (userId) socket.emit("userLoggedOut", userId);
+});

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | OpenArk</title>
+  <link rel="stylesheet" href="admin.css">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="img/logo.png">
+</head>
+<body>
+  <header class="topbar">
+    <div class="left">
+      <img src="img/logo.png" class="logo" alt="Logo">
+      <h1>OpenArk Admin</h1>
+    </div>
+    <nav>
+      <a href="#" id="userTab" class="active">Users</a>
+      <a href="#" id="booksTab">Books</a>
+    </nav>
+    <div class="right">
+      <button id="logoutBtn" class="btn">Logout</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- USERS TAB -->
+<section id="usersSection" class="tab-content">
+  <h2>Users Management</h2>
+
+  <div class="stats-container">
+    <div class="stat-card">
+      <h3 id="totalUsers">0</h3>
+      <p>Total Users</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="activeUsers">0</h3>
+      <p>Active Users</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="inactiveUsers">0</h3>
+      <p>Inactive Users</p>
+    </div>
+  </div>
+
+  <!-- ✅ Search + Sort Container -->
+<div class="search-sort-bar">
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search users by name or email...">
+  </div>
+
+  <div class="sort-dropdown">
+    <select id="roleFilter">
+      <option value="all">All Roles</option>
+      <option value="student">Student</option>
+      <option value="librarian">Librarian</option>
+    </select>
+  </div>
+
+    <div class="status-dropdown">
+    <select id="statusFilter">
+      <option value="all">All Status</option>
+      <option value="active">Active</option>
+      <option value="inactive">Inactive</option>
+    </select>
+  </div>
+</div>
+
+  <div class="user-table-container">
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Profile</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="userTableBody">
+        <tr><td colspan="6" class="loading">Loading users...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+    <!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Confirm Deletion</h3>
+    <p>Are you sure you want to permanently delete this user account?</p>
+    <div class="modal-buttons">
+      <button id="cancelDelete" class="btn cancel">Cancel</button>
+      <button id="confirmDelete" class="btn delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="popup" class="popup"></div>
+
+
+    <!-- BOOKS TAB (placeholder for later) -->
+    <section id="booksSection" class="tab-content hidden">
+      <h2>Books Management (Coming Soon)</h2>
+    </section>
+  </main>
+
+  <div id="popup" class="popup"></div>
+  <script src="admin.js"></script>
+</body>
+</html>

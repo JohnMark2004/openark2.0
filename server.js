@@ -426,6 +426,11 @@ app.post("/api/login", async (req, res) => {
     const validPass = await bcrypt.compare(password, user.password);
     if (!validPass) return res.status(401).json({ error: "Invalid credentials" });
 
+    // Mark user as active upon login
+user.active = true;
+await user.save();
+
+
     const token = jwt.sign(
       { id: user._id, role: "student", email: user.email },
       process.env.JWT_SECRET,
@@ -448,6 +453,34 @@ app.post("/api/login", async (req, res) => {
     res.status(500).json({ error: "Login failed" });
   }
 });
+
+// ===============================
+// ✅ LOGOUT ROUTE
+// ===============================
+app.post("/api/logout", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const user = await User.findById(decoded.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    user.active = false;
+    await user.save();
+
+    // Also notify all admins in real time
+    io.to("admins").emit("userStatusChange", { userId: user._id, active: false });
+
+    res.json({ message: "User logged out successfully" });
+  } catch (err) {
+    console.error("❌ Logout error:", err);
+    res.status(500).json({ error: "Logout failed" });
+  }
+});
+
 
 // ===============================
 // 👑 Admin: Manage Users
@@ -482,6 +515,25 @@ app.put("/api/users/:id", async (req, res) => {
   } catch (err) {
     console.error("❌ Error updating user:", err);
     res.status(500).json({ error: "Failed to update user" });
+  }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "admin") return res.status(403).json({ error: "Access denied" });
+
+    const { id } = req.params;
+    const deletedUser = await User.findByIdAndDelete(id);
+    if (!deletedUser) return res.status(404).json({ error: "User not found" });
+
+    res.json({ message: "User account deleted successfully" });
+  } catch (err) {
+    console.error("❌ Error deleting user:", err);
+    res.status(500).json({ error: "Failed to delete user" });
   }
 });
 
@@ -1043,20 +1095,44 @@ const io = new Server(server, {
   },
 });
 
-// Socket.IO connection listener
+// ===============================
+// 🔌 Socket.IO Real-Time User Status
+// ===============================
 io.on("connection", (socket) => {
   console.log("🔌 A user connected:", socket.id);
 
-  // join a room for each book (so we broadcast only to relevant book viewers)
-  socket.on("joinBookRoom", (bookId) => {
-    socket.join(bookId);
-    console.log(`📚 socket ${socket.id} joined book room: ${bookId}`);
+  // User joins their own private room
+  socket.on("registerUser", async (userId) => {
+    socket.userId = userId;
+    socket.join("admins"); // Admins get updates
+    console.log(`👤 User ${userId} registered for real-time updates`);
+
+    // Mark user active
+    if (userId) {
+      await User.findByIdAndUpdate(userId, { active: true });
+      io.to("admins").emit("userStatusChange", { userId, active: true });
+    }
   });
 
-  socket.on("disconnect", () => {
-    console.log("❌ A user disconnected:", socket.id);
+  // Handle manual logout from frontend
+  socket.on("userLoggedOut", async (userId) => {
+    if (userId) {
+      await User.findByIdAndUpdate(userId, { active: false });
+      io.to("admins").emit("userStatusChange", { userId, active: false });
+      console.log(`🚪 User ${userId} logged out`);
+    }
+  });
+
+  // Auto-deactivate when user disconnects
+  socket.on("disconnect", async () => {
+    if (socket.userId) {
+      await User.findByIdAndUpdate(socket.userId, { active: false });
+      io.to("admins").emit("userStatusChange", { userId: socket.userId, active: false });
+      console.log(`❌ User ${socket.userId} disconnected`);
+    }
   });
 });
+
 
 // Helper: broadcast new or deleted comment
 function broadcastComment(bookId, type, payload) {
