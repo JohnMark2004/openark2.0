@@ -994,10 +994,11 @@ app.get(["/intro.html", "/admin.html", "/dashboard.html"], (req, res) => {
   res.sendFile(path.join(__dirname, "public", req.path));
 });
 
-// ✅ Catch-all fallback (for invalid or unknown routes only)
-app.get("*", (req, res) => {
+// ✅ Catch-all fallback (Express 5-safe)
+app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(__dirname, "public", "intro.html"));
 });
+
 
 
 // ===============================
