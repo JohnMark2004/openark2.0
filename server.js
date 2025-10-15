@@ -983,11 +983,22 @@ app.use(/^\/api(\/|$)/, (req, res) => {
 });
 
 // ===============================
-// Frontend Routes (catch-all)
+// ✅ FRONTEND ROUTES (Fixed for Render Deployment)
 // ===============================
-app.get(/^\/(?!api).*/, (req, res) => {
+
+// Serve all static files from /public (includes admin.html, dashboard.html, etc.)
+app.use(express.static(path.join(__dirname, "public")));
+
+// Explicitly handle known pages to prevent 502 errors
+app.get(["/intro.html", "/admin.html", "/dashboard.html"], (req, res) => {
+  res.sendFile(path.join(__dirname, "public", req.path));
+});
+
+// ✅ Catch-all fallback (for invalid or unknown routes only)
+app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "intro.html"));
 });
+
 
 // ===============================
 // Profile Picture Upload (Student + Librarian)

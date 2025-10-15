@@ -178,12 +178,13 @@ if (userId) {
   socket.emit("registerUser", userId);
   console.log("🟢 User registered for real-time updates:", userId);
 }
-        // ✅ Redirect based on role
-  if (data.role === "admin") {
-    window.location.href = "admin.html";
-  } else {
-    window.location.href = "dashboard.html";
-  }
+if (data.role === "admin") {
+  localStorage.setItem("token", data.token);
+  window.location.href = "admin.html"; // ✅ relative, not full URL
+} else if (data.role === "student") {
+  window.location.href = "dashboard.html";
+}
+
     }
   } catch (err) {
     console.error("Login failed:", err);
