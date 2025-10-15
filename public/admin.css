@@ -403,3 +403,148 @@ body {
   background: linear-gradient(135deg, #ffe7d6, #fff2ea);
   border: 2px solid #ff9a6b;
 }
+
+/* --- Reports Sorting --- */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1.2rem 0 0.8rem;
+}
+
+.section-header h3 {
+  font-size: 1.3rem;
+  color: var(--maroon);
+}
+
+.sort-dropdown select {
+  padding: 0.5rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sort-dropdown select:hover {
+  border-color: var(--maroon);
+  box-shadow: 0 0 0 2px rgba(154, 63, 63, 0.2);
+}
+
+/* ==============================
+   📊 Recent Activity Header Layout Fix
+   ============================== */
+.activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 1.5rem 0 1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.activity-header h3 {
+  color: var(--maroon);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* Container for Sort + Month controls */
+.activity-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Aligns each control neatly */
+.activity-controls > div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Styling for dropdowns and month input */
+.activity-controls select,
+.activity-controls input[type="month"] {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--maroon);
+  background: var(--beige);
+  color: var(--maroon);
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.activity-controls select:hover,
+.activity-controls input[type="month"]:hover {
+  background: var(--maroon);
+  color: var(--beige);
+  border-color: var(--gold);
+}
+
+/* Filter button */
+.activity-controls .btn.small {
+  padding: 0.5rem 1rem;
+  background: var(--beige);
+  color: var(--maroon);
+  border-radius: 20px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+.activity-controls .btn.small:hover {
+  background: var(--maroon);
+  color: var(--beige);
+}
+
+/* ==============================
+   📤 Export Buttons (Formal Layout)
+   ============================== */
+.activity-export {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.activity-export .btn.small {
+  padding: 0.5rem 1rem;
+  background: var(--beige);
+  color: var(--maroon);
+  border-radius: 20px;
+  font-weight: 600;
+  border: 1px solid var(--maroon);
+  transition: all 0.3s ease;
+}
+
+.activity-export .btn.small:hover {
+  background: var(--maroon);
+  color: var(--beige);
+  border-color: var(--gold);
+}
+
+@media (max-width: 768px) {
+  .activity-export {
+    justify-content: center;
+  }
+}
+
+
+/* Make it look good on smaller screens */
+@media (max-width: 768px) {
+  .activity-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .activity-controls {
+    justify-content: flex-start;
+  }
+}

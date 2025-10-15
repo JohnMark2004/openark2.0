@@ -177,14 +177,27 @@
     </div>
   </div>
 
-  <!-- Charts Placeholder -->
-  <div class="charts">
-    <canvas id="booksCategoryChart"></canvas>
-    <canvas id="booksPerMonthChart"></canvas>
-  </div>
-
-  <!-- Activity Log -->
+<div class="activity-controls">
   <h3>Recent Activity</h3>
+  <div class="activity-options">
+    <div class="sort-section">
+      <label for="activitySort">Sort by:</label>
+      <select id="activitySort">
+        <option value="newest">Newest → Oldest</option>
+        <option value="oldest">Oldest → Newest</option>
+        <option value="user">User Name (A–Z)</option>
+        <option value="action">Action Type (A–Z)</option>
+      </select>
+    </div>
+    <div class="filter-section">
+      <label for="monthFilter">📅 Month:</label>
+      <input type="month" id="monthFilter">
+      <button id="filterMonthBtn" class="btn">Filter</button>
+    </div>
+  </div>
+</div>
+
+
   <table class="user-table">
     <thead>
       <tr>
@@ -198,6 +211,12 @@
       <tr><td colspan="4" style="text-align:center;">No recent activity.</td></tr>
     </tbody>
   </table>
+  <div class="activity-export">
+  <button id="exportPNG" class="btn small">🖼️ Download PNG</button>
+  <button id="exportPDF" class="btn small">📄 Download PDF</button>
+  <button id="exportExcel" class="btn small">📊 Download Excel</button>
+</div>
+
 </section>
 
 
@@ -217,8 +236,26 @@
   </div>
 </div>
 
+<!-- 🗑️ Book Delete Confirmation Modal -->
+<div id="bookDeleteModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Confirm Book Deletion</h3>
+    <p>Are you sure you want to permanently delete this book from the library?</p>
+    <div class="modal-buttons">
+      <button id="cancelBookDelete" class="btn cancel">Cancel</button>
+      <button id="confirmBookDelete" class="btn delete">Delete</button>
+    </div>
+  </div>
+</div>
+
 
   <div id="popup" class="popup"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script src="admin.js"></script>
 </body>

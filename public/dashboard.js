@@ -322,22 +322,61 @@ async function loadBooksForDeletion() {
       container.appendChild(div);
     });
 
-    // Delete button logic
-    document.querySelectorAll(".btn-delete").forEach((btn) => {
-      btn.addEventListener("click", async () => {
-        const id = btn.dataset.id;
-        if (confirm("Are you sure you want to delete this book?")) {
-          const token = sessionStorage.getItem("token");
-          const res = await fetch(`${API_URL}/api/books/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          const data = await res.json();
-          showPopup(data.message || "Book deleted", res.ok ? "success" : "error");
-          await loadBooksForDeletion();
-        }
-      });
+// --- Delete button logic (with modal) ---
+document.querySelectorAll(".btn-delete").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    const id = btn.dataset.id;
+    const bookCard = btn.closest(".book");
+    const title = bookCard.querySelector("h4")?.textContent || "this book";
+
+    // update modal text
+    document.getElementById("deleteModalMessage").textContent =
+      `Are you sure you want to delete “${title}”?`;
+
+    // show modal
+    const modal = document.getElementById("deleteModal");
+    modal.classList.remove("hidden");
+
+    const confirmBtn = document.getElementById("confirmDeleteBtn");
+    const cancelBtn = document.getElementById("cancelDeleteBtn");
+
+    // remove old event listeners (prevent duplicates)
+    const newConfirm = confirmBtn.cloneNode(true);
+    const newCancel = cancelBtn.cloneNode(true);
+    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+    // cancel action
+    newCancel.addEventListener("click", () => {
+      modal.classList.add("hidden");
     });
+
+    // confirm delete
+    newConfirm.addEventListener("click", async () => {
+      const token = sessionStorage.getItem("token");
+      try {
+        const res = await fetch(`${API_URL}/api/books/${id}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          showPopup(`✅ Deleted “${title}” successfully`, "success");
+          await loadBooksForDeletion();
+        } else {
+          showPopup(`❌ ${data.error || "Failed to delete"}`, "error");
+        }
+      } catch (err) {
+        console.error("Delete error:", err);
+        showPopup("❌ Failed to delete book", "error");
+      } finally {
+        modal.classList.add("hidden");
+      }
+    });
+  });
+});
+
   } catch (err) {
     console.error("Failed to load books:", err);
   } finally {
@@ -721,14 +760,60 @@ div.innerHTML = `
             showBookDetails(book, conversionSection)
           );
 
-          div.querySelector(".delete-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            bookToDelete = book;
-            document.getElementById(
-              "deleteModalMessage"
-            ).textContent = `Are you sure you want to delete "${book.title}"?`;
-            document.getElementById("deleteModal").classList.remove("hidden");
-          });
+div.querySelector(".delete-btn").addEventListener("click", (e) => {
+  e.stopPropagation();
+  const modal = document.getElementById("deleteModal");
+  const msg = document.getElementById("deleteModalMessage");
+  const confirmBtn = document.getElementById("confirmDeleteBtn");
+  const cancelBtn = document.getElementById("cancelDeleteBtn");
+
+  // set book to delete
+  bookToDelete = book;
+  msg.textContent = `Are you sure you want to delete “${book.title}”?`;
+
+  // show modal
+  modal.classList.remove("hidden");
+
+  // remove old listeners (avoid stacking)
+  const newConfirm = confirmBtn.cloneNode(true);
+  const newCancel = cancelBtn.cloneNode(true);
+  confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
+  cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
+
+  // cancel
+  newCancel.addEventListener("click", () => {
+    modal.classList.add("hidden");
+    bookToDelete = null;
+  });
+
+  // confirm delete
+  newConfirm.addEventListener("click", async () => {
+    const token = sessionStorage.getItem("token");
+    if (!bookToDelete) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/books/${bookToDelete._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showPopup(`✅ Deleted “${bookToDelete.title}” successfully`, "success");
+        await loadConversionBooks();
+      } else {
+        showPopup(`❌ ${data.error || "Failed to delete"}`, "error");
+      }
+    } catch (err) {
+      console.error("Delete error:", err);
+      showPopup("❌ Failed to delete book", "error");
+    } finally {
+      modal.classList.add("hidden");
+      bookToDelete = null;
+    }
+  });
+});
+
 
           conversionBooks.appendChild(div);
         });
