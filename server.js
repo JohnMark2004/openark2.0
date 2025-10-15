@@ -149,6 +149,62 @@ const activitySchema = new mongoose.Schema({
 
 const Activity = mongoose.model("Activity", activitySchema);
 
+// ===============================
+// 📊 REPORT MODEL
+// ===============================
+const reportSchema = new mongoose.Schema({
+  totalUsers: { type: Number, default: 0 },
+  totalBooks: { type: Number, default: 0 },
+  topCategory: { type: String, default: "N/A" },
+  topBook: { type: String, default: "N/A" },
+  lastUpdated: { type: Date, default: Date.now },
+});
+
+const Report = mongoose.model("Report", reportSchema);
+
+// ===============================
+// 📈 REPORT AUTO-UPDATER
+// ===============================
+async function updateReport() {
+  try {
+    const usersCount = await User.countDocuments();
+    const books = await Book.find();
+
+    // Count category frequency
+    const categoryCount = {};
+    books.forEach(b => {
+      const cats = Array.isArray(b.category) ? b.category : [b.category];
+      cats.forEach(c => {
+        if (c) categoryCount[c] = (categoryCount[c] || 0) + 1;
+      });
+    });
+
+    // Find top category
+    const topCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0];
+
+    // Find "top book" by number of pages (as a simple metric)
+    const topBook =
+      books.length > 0
+        ? books.reduce((max, b) => (b.pages.length > max.pages.length ? b : max))
+        : null;
+
+    await Report.findOneAndUpdate(
+      {},
+      {
+        totalUsers: usersCount,
+        totalBooks: books.length,
+        topCategory: topCategory ? topCategory[0] : "N/A",
+        topBook: topBook ? topBook.title : "N/A",
+        lastUpdated: Date.now(),
+      },
+      { upsert: true, new: true }
+    );
+  } catch (err) {
+    console.error("❌ Failed to update report:", err);
+  }
+}
+
+
 
 app.post("/api/ocr", async (req, res) => {
   try {
@@ -301,16 +357,6 @@ app.delete("/api/comments/:commentId", async (req, res) => {
 // ===============================
 // ✅ ADMIN: Get All Users + Delete User
 // ===============================
-app.get("/api/users", async (req, res) => {
-  try {
-    const users = await User.find().select("-password");
-    res.json(users);
-  } catch (err) {
-    console.error("❌ Get users error:", err);
-    res.status(500).json({ error: "Failed to load users" });
-  }
-});
-
 app.delete("/api/users/:id", async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
@@ -380,6 +426,7 @@ app.post("/api/signup", async (req, res) => {
       action: "Registered Account",
       details: `New user registered (${email})`,
     });
+    await updateReport();
     res.json({ message: "Signup successful" });
   } catch (err) {
     console.error("❌ Signup error:", err);
@@ -737,7 +784,7 @@ parsedCategories = parsedCategories
   action: "Added Book",
   details: `Added "${newBook.title}" by ${newBook.author}`,
 });
-
+await updateReport();
       res.status(201).json(newBook);
     } catch (err) {
       console.error("❌ Error creating book:", err);
@@ -1031,6 +1078,42 @@ app.patch("/api/books/:bookId/pages/:pageIndex", async (req, res) => {
   }
 });
 
+// ===============================
+// 📊 REPORT SUMMARY API (For Admin Reports Tab)
+// ===============================
+app.get("/api/report-summary", async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    const totalBooks = await Book.countDocuments();
+
+    const books = await Book.find({}, "category title author");
+    const categoryCount = {};
+    books.forEach(b => {
+      const cats = Array.isArray(b.category) ? b.category : [b.category];
+      cats.forEach(c => {
+        if (c) categoryCount[c] = (categoryCount[c] || 0) + 1;
+      });
+    });
+    const topCategory = Object.entries(categoryCount)
+      .sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+    let topBook = "N/A";
+    if (books.length > 0) {
+      const top = books.reduce((max, b) => {
+        const views = b.views || b.readCount || 0;
+        return views > (max.views || max.readCount || 0) ? b : max;
+      });
+      topBook = `${top.title} (${top.views || top.readCount || 0} reads)`;
+    }
+
+    res.json({ totalUsers, totalBooks, topCategory, topBook });
+  } catch (err) {
+    console.error("❌ Report summary error:", err);
+    res.status(500).json({ error: "Failed to load report summary" });
+  }
+});
+
+
 
 // ===============================
 // API Fallback (must come after all /api routes)
@@ -1260,7 +1343,6 @@ app.get("/api/activity", async (req, res) => {
     res.status(500).json({ message: "Failed to load activity logs" });
   }
 });
-
 
 // ===============================
 // ✅ Start the unified HTTP + Socket.IO server

@@ -49,6 +49,8 @@ booksTab.addEventListener("click", (e) => {
   usersSection.classList.add("hidden");
   booksSection.classList.remove("hidden");
   reportsSection.classList.add("hidden");
+
+  loadBooks();
 });
 
 
@@ -367,41 +369,17 @@ async function loadReports() {
   try {
     const token = sessionStorage.getItem("token");
 
-    const [usersRes, booksRes] = await Promise.all([
-      fetch(`${API_URL}/api/users`, { headers: { Authorization: `Bearer ${token}` } }),
-      fetch(`${API_URL}/api/books`, { headers: { Authorization: `Bearer ${token}` } })
-    ]);
+// --- Load Summary from Database ---
+const reportRes = await fetch(`${API_URL}/api/report-summary`, {
+  headers: { Authorization: `Bearer ${token}` },
+});
+const report = await reportRes.json();
 
-    const users = await usersRes.json();
-    const books = await booksRes.json();
+reportTotalUsers.textContent = report.totalUsers || 0;
+reportTotalBooks.textContent = report.totalBooks || 0;
+reportTopCategory.textContent = report.topCategory || "N/A";
+reportTopBook.textContent = report.topBook || "N/A";
 
-    // --- Summary Stats ---
-    reportTotalUsers.textContent = users.length;
-    reportTotalBooks.textContent = books.length;
-
-    // --- Top Category ---
-    const categoryCount = {};
-    books.forEach(b => {
-      const cats = Array.isArray(b.category) ? b.category : [b.category];
-      cats.forEach(c => {
-        if (c) categoryCount[c] = (categoryCount[c] || 0) + 1;
-      });
-    });
-
-    const topCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0];
-    reportTopCategory.textContent = topCategory ? topCategory[0] : "N/A";
-
-    // --- Most Read Book ---
-    let topBook = null;
-    if (books.length > 0) {
-      topBook = books.reduce((max, b) => {
-        const views = b.views || b.readCount || 0;
-        return views > (max.views || max.readCount || 0) ? b : max;
-      });
-    }
-    reportTopBook.textContent = topBook
-      ? `${topBook.title} (${topBook.views || topBook.readCount || 0} reads)`
-      : "N/A";
 
 // --- Load Real Recent Activity ---
 const activityRes = await fetch(`${API_URL}/api/activity`, {
