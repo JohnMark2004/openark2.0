@@ -9,7 +9,11 @@ window.showPopup = function (message, type = "success") {
 };
 
 // API BASE URL
-const API_URL = "https://openark2-0.onrender.com";
+const API_URL =
+  window.location.hostname === "localhost"
+    ? "http://localhost:5000"
+    : "https://openark2-0.onrender.com";
+
 
 // ✅ Initialize socket connection for real-time updates
 const socket = io(API_URL);

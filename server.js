@@ -86,7 +86,8 @@ const userSchema = new mongoose.Schema({
     },
   ],
   profilePic: { type: String, default: "assets/default-pfp.jpg" },
-  active: { type: Boolean, default: true }
+  active: { type: Boolean, default: false }
+
 });
 const User = mongoose.model("User", userSchema);
 
@@ -264,6 +265,31 @@ app.delete("/api/comments/:commentId", async (req, res) => {
     res.status(500).json({ error: "Failed to delete comment" });
   }
 });
+
+// ===============================
+// ✅ ADMIN: Get All Users + Delete User
+// ===============================
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (err) {
+    console.error("❌ Get users error:", err);
+    res.status(500).json({ error: "Failed to load users" });
+  }
+});
+
+app.delete("/api/users/:id", async (req, res) => {
+  try {
+    const user = await User.findByIdAndDelete(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    res.json({ message: "User deleted successfully" });
+  } catch (err) {
+    console.error("❌ Delete user error:", err);
+    res.status(500).json({ error: "Failed to delete user" });
+  }
+});
+
 
 // ===============================
 // Get Single Book by ID
@@ -457,6 +483,7 @@ await user.save();
 // ===============================
 // ✅ LOGOUT ROUTE
 // ===============================
+// ✅ LOGOUT ROUTE — sets user inactive
 app.post("/api/logout", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
@@ -468,13 +495,13 @@ app.post("/api/logout", async (req, res) => {
     const user = await User.findById(decoded.id);
     if (!user) return res.status(404).json({ error: "User not found" });
 
-    user.active = false;
+    user.active = false; // 🔹 mark inactive
     await user.save();
 
-    // Also notify all admins in real time
-    io.to("admins").emit("userStatusChange", { userId: user._id, active: false });
+    // 🔹 broadcast to admin
+    broadcastUserStatus(user._id, false);
 
-    res.json({ message: "User logged out successfully" });
+    res.json({ message: "Logout successful" });
   } catch (err) {
     console.error("❌ Logout error:", err);
     res.status(500).json({ error: "Logout failed" });
@@ -1101,37 +1128,40 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
   console.log("🔌 A user connected:", socket.id);
 
-  // User joins their own private room
+  // User registers their ID for real-time updates
   socket.on("registerUser", async (userId) => {
+    if (!userId) return;
     socket.userId = userId;
-    socket.join("admins"); // Admins get updates
+    socket.join("admins");
+
     console.log(`👤 User ${userId} registered for real-time updates`);
+    await User.findByIdAndUpdate(userId, { active: true });
 
-    // Mark user active
-    if (userId) {
-      await User.findByIdAndUpdate(userId, { active: true });
-      io.to("admins").emit("userStatusChange", { userId, active: true });
-    }
+    broadcastUserStatus(userId, true);
   });
 
-  // Handle manual logout from frontend
+  // Manual logout
   socket.on("userLoggedOut", async (userId) => {
-    if (userId) {
-      await User.findByIdAndUpdate(userId, { active: false });
-      io.to("admins").emit("userStatusChange", { userId, active: false });
-      console.log(`🚪 User ${userId} logged out`);
-    }
+    if (!userId) return;
+    await User.findByIdAndUpdate(userId, { active: false });
+    broadcastUserStatus(userId, false);
+    console.log(`🚪 User ${userId} logged out`);
   });
 
-  // Auto-deactivate when user disconnects
+  // When socket disconnects (tab closed, network lost)
   socket.on("disconnect", async () => {
     if (socket.userId) {
       await User.findByIdAndUpdate(socket.userId, { active: false });
-      io.to("admins").emit("userStatusChange", { userId: socket.userId, active: false });
+      broadcastUserStatus(socket.userId, false);
       console.log(`❌ User ${socket.userId} disconnected`);
     }
   });
 });
+
+// ✅ Helper to emit to admins
+function broadcastUserStatus(userId, active) {
+  io.to("admins").emit("userStatusChange", { userId, active });
+}
 
 
 // Helper: broadcast new or deleted comment

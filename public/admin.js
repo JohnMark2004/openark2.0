@@ -17,6 +17,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const socket = io(API_URL);
 
+// ✅ Redirect non-admins away
+if (localStorage.getItem("role") !== "admin") {
+  window.location.href = "intro.html";
+}
+
+
 // Admin joins the "admins" room
 socket.emit("registerAdmin", "admin");
 
