@@ -85,7 +85,8 @@ const userSchema = new mongoose.Schema({
       updatedAt: { type: Date, default: Date.now },
     },
   ],
-  profilePic: { type: String, default: "assets/default-pfp.jpg" }
+  profilePic: { type: String, default: "assets/default-pfp.jpg" },
+  active: { type: Boolean, default: true }
 });
 const User = mongoose.model("User", userSchema);
 
@@ -326,70 +327,99 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-// ===============================
-// Librarian Login (Static Librarians)
-// ===============================
-const staticLibrarians = [
-  { email: "librarian1@gmail.com", password: "libpass1", username: "Librarian 1" },
-  { email: "librarian2@gmail.com", password: "libpass2", username: "Librarian 2" },
-  { email: "librarian3@gmail.com", password: "libpass3", username: "Librarian 3" },
-  { email: "librarian4@gmail.com", password: "libpass4", username: "Librarian 4" },
-  { email: "librarian5@gmail.com", password: "libpass5", username: "Librarian 5" },
-];
+    // ===============================
+    // ✅ 1. Static Librarian Login
+    // ===============================
+    const staticLibrarians = [
+      { email: "librarian1@gmail.com", password: "libpass1", username: "Librarian 1" },
+      { email: "librarian2@gmail.com", password: "libpass2", username: "Librarian 2" },
+      { email: "librarian3@gmail.com", password: "libpass3", username: "Librarian 3" },
+      { email: "librarian4@gmail.com", password: "libpass4", username: "Librarian 4" },
+      { email: "librarian5@gmail.com", password: "libpass5", username: "Librarian 5" },
+    ];
 
-const matchedLibrarian = staticLibrarians.find(
-  (lib) => lib.email === email && lib.password === password
-);
+    const matchedLibrarian = staticLibrarians.find(
+      (lib) => lib.email === email && lib.password === password
+    );
 
-if (matchedLibrarian) {
-  const index = staticLibrarians.indexOf(matchedLibrarian);
+    if (matchedLibrarian) {
+      const index = staticLibrarians.indexOf(matchedLibrarian);
 
-  // 🧩 Local librarian profile images (non-changeable)
-  const librarianImages = [
-    "assets/librarian1.png",
-    "assets/librarian1.png",
-    "assets/librarian1.png",
-    "assets/librarian1.png",
-    "assets/librarian1.png",
-  ];
+      // Local librarian profile images
+      const librarianImages = [
+        "assets/librarian1.png",
+        "assets/librarian1.png",
+        "assets/librarian1.png",
+        "assets/librarian1.png",
+        "assets/librarian1.png",
+      ];
 
-  // ensure librarian exists in DB (so comments/bookmarks work)
-  let librarianUser = await User.findOne({ email: matchedLibrarian.email });
-  if (!librarianUser) {
-    librarianUser = new User({
-      username: matchedLibrarian.username,
-      email: matchedLibrarian.email,
-      password: await bcrypt.hash(matchedLibrarian.password, 10),
-      role: "librarian",
-      collegeYear: "N/A",
-      profilePic: librarianImages[index], // ✅ fixed image in DB
-    });
-    await librarianUser.save();
-  } else if (librarianUser.profilePic !== librarianImages[index]) {
-    // update pic if not matching
-    librarianUser.profilePic = librarianImages[index];
-    await librarianUser.save();
-  }
+      // ensure librarian exists in DB
+      let librarianUser = await User.findOne({ email: matchedLibrarian.email });
+      if (!librarianUser) {
+        librarianUser = new User({
+          username: matchedLibrarian.username,
+          email: matchedLibrarian.email,
+          password: await bcrypt.hash(matchedLibrarian.password, 10),
+          role: "librarian",
+          collegeYear: "N/A",
+          profilePic: librarianImages[index],
+        });
+        await librarianUser.save();
+      } else if (librarianUser.profilePic !== librarianImages[index]) {
+        librarianUser.profilePic = librarianImages[index];
+        await librarianUser.save();
+      }
 
-  const token = jwt.sign(
-    { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
-    process.env.JWT_SECRET,
-    { expiresIn: "24h" }
-  );
+      const token = jwt.sign(
+        { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" }
+      );
 
-  return res.json({
-    message: "Login successful",
-    token,
-    _id: librarianUser._id,
-    role: "librarian",
-    email: librarianUser.email,
-    username: librarianUser.username,
-    profilePic: librarianUser.profilePic, // ✅ send correct local image
-  });
-}
+      return res.json({
+        message: "Login successful",
+        token,
+        _id: librarianUser._id,
+        role: "librarian",
+        email: librarianUser.email,
+        username: librarianUser.username,
+        profilePic: librarianUser.profilePic,
+      });
+    }
 
+    // ===============================
+    // ✅ 2. ✨ Static Admin Login (INSERTED HERE!)
+    // ===============================
+    const staticAdmins = [
+      { email: "admin@gmail.com", password: "admin123", username: "Admin", role: "admin" }
+    ];
 
-    // Otherwise, check student in DB
+    const matchedAdmin = staticAdmins.find(
+      (admin) => admin.email === email && admin.password === password
+    );
+
+    if (matchedAdmin) {
+      const token = jwt.sign(
+        { id: matchedAdmin.email, role: "admin", email: matchedAdmin.email },
+        process.env.JWT_SECRET,
+        { expiresIn: "24h" }
+      );
+
+      return res.json({
+        message: "Admin login successful",
+        token,
+        _id: matchedAdmin.email,
+        role: "admin",
+        email: matchedAdmin.email,
+        username: matchedAdmin.username,
+        profilePic: "assets/admin.png" // Optional default
+      });
+    }
+
+    // ===============================
+    // ✅ 3. Student Login (Database)
+    // ===============================
     const user = await User.findOne({ email });
     if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
@@ -412,11 +442,49 @@ if (matchedLibrarian) {
       collegeYear: user.collegeYear,
       profilePic: user.profilePic,
     });
+
   } catch (err) {
     console.error("❌ Login error:", err);
     res.status(500).json({ error: "Login failed" });
   }
 });
+
+// ===============================
+// 👑 Admin: Manage Users
+// ===============================
+
+// Get all users
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await User.find({}, "-password"); // exclude password
+    res.json(users);
+  } catch (err) {
+    console.error("❌ Error fetching users:", err);
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+});
+
+// Update user active status
+app.put("/api/users/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { active } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      id,
+      { active },
+      { new: true, runValidators: true }
+    );
+
+    if (!user) return res.status(404).json({ error: "User not found" });
+
+    res.json({ message: `User ${active ? "activated" : "deactivated"} successfully`, user });
+  } catch (err) {
+    console.error("❌ Error updating user:", err);
+    res.status(500).json({ error: "Failed to update user" });
+  }
+});
+
 
 // ===============================
 // Upload Profile Picture (Students only)
