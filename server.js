@@ -369,6 +369,9 @@ app.post("/api/signup", async (req, res) => {
 });
 
 app.post("/api/login", async (req, res) => {
+  console.log("📩 /api/login request received");
+console.log("Request body:", req.body);
+
   try {
     const { email, password } = req.body;
 
@@ -407,14 +410,12 @@ if (matchedLibrarian) {
       collegeYear: "N/A",
       profilePic: librarianImages[index],
     });
-    await librarianUser.save();
   } else if (librarianUser.profilePic !== librarianImages[index]) {
     librarianUser.profilePic = librarianImages[index];
-    await librarianUser.save();
   }
 
   librarianUser.active = true;
-await librarianUser.save();
+  await librarianUser.save();
 
   const token = jwt.sign(
     { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
@@ -432,9 +433,6 @@ await librarianUser.save();
     profilePic: librarianUser.profilePic,
   });
 }
-
-    librarianUser.active = true;
-await librarianUser.save();
 
     // ===============================
     // ✅ 2. ✨ Static Admin Login (INSERTED HERE!)
