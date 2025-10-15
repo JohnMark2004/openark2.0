@@ -387,51 +387,52 @@ app.post("/api/login", async (req, res) => {
       (lib) => lib.email === email && lib.password === password
     );
 
-    if (matchedLibrarian) {
-      const index = staticLibrarians.indexOf(matchedLibrarian);
+if (matchedLibrarian) {
+  const index = staticLibrarians.indexOf(matchedLibrarian);
+  const librarianImages = [
+    "assets/librarian1.png",
+    "assets/librarian1.png",
+    "assets/librarian1.png",
+    "assets/librarian1.png",
+    "assets/librarian1.png",
+  ];
 
-      // Local librarian profile images
-      const librarianImages = [
-        "assets/librarian1.png",
-        "assets/librarian1.png",
-        "assets/librarian1.png",
-        "assets/librarian1.png",
-        "assets/librarian1.png",
-      ];
+  let librarianUser = await User.findOne({ email: matchedLibrarian.email });
+  if (!librarianUser) {
+    librarianUser = new User({
+      username: matchedLibrarian.username,
+      email: matchedLibrarian.email,
+      password: await bcrypt.hash(matchedLibrarian.password, 10),
+      role: "librarian",
+      collegeYear: "N/A",
+      profilePic: librarianImages[index],
+    });
+    await librarianUser.save();
+  } else if (librarianUser.profilePic !== librarianImages[index]) {
+    librarianUser.profilePic = librarianImages[index];
+    await librarianUser.save();
+  }
 
-      // ensure librarian exists in DB
-      let librarianUser = await User.findOne({ email: matchedLibrarian.email });
-      if (!librarianUser) {
-        librarianUser = new User({
-          username: matchedLibrarian.username,
-          email: matchedLibrarian.email,
-          password: await bcrypt.hash(matchedLibrarian.password, 10),
-          role: "librarian",
-          collegeYear: "N/A",
-          profilePic: librarianImages[index],
-        });
-        await librarianUser.save();
-      } else if (librarianUser.profilePic !== librarianImages[index]) {
-        librarianUser.profilePic = librarianImages[index];
-        await librarianUser.save();
-      }
+  // ✅ Mark active INSIDE here
+  librarianUser.active = true;
+  await librarianUser.save();
 
-      const token = jwt.sign(
-        { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
-        process.env.JWT_SECRET,
-        { expiresIn: "24h" }
-      );
+  const token = jwt.sign(
+    { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
+    process.env.JWT_SECRET || "fallback_secret",
+    { expiresIn: "24h" }
+  );
 
-      return res.json({
-        message: "Login successful",
-        token,
-        _id: librarianUser._id,
-        role: "librarian",
-        email: librarianUser.email,
-        username: librarianUser.username,
-        profilePic: librarianUser.profilePic,
-      });
-    }
+  return res.json({
+    message: "Login successful",
+    token,
+    _id: librarianUser._id,
+    role: "librarian",
+    email: librarianUser.email,
+    username: librarianUser.username,
+    profilePic: librarianUser.profilePic,
+  });
+}
 
     librarianUser.active = true;
 await librarianUser.save();
@@ -450,7 +451,7 @@ await librarianUser.save();
     if (matchedAdmin) {
       const token = jwt.sign(
         { id: matchedAdmin.email, role: "admin", email: matchedAdmin.email },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET || "fallback_secret",
         { expiresIn: "24h" }
       );
 
@@ -461,7 +462,7 @@ await librarianUser.save();
         role: "admin",
         email: matchedAdmin.email,
         username: matchedAdmin.username,
-        profilePic: "assets/admin.png" // Optional default
+        profilePic: "assets/default-pfp.jpg" // Optional default
       });
     }
 
