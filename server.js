@@ -354,20 +354,6 @@ app.delete("/api/comments/:commentId", async (req, res) => {
   }
 });
 
-// ===============================
-// ✅ ADMIN: Get All Users + Delete User
-// ===============================
-app.delete("/api/users/:id", async (req, res) => {
-  try {
-    const user = await User.findByIdAndDelete(req.params.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-    res.json({ message: "User deleted successfully" });
-  } catch (err) {
-    console.error("❌ Delete user error:", err);
-    res.status(500).json({ error: "Failed to delete user" });
-  }
-});
-
 
 // ===============================
 // Get Single Book by ID
@@ -806,18 +792,20 @@ app.delete("/api/books/:id", async (req, res) => {
       return res.status(401).json({ error: "Invalid or expired token" });
     }
 
-    if (decoded.role !== "librarian") {
-      return res.status(403).json({ error: "Forbidden: Only librarians can delete books" });
+    // ✅ Allow both librarians AND admins
+    if (decoded.role !== "librarian" && decoded.role !== "admin") {
+      return res.status(403).json({ error: "Forbidden: Only librarians or admins can delete books" });
     }
 
     const deleted = await Book.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: "Book not found" });
-    await Activity.create({
-  user: "Librarian",
-  action: "Deleted Book",
-  details: `Removed "${deleted.title}" by ${deleted.author}`,
-});
 
+    // ✅ Log who deleted it
+    await Activity.create({
+      user: decoded.role === "admin" ? "Admin" : "Librarian",
+      action: "Deleted Book",
+      details: `Removed "${deleted.title}" by ${deleted.author}`,
+    });
 
     res.json({ message: "Book deleted successfully" });
   } catch (err) {
