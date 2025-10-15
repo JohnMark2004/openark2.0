@@ -4,6 +4,20 @@ document.addEventListener("DOMContentLoaded", () => {
       ? "http://localhost:5000"
       : "https://openark2-0.onrender.com";
 
+        // ✅ Re-enable lightweight real-time updates
+  const socket = io(API_URL);
+
+  // Listen for live updates from backend
+  socket.on("userStatusChange", ({ userId, active }) => {
+    const row = document.querySelector(`[data-id="${userId}"]`);
+    if (row) {
+      const statusEl = row.querySelector(".status");
+      statusEl.textContent = active ? "Active" : "Inactive";
+      statusEl.className = `status ${active ? "active" : "inactive"}`;
+    }
+  });
+
+
   // --- Element References ---
   const userTab = document.getElementById("userTab");
   const booksTab = document.getElementById("booksTab");

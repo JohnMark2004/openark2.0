@@ -433,6 +433,9 @@ app.post("/api/login", async (req, res) => {
       });
     }
 
+    librarianUser.active = true;
+await librarianUser.save();
+
     // ===============================
     // ✅ 2. ✨ Static Admin Login (INSERTED HERE!)
     // ===============================
