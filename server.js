@@ -414,7 +414,7 @@ if (matchedLibrarian) {
     librarianUser.profilePic = librarianImages[index];
   }
 
-  librarianUser.active = true;
+  librarianUser.active = false;
   await librarianUser.save();
 
   const token = jwt.sign(
@@ -503,24 +503,13 @@ await user.save();
 // ===============================
 // ✅ LOGOUT ROUTE
 // ===============================
-// ✅ LOGOUT ROUTE — sets user inactive
+// ✅ LOGOUT ROUTE (does not set inactive)
 app.post("/api/logout", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: "Missing token" });
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    user.active = false; // 🔹 mark inactive
-    await user.save();
-
-    // 🔹 broadcast to admin
-    broadcastUserStatus(user._id, false);
-
+    // We no longer mark user inactive
     res.json({ message: "Logout successful" });
   } catch (err) {
     console.error("❌ Logout error:", err);
@@ -1160,7 +1149,6 @@ function broadcastComment(bookId, type, payload) {
 io.on("connection", (socket) => {
   console.log("🔌 Client connected:", socket.id);
 
-  // When a user (student or librarian) connects
   socket.on("registerUser", async (userId) => {
     if (!userId) return;
     socket.userId = userId;
@@ -1172,15 +1160,13 @@ io.on("connection", (socket) => {
         user.active = true;
         await user.save();
         broadcastUserStatus(userId, true);
-      } else {
-        console.warn(`⚠️ User ${userId} not found in DB`);
       }
     } catch (err) {
       console.error("❌ registerUser error:", err);
     }
   });
 
-  // When user disconnects
+  // ✅ Mark inactive on disconnect
   socket.on("disconnect", async () => {
     if (!socket.userId) return;
     try {
@@ -1190,13 +1176,13 @@ io.on("connection", (socket) => {
         await user.save();
         broadcastUserStatus(socket.userId, false);
       }
-      console.log(`🔴 User disconnected: ${socket.userId}`);
+      console.log(`🔴 Disconnected: ${socket.userId}`);
     } catch (err) {
       console.error("❌ Disconnect error:", err);
     }
   });
 
-  // Mark user inactive manually (logout)
+  // ✅ Also handle explicit logout
   socket.on("userLoggedOut", async (userId) => {
     try {
       const user = await User.findById(userId);
@@ -1205,12 +1191,14 @@ io.on("connection", (socket) => {
         await user.save();
         broadcastUserStatus(userId, false);
       }
-      console.log(`🚪 User logged out: ${userId}`);
+      console.log(`🚪 Logged out: ${userId}`);
     } catch (err) {
       console.error("❌ userLoggedOut error:", err);
     }
   });
 });
+
+
 
 // Helper: tell all admins that a user’s active state changed
 function broadcastUserStatus(userId, isActive) {
