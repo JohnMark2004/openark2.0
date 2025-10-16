@@ -905,18 +905,12 @@ async function loadBrowseBooks({ search = "", sort = "newest", genre = "all" } =
       );
     }
 
-// 🔹 Filter by search (Title, Author, Publisher, Year)
+// 🔹 Filter by search (Title)
 if (search) {
   const query = search.toLowerCase();
-  filtered = filtered.filter((book) => {
-    const yearStr = String(book.year || "");
-    return (
-      book.title?.toLowerCase().includes(query) ||
-      book.author?.toLowerCase().includes(query) ||
-      book.publisher?.toLowerCase().includes(query) ||
-      yearStr.includes(query)
-    );
-  });
+  filtered = filtered.filter(book =>
+    book.title?.toLowerCase().includes(query)
+  );
 }
 
 
@@ -1161,29 +1155,27 @@ showBookDetails = async function (book, fromSection) {
 
 
 const genreButtons = document.querySelectorAll(".genre-btn");
-if (genreButtons.length > 0) {
-  genreButtons.forEach((btn) => {
-    btn.addEventListener("click", () => {
-      // 1) Remove "active" from all buttons
-      genreButtons.forEach((b) => b.classList.remove("active"));
-      btn.classList.add("active");
+genreButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    // Remove previous active
+    document.querySelector(".genre-btn.active")?.classList.remove("active");
+    btn.classList.add("active");
 
-      // 2) Get the clicked genre
-      const selectedGenre = btn.dataset.genre || "all";
+    const genre = btn.dataset.genre;
 
-      // 3) Get current advanced search values
-      const keyword =
-        document.getElementById("keywordSearch")?.value.trim().toLowerCase() ||
-        "";
-      const author =
-        document.getElementById("authorSearch")?.value.trim().toLowerCase() ||
-        "";
+    // ✅ Update "Showing: ..."
+    const genreTitle = document.getElementById("currentGenreTitle");
+    const label = genre === "all" ? "All" : genre;
+genreTitle.textContent = `Showing: ${label}`;
 
-      // 4) Filter using ALL criteria
-      filterBooks({ keyword, author, genre: selectedGenre });
-    });
+
+    // ✅ Trigger filtering
+    const keyword = keywordSearch?.value.trim().toLowerCase() || "";
+    const author = authorSearch?.value.trim().toLowerCase() || "";
+    filterBooks({ keyword, author, genre });
   });
-}
+});
+
 
 
   // --- Book Creation Wizard ---
@@ -1971,7 +1963,23 @@ if (advancedSearchToggle && advancedSearchSection) {
 
 
 const keywordSearch = document.getElementById("keywordSearch");
-const authorSearch = document.getElementById("authorSearch"); // ✅ ADD THIS
+const authorSearch = document.getElementById("authorSearch");
+const publisherSearch = document.getElementById("publisherSearch");
+const yearSearch = document.getElementById("yearSearch");
+
+[keywordSearch, authorSearch, publisherSearch, yearSearch].forEach(input => {
+  if (!input) return;
+  input.addEventListener("input", () => {
+    const keyword = keywordSearch?.value.trim().toLowerCase() || "";
+    const author = authorSearch?.value.trim().toLowerCase() || "";
+    const publisher = publisherSearch?.value.trim().toLowerCase() || "";
+    const year = yearSearch?.value.trim() || "";
+    const genre =
+      document.querySelector(".genre-btn.active")?.dataset.genre || "all";
+
+    filterBooks({ keyword, author, publisher, year, genre });
+  });
+});
 
 
 if (keywordSearch) {
@@ -1996,8 +2004,13 @@ if (authorSearch) {
   });
 }
 
-
-function filterBooks({ keyword = "", author = "", genre = "all" }) {
+function filterBooks({
+  keyword = "",
+  author = "",
+  publisher = "",
+  year = "",
+  genre = "all"
+}) {
   if (!Array.isArray(allBooks)) return;
 
   let filtered = allBooks.filter(book => {
@@ -2006,7 +2019,15 @@ function filterBooks({ keyword = "", author = "", genre = "all" }) {
       : true;
 
     const matchesAuthor = author
-      ? (book.author || "").toLowerCase().includes(author.toLowerCase())
+      ? (book.author || "").toLowerCase().includes(author)
+      : true;
+
+    const matchesPublisher = publisher
+      ? (book.publisher || "").toLowerCase().includes(publisher)
+      : true;
+
+    const matchesYear = year
+      ? String(book.year) === String(year)
       : true;
 
     const matchesGenre =
@@ -2015,7 +2036,13 @@ function filterBooks({ keyword = "", author = "", genre = "all" }) {
         ? book.category.includes(genre)
         : (book.category || "").toLowerCase() === genre.toLowerCase());
 
-    return matchesKeyword && matchesAuthor && matchesGenre;
+    return (
+      matchesKeyword &&
+      matchesAuthor &&
+      matchesPublisher &&
+      matchesYear &&
+      matchesGenre
+    );
   });
 
   renderBrowseBooks(filtered);

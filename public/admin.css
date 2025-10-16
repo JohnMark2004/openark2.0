@@ -531,6 +531,31 @@ body {
   border-color: var(--gold);
 }
 
+#yearSearch {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background-color: #fff;
+  transition: border-color 0.2s ease;
+}
+
+#yearSearch:focus {
+  border-color: #007bff;
+}
+.advanced-row {
+  margin-bottom: 15px;
+}
+
+.advanced-row label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+
 @media (max-width: 768px) {
   .activity-export {
     justify-content: center;

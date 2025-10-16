@@ -283,17 +283,40 @@
 
   <!-- Top Controls -->
   <div class="browse-controls">
-    <input type="text" id="browseSearch" placeholder="Search books by title, author, publisher, year..." />
+  <input type="text" id="browseSearch" placeholder="Search by title..." />
+
 <button id="advancedSearchToggle" class="adv-btn">Advanced Search</button>
 
   </div>
 
   <div id="advancedSearchSection">
-    <h4>Keyword</h4>
-    <input type="text" id="keywordSearch" placeholder="Keyword (Description)">
-    <h4>Author</h4>
-    <input type="text" id="authorSearch" placeholder="Author Name">
+  <div class="advanced-row">
+    <label>Keyword (Description)</label>
+    <input type="text" id="keywordSearch" placeholder="Enter any word from description">
+  </div>
 
+  <div class="advanced-row">
+    <label>Author</label>
+    <input type="text" id="authorSearch" placeholder="Enter author name">
+  </div>
+
+  <div class="advanced-row">
+    <label>Publisher</label>
+    <input type="text" id="publisherSearch" placeholder="Enter publisher name">
+  </div>
+
+  <div class="advanced-row">
+    <label>Year Published</label>
+    <select id="yearSearch">
+      <option value="">Select Year</option>
+      <option value="2025">2025</option>
+      <option value="2024">2024</option>
+      <option value="2023">2023</option>
+      <option value="2022">2022</option>
+      <option value="2021">2021</option>
+      <option value="2020">2020</option>
+    </select>
+  </div>
   <!-- Genre Buttons -->
    <h4>Categories</h4>
   <div class="genre-filters" id="genreFilters">
