@@ -209,46 +209,22 @@
   <input type="number" name="year" required>
 </label></p>
           <p>
-  <label>Genres: <span style="color:red">*</span><br></label>
+  <label>Categories: <span style="color:red">*</span><br></label>
 <div id="categoriesButtons" class="genres-buttons">
-  <h4>Subjects (Academic Focus)</h4>
-  <button type="button" data-genre="Mathematics">Mathematics</button>
-  <button type="button" data-genre="Science">Science</button>
+  <button type="button" data-genre="Accountancy">Accountancy</button>
+  <button type="button" data-genre="Criminology">Criminology</button>
   <button type="button" data-genre="Computer Science">Computer Science</button>
   <button type="button" data-genre="Engineering">Engineering</button>
-  <button type="button" data-genre="Medicine">Medicine</button>
-  <button type="button" data-genre="Social Studies">Social Studies</button>
-  <button type="button" data-genre="History">History</button>
-  <button type="button" data-genre="Economics">Economics</button>
-  <button type="button" data-genre="Business">Business</button>
-  <button type="button" data-genre="Law">Law</button>
+  <button type="button" data-genre="Commerce">Commerce</button>
+  <button type="button" data-genre="Maritime">Maritime</button>
+  <button type="button" data-genre="Mass Communication">Mass Communication</button>
+  <button type="button" data-genre="Political Science">Political Science</button>
   <button type="button" data-genre="Psychology">Psychology</button>
-  <button type="button" data-genre="Philosophy">Philosophy</button>
-  <button type="button" data-genre="Literature">Literature</button>
-  <button type="button" data-genre="Education">Education</button>
-  <button type="button" data-genre="Reference">Reference</button>
-
-  <!-- <h4>Genres (Story / Literary Focus)</h4>
-  <button type="button" data-genre="Romance">Romance</button>
-  <button type="button" data-genre="Mystery">Mystery</button>
-  <button type="button" data-genre="Fantasy">Fantasy</button>
-  <button type="button" data-genre="Science Fiction">Science Fiction</button>
-  <button type="button" data-genre="Horror">Horror</button>
-  <button type="button" data-genre="Thriller">Thriller</button>
-  <button type="button" data-genre="Adventure">Adventure</button>
-  <button type="button" data-genre="Drama">Drama</button>
-  <button type="button" data-genre="Historical Fiction">Historical Fiction</button>
-  <button type="button" data-genre="Comedy">Comedy</button>
-  <button type="button" data-genre="Slice of Life">Slice of Life</button>
-  <button type="button" data-genre="Action">Action</button>
-  <button type="button" data-genre="Supernatural">Supernatural</button>
-  <button type="button" data-genre="Biography">Biography</button>
-  <button type="button" data-genre="Memoir">Memoir</button>
-  <button type="button" data-genre="Poetry">Poetry</button>
-  <button type="button" data-genre="Comics">Comics</button>
-  <button type="button" data-genre="Young Adult">Young Adult</button>
-  <button type="button" data-genre="Children">Children</button>
-  <button type="button" data-genre="Non-fiction">Non-fiction</button> -->
+  <button type="button" data-genre="Aviation">Aviation</button>
+  <button type="button" data-genre="Fiction">Fiction</button>
+  <button type="button" data-genre="Filipiana">Filipiana</button>
+  <button type="button" data-genre="General Education">General Education</button>
+  <button type="button" data-genre="Senior High">Senior High</button>
 </div>
 
           </p>
@@ -308,57 +284,35 @@
   <!-- Top Controls -->
   <div class="browse-controls">
     <input type="text" id="browseSearch" placeholder="Search books by title, author, publisher, year..." />
+<button id="advancedSearchToggle" class="adv-btn">Advanced Search</button>
 
-    <select id="browseSort">
-      <option value="latest">Latest Upload</option>
-      <option value="oldest">Oldest Upload</option>
-    </select>
   </div>
 
+  <div id="advancedSearchSection">
+    <h4>Keyword</h4>
+    <input type="text" id="keywordSearch" placeholder="Keyword (Description)">
+    <h4>Author</h4>
+    <input type="text" id="authorSearch" placeholder="Author Name">
+
   <!-- Genre Buttons -->
+   <h4>Categories</h4>
   <div class="genre-filters" id="genreFilters">
-    <button class="genre-btn active" data-genre="all">All</button>
-    <button class="genre-btn" data-genre="Mathematics">Mathematics</option>
-    <button class="genre-btn" data-genre="Science">Science</option>
-    <button class="genre-btn" data-genre="Computer Science">Computer Science</option>
-    <button class="genre-btn" data-genre="Engineering">Engineering</option>
-    <button class="genre-btn" data-genre="Medicine">Medicine / Health Sciences</option>
-    <button class="genre-btn" data-genre="Social Studies">Social Studies</option>
-    <button class="genre-btn" data-genre="History">History</option>
-    <button class="genre-btn" data-genre="Geography">Geography</option>
-    <button class="genre-btn" data-genre="Political Science">Political Science</option>
-    <button class="genre-btn" data-genre="Economics">Economics</option>
-    <button class="genre-btn" data-genre="Business">Business / Management</option>
-    <button class="genre-btn" data-genre="Law">Law</option>
-    <button class="genre-btn" data-genre="Psychology">Psychology</option>
-    <button class="genre-btn" data-genre="Philosophy">Philosophy</option>
-    <button class="genre-btn" data-genre="Religion">Religion / Theology</option>
-    <button class="genre-btn" data-genre="Literature">Literature</option>
-    <button class="genre-btn" data-genre="Language">Language & Linguistics</option>
-    <button class="genre-btn" data-genre="Arts">Arts</option>
-    <button class="genre-btn" data-genre="Education">Education</option>
-    <button class="genre-btn" data-genre="Reference">Reference</option>
-    <!-- <button class="genre-btn" data genre="Romance">Romance</option>
-    <button class="genre-btn" data genre="Mystery">Mystery / Detective</option>
-    <button class="genre-btn" data genre="Fantasy">Fantasy</option>
-    <button class="genre-btn" data genre="Science Fiction">Science Fiction</option>
-    <button class="genre-btn" data genre="Horror">Horror</option>
-    <button class="genre-btn" data genre="Thriller">Thriller / Suspense</option>
-    <button class="genre-btn" data genre="Adventure">Adventure</option>
-    <button class="genre-btn" data genre="Drama">Drama</option>
-    <button class="genre-btn" data genre="Historical Fiction">Historical Fiction</option>
-    <button class="genre-btn" data genre="Comedy">Comedy / Humor</option>
-    <button class="genre-btn" data genre="Slice of Life">Slice of Life</option>
-    <button class="genre-btn" data genre="Action">Action</option>
-    <button class="genre-btn" data genre="Supernatural">Supernatural / Paranormal</option>
-    <button class="genre-btn" data genre="Biography">Biography / Autobiography</option>
-    <button class="genre-btn" data genre="Memoir">Memoir</option>
-    <button class="genre-btn" data genre="Poetry">Poetry</option>
-    <button class="genre-btn" data genre="Comics">Graphic Novels / Comics</option>
-    <button class="genre-btn" data genre="Young Adult">Young Adult (YA)</option>
-    <button class="genre-btn" data genre="Children">Children’s Literature</option>
-    <button class="genre-btn" data genre="Non-fiction">Non-fiction</option>
-    add more genres -->
+      <button class="genre-btn active" data-genre="all">All</button>
+      <button class="genre-btn" data-genre="Accountancy">Accountancy</button>
+      <button class="genre-btn" data-genre="Criminology">Criminology</button>
+      <button class="genre-btn" data-genre="Computer Science">Computer Science</button>
+      <button class="genre-btn" data-genre="Engineering">Engineering</button>
+      <button class="genre-btn" data-genre="Commerce">Commerce</button>
+      <button class="genre-btn" data-genre="Maritime">Maritime</button>
+      <button class="genre-btn" data-genre="Mass Communication">Mass Communication</button>
+      <button class="genre-btn" data-genre="Political Science">Political Science</button>
+      <button class="genre-btn" data-genre="Psychology">Psychology</button>
+      <button class="genre-btn" data-genre="Aviation">Aviation</button>
+      <button class="genre-btn" data-genre="Fiction">Fiction</button>
+      <button class="genre-btn" data-genre="Filipiana">Filipiana</button>
+      <button class="genre-btn" data-genre="General Education">General Education</button>
+      <button class="genre-btn" data-genre="Senior High">Senior High</button>
+  </div>
   </div>
  <h3 id="currentGenreTitle">Showing: All</h3>
    <div id="loadingSpinnerBrowse" class="spinner hidden"></div>

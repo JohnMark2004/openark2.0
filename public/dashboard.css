@@ -1950,6 +1950,83 @@ main {
   font-family: 'Montserrat', sans-serif;
 }
 
+/* Container alignment (same as dashboard forms) */
+#advancedSearchSection {
+  width: 100%;
+  /* max-width: 800px;  ✅ Same as main.dashboard layout width */
+  /* margin: 0 auto;    ✅ Centers like dashboard sections */
+  padding-right: 10px;
+}
+
+/* Match h4 alignment to dashboard form labels */
+#advancedSearchSection h4 {
+  margin: 15px 0 5px;
+  font-size: 16px;
+  font-weight: 600;
+  width: 100%;
+}
+
+/* Make inputs match dashboard's form fields */
+#advancedSearchSection input[type="text"] {
+  width: 100%;
+  max-width: 100%;  /* ✅ Uses full dashboard width */
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+  background: var(--white);
+}
+
+/* Align categories section the same way */
+#genreFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 100%;
+  margin-top: 10px;
+}
+
+/* Advanced Search button — uses the same style as .btn */
+#advancedSearchToggle {
+  padding: 0.75rem 2rem;
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(156, 149, 149, 0.3);
+  background-color: #E6CFA9;   /* matches your main buttons */
+  color: #9A3F3F;
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+#advancedSearchToggle:hover {
+  background-color: #9A3F3F;
+  color: #E6CFA9;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Container is hidden by default with smooth height transition */
+#advancedSearchSection {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+/* When opened */
+#advancedSearchSection.open {
+  max-height: 500px; /* adjust if content gets taller */
+}
+
+#categoriesButtons button.active {
+  background-color: #9A3F3F;
+  color: #E6CFA9;
+  transform: scale(1.05);
+}
+
+
 
 /* Responsive */
 @media (max-width: 768px) {

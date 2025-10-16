@@ -1,6 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   let bookToDelete = null;
   let bookData = {};
+  let allBooks = []; // ✅ Add this near your other global variables
+
 
   // --- Popup/Toast Notification Function ---
   function showPopup(message, type = "success") {
@@ -466,30 +468,27 @@ if (email?.includes("librarian")) {
     });
 
     // Bind events
-    document.querySelectorAll(".genre-btn").forEach((btn) => {
-btn.addEventListener("click", () => {
-  document.querySelectorAll(".genre-btn").forEach((b) =>
-    b.classList.remove("active")
-  );
-  btn.classList.add("active");
-
-  const search = document.getElementById("browseSearch").value.trim();
-  const sort = document.getElementById("browseSort").value;
-  const genre = btn.dataset.genre;
-
-  // 🆕 Update heading
-  const genreTitle = document.getElementById("currentGenreTitle");
-  genreTitle.textContent =
-    genre === "all" ? "Showing: All" : `Showing: ${genre}`;
-
-  loadBrowseBooks({ search, sort, genre });
-});
-
-    });
   } catch (err) {
     console.error("❌ Error loading genres:", err);
   }
 }
+
+// Category selection handler
+document.querySelectorAll("#categoriesButtons button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    // remove highlight from all
+    document.querySelectorAll("#categoriesButtons button").forEach(b => 
+      b.classList.remove("active"));
+    
+    // add highlight to selected
+    btn.classList.add("active");
+
+    // store selected category in bookData
+    if (!bookData.category) bookData.category = [];
+    bookData.category = [btn.dataset.genre];
+  });
+});
+
 
 // 📚 Load Recently Added Books (Home Section)
 async function loadBooks() {
@@ -528,7 +527,7 @@ async function loadBooks() {
       div.innerHTML = `
         <img src="${book.img}" alt="${book.title}">
         <h4>${book.title}</h4>
-        <p class="genre-label">(${firstGenre.trim()} ...)</p>
+        <p class="genre-label">${firstGenre.trim()}</p>
       `;
 
       div.addEventListener("click", () => showBookDetails(book, homeSection));
@@ -589,7 +588,7 @@ const firstGenre = Array.isArray(book.category)
 div.innerHTML = `
   <img src="${book.img}" alt="${book.title}">
   <h4>${book.title}</h4>
-  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+  <p class="genre-label">${firstGenre.trim()}</p>
 `;
       div.addEventListener("click", async () => {
 try {
@@ -751,7 +750,7 @@ const firstGenre = Array.isArray(book.category)
 div.innerHTML = `
   <img src="${book.img}" alt="${book.title}">
   <h4>${book.title}</h4>
-  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+  <p class="genre-label">${firstGenre.trim()}</p>
               <button class="delete-btn">Delete</button>
 `;
 
@@ -893,6 +892,8 @@ async function loadBrowseBooks({ search = "", sort = "newest", genre = "all" } =
     if (!res.ok) throw new Error("Failed to fetch books");
     const books = await res.json();
 
+    allBooks = books;
+
     let filtered = books;
 
     // 🔹 Filter by genre
@@ -944,7 +945,7 @@ const firstGenre = Array.isArray(book.category)
 div.innerHTML = `
   <img src="${book.img}" alt="${book.title}">
   <h4>${book.title}</h4>
-  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+  <p class="genre-label">${firstGenre.trim()}</p>
 `;
 
       div.addEventListener("click", () => showBookDetails(book, browseSection));
@@ -957,32 +958,26 @@ div.innerHTML = `
 }
 
   // Browse filters events
-  document.getElementById("browseSearch").addEventListener("input", () => {
-    const search = document.getElementById("browseSearch").value.trim();
-    const sort = document.getElementById("browseSort").value;
-    const genre = document.querySelector(".genre-btn.active").dataset.genre;
+const browseSearch = document.getElementById("browseSearch");
+if (browseSearch) {
+  browseSearch.addEventListener("input", () => {
+    const search = browseSearch.value.trim();
+    // remove or comment this if browseSort no longer exists in HTML
+    const genre = document.querySelector(".genre-btn.active")?.dataset.genre || "all";
+    loadBrowseBooks({ search, genre });
+  });
+}
+
+
+const browseSort = document.getElementById("browseSort");
+if (browseSort) {
+  browseSort.addEventListener("change", () => {
+    const search = document.getElementById("browseSearch")?.value.trim() || "";
+    const sort = browseSort.value;
+    const genre = document.querySelector(".genre-btn.active")?.dataset.genre || "all";
     loadBrowseBooks({ search, sort, genre });
   });
-
-  document.getElementById("browseSort").addEventListener("change", () => {
-    const search = document.getElementById("browseSearch").value.trim();
-    const sort = document.getElementById("browseSort").value;
-    const genre = document.querySelector(".genre-btn.active").dataset.genre;
-    loadBrowseBooks({ search, sort, genre });
-  });
-
-  document.querySelectorAll(".genre-btn").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      document.querySelectorAll(".genre-btn").forEach((b) =>
-        b.classList.remove("active")
-      );
-      btn.classList.add("active");
-      const search = document.getElementById("browseSearch").value.trim();
-      const sort = document.getElementById("browseSort").value;
-      const genre = btn.dataset.genre;
-      loadBrowseBooks({ search, sort, genre });
-    });
-  });
+}
 
 function showBookDetails(book, fromSection) {
   if (fromSection) {
@@ -1165,13 +1160,31 @@ showBookDetails = async function (book, fromSection) {
 
 
 
-    // --- Genre Button Toggle (move this near the top) ---
-  const genreButtons = document.querySelectorAll("#categoriesButtons button");
-  genreButtons.forEach(btn => {
+const genreButtons = document.querySelectorAll(".genre-btn");
+if (genreButtons.length > 0) {
+  genreButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
-      btn.classList.toggle("active");
+      // 1) Remove "active" from all buttons
+      genreButtons.forEach((b) => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      // 2) Get the clicked genre
+      const selectedGenre = btn.dataset.genre || "all";
+
+      // 3) Get current advanced search values
+      const keyword =
+        document.getElementById("keywordSearch")?.value.trim().toLowerCase() ||
+        "";
+      const author =
+        document.getElementById("authorSearch")?.value.trim().toLowerCase() ||
+        "";
+
+      // 4) Filter using ALL criteria
+      filterBooks({ keyword, author, genre: selectedGenre });
     });
   });
+}
+
 
   // --- Book Creation Wizard ---
   const bookMetaForm = document.getElementById("bookMetaForm");
@@ -1602,11 +1615,12 @@ document.getElementById("generateOutlineBtn").addEventListener("click", async ()
 });
 
 
-  const bookmarksTab = document.getElementById("bookmarksTab");
+// ✅ Move these to the TOP of the block, before you use them anywhere
+const bookmarksTab = document.getElementById("bookmarksTab");
 const bookmarksSection = document.getElementById("bookmarksSection");
 const bookmarksGrid = document.getElementById("bookmarksGrid");
 
-// --- Nav: Bookmarks ---
+// ✅ THEN keep the listener
 if (bookmarksTab) {
   bookmarksTab.addEventListener("click", (e) => {
     e.preventDefault();
@@ -1620,6 +1634,7 @@ if (bookmarksTab) {
     loadBookmarks();
   });
 }
+
 
 const token = sessionStorage.getItem("token");
 const profilePicInput = document.getElementById("profilePicInput");
@@ -1914,7 +1929,7 @@ const firstGenre = Array.isArray(book.category)
 div.innerHTML = `
   <img src="${book.img}" alt="${book.title}">
   <h4>${book.title}</h4>
-  <p class="genre-label">(${firstGenre.trim()} ...)</p>
+ <p class="genre-label">${firstGenre.trim()}</p>
 `;
 
       div.addEventListener("click", () => showBookDetails(book, bookmarksSection));
@@ -1945,6 +1960,94 @@ if (viewAllBtn) {
   });
 }
 
+const advancedSearchToggle = document.getElementById("advancedSearchToggle");
+const advancedSearchSection = document.getElementById("advancedSearchSection");
+
+if (advancedSearchToggle && advancedSearchSection) {
+  advancedSearchToggle.addEventListener("click", () => {
+    advancedSearchSection.classList.toggle("open");
+  });
+}
+
+
+const keywordSearch = document.getElementById("keywordSearch");
+const authorSearch = document.getElementById("authorSearch"); // ✅ ADD THIS
+
+
+if (keywordSearch) {
+keywordSearch.addEventListener("input", () => {
+  const keyword = keywordSearch.value.trim().toLowerCase();
+  const author = authorSearch?.value.trim().toLowerCase() || "";
+  const genre =
+    document.querySelector(".genre-btn.active")?.dataset.genre || "all";
+
+  filterBooks({ keyword, author, genre });
+});
+}
+
+if (authorSearch) {
+  authorSearch.addEventListener("input", () => {
+    const keyword = keywordSearch?.value.trim().toLowerCase() || "";
+    const author = authorSearch.value.trim().toLowerCase();
+    const genre =
+      document.querySelector(".genre-btn.active")?.dataset.genre || "all";
+
+    filterBooks({ keyword, author, genre });
+  });
+}
+
+
+function filterBooks({ keyword = "", author = "", genre = "all" }) {
+  if (!Array.isArray(allBooks)) return;
+
+  let filtered = allBooks.filter(book => {
+    const matchesKeyword = keyword
+      ? (book.description || "").toLowerCase().includes(keyword)
+      : true;
+
+    const matchesAuthor = author
+      ? (book.author || "").toLowerCase().includes(author.toLowerCase())
+      : true;
+
+    const matchesGenre =
+      genre === "all" ||
+      (Array.isArray(book.category)
+        ? book.category.includes(genre)
+        : (book.category || "").toLowerCase() === genre.toLowerCase());
+
+    return matchesKeyword && matchesAuthor && matchesGenre;
+  });
+
+  renderBrowseBooks(filtered);
+}
+
+function renderBrowseBooks(books) {
+  const browseBooks = document.getElementById("browseBooks");
+  browseBooks.innerHTML = "";
+
+  if (!books || books.length === 0) {
+    browseBooks.innerHTML = `<p>No books found.</p>`;
+    return;
+  }
+
+  books.forEach((book) => {
+    const div = document.createElement("div");
+    div.className = "book";
+
+    const firstGenre = Array.isArray(book.category)
+      ? book.category[0]
+      : (book.category?.split(",")[0] || "Unknown");
+
+    div.innerHTML = `
+      <img src="${book.img}" alt="${book.title}">
+      <h4>${book.title}</h4>
+      <p class="genre-label">${firstGenre.trim()}</p>
+    `;
+
+    div.addEventListener("click", () => showBookDetails(book, browseSection));
+    browseBooks.appendChild(div);
+  });
+}
 
 
   // --- Init ---
