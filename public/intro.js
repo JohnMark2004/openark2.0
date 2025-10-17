@@ -96,28 +96,28 @@ closeModal(modal);
 // Signup
 document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const username = e.target[0].value;
-  const email = e.target[1].value;
+
+  const username = e.target[0].value.trim();
+  const email = e.target[1].value.trim();
   const password = e.target[2].value;
   const confirmPassword = e.target[3].value;
   const collegeYear = e.target[4].value;
 
-// Password validation (no special character required)
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+  // Password validation
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 
-if (password !== confirmPassword) {
-  showPopup("Passwords do not match", "error");
-  return;
-}
+  if (password !== confirmPassword) {
+    showPopup("Passwords do not match", "error");
+    return;
+  }
 
-if (!passwordRegex.test(password)) {
-  showPopup(
-    "Password must be at least 6 characters and include uppercase, lowercase, and a number.",
-    "error"
-  );
-  return;
-}
-
+  if (!passwordRegex.test(password)) {
+    showPopup(
+      "Password must be at least 6 characters and include uppercase, lowercase, and a number.",
+      "error"
+    );
+    return;
+  }
 
   try {
     const res = await fetch(`${API_URL}/api/signup`, {
@@ -127,24 +127,35 @@ if (!passwordRegex.test(password)) {
     });
 
     const data = await res.json();
-    console.log("Login response:", data);
-
-    showPopup(data.message || data.error, res.ok ? "success" : "error");
+    console.log("Signup response:", data);
 
     if (res.ok) {
+      // Show pending approval notice
+      showPopup(
+        "✅ Signup successful! Please wait for admin approval before logging in.",
+        "success"
+      );
+
+      // Save basic info (not logged in yet)
       localStorage.setItem("username", username);
       localStorage.setItem("email", email);
       localStorage.setItem("collegeYear", collegeYear);
       localStorage.setItem("role", "student");
 
-      closeModal(signupModal);
-      openModal(loginModal);
+      // Switch modals after short delay
+      setTimeout(() => {
+        closeModal(signupModal);
+        openModal(loginModal);
+      }, 2500);
+    } else {
+      showPopup(data.error || "Signup failed", "error");
     }
   } catch (err) {
     console.error("Signup failed:", err);
-    showPopup("Signup request failed", "error");
+    showPopup("Signup request failed. Please try again later.", "error");
   }
 });
+
 
 // Login
 document.querySelector(".login-form").addEventListener("submit", async (e) => {

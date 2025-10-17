@@ -24,37 +24,40 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const gemini = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
 // ===============================
-// 📧 MailerSend Setup
+// 📧 Brevo SMTP (Nodemailer)
 // ===============================
-const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
+const nodemailer = require("nodemailer");
 
-const mailerSend = new MailerSend({
-  apiKey: process.env.MAILERSEND_API_KEY,
+const transporter = nodemailer.createTransport({
+  host: process.env.BREVO_SMTP_HOST,
+  port: process.env.BREVO_SMTP_PORT,
+  auth: {
+    user: process.env.BREVO_SMTP_USER,
+    pass: process.env.BREVO_SMTP_PASS,
+  },
 });
 
 async function sendApprovalEmail(user) {
   try {
-    const from = new Sender(process.env.SENDER_EMAIL, process.env.SENDER_NAME || "OpenArk");
-    const recipients = [new Recipient(user.email, user.username)];
-
     const loginUrl = process.env.FRONTEND_URL || "https://openark2-0.onrender.com/intro.html";
+    const mailOptions = {
+      from: `"${process.env.SENDER_NAME || "OpenArk"}" <${process.env.SENDER_EMAIL}>`,
+      to: user.email,
+      subject: "🎉 Your OpenArk account is approved",
+      html: `
+        <p>Hi <strong>${user.username}</strong>,</p>
+        <p>Your OpenArk account has been <strong>approved</strong>.</p>
+        <p><a href="${loginUrl}">Click here to log in</a>.</p>
+        <p>— OpenArk Team</p>
+      `,
+    };
 
-    const emailParams = new EmailParams()
-      .setFrom(from)
-      .setTo(recipients)
-      .setSubject("🎉 Your OpenArk account is approved")
-      .setHtml(`<p>Hi <strong>${user.username}</strong>,</p>
-                <p>Your OpenArk account has been <strong>approved</strong>.</p>
-                <p><a href="${loginUrl}">Click here to log in</a>.</p>
-                <p>— OpenArk Team</p>`);
-
-    await mailerSend.email.send(emailParams);
+    await transporter.sendMail(mailOptions);
     console.log(`✅ Approval email sent to ${user.email}`);
   } catch (err) {
-    console.error("❌ Failed to send MailerSend email:", err);
+    console.error("❌ Failed to send approval email:", err);
   }
 }
-
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -507,6 +510,25 @@ app.post("/api/signup", async (req, res) => {
     });
         await newUser.save();
 
+        // 🔔 Notify admin that a new signup awaits approval
+// 🔔 Notify admin that a new signup awaits approval
+try {
+  await transporter.sendMail({
+    from: `"${process.env.SENDER_NAME || "OpenArk"}" <${process.env.SENDER_EMAIL}>`,
+    to: process.env.ADMIN_GMAIL,
+    subject: "🕐 New user awaiting approval - OpenArk",
+    html: `
+      <p>A new user <strong>${username}</strong> (${email}) just signed up.</p>
+      <p>Login to your admin dashboard to approve this account.</p>
+    `,
+  });
+  console.log("📧 Admin notified of new signup via Brevo SMTP");
+} catch (err) {
+  console.error("❌ Failed to notify admin via Brevo SMTP:", err);
+}
+
+
+
     // ✅ Log activity AFTER saving
     await Activity.create({
       user: username,
@@ -616,36 +638,37 @@ if (matchedLibrarian) {
       });
     }
 
-    // ===============================
-    // ✅ 3. Student Login (Database)
-    // ===============================
-    const user = await User.findOne({ email });
-    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+// ✅ 3. Student Login (Database)
+const user = await User.findOne({ email });
+if (!user) return res.status(401).json({ error: "Invalid credentials" });
 
-    const validPass = await bcrypt.compare(password, user.password);
-    if (!validPass) return res.status(401).json({ error: "Invalid credentials" });
+const validPass = await bcrypt.compare(password, user.password);
+if (!validPass) return res.status(401).json({ error: "Invalid credentials" });
 
-    // Mark user as active upon login
-user.active = true;
-await user.save();
+// 🔒 Check approval status
+if (!user.active) {
+  return res.status(403).json({
+    error: "Your account is pending admin approval. Please wait for confirmation.",
+  });
+}
 
+const token = jwt.sign(
+  { id: user._id, role: "student", email: user.email },
+  process.env.JWT_SECRET,
+  { expiresIn: "24h" }
+);
 
-    const token = jwt.sign(
-      { id: user._id, role: "student", email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
+res.json({
+  message: "Login successful",
+  token,
+  _id: user._id,
+  role: "student",
+  email: user.email,
+  username: user.username,
+  collegeYear: user.collegeYear,
+  profilePic: user.profilePic,
+});
 
-    res.json({
-      message: "Login successful",
-      token,
-      _id: user._id,
-      role: "student",
-      email: user.email,
-      username: user.username,
-      collegeYear: user.collegeYear,
-      profilePic: user.profilePic,
-    });
 
   } catch (err) {
     console.error("❌ Login error:", err);
@@ -1364,22 +1387,22 @@ function broadcastComment(bookId, type, payload) {
 io.on("connection", (socket) => {
   console.log("🔌 Client connected:", socket.id);
 
-  socket.on("registerUser", async (userId) => {
-    if (!userId) return;
-    socket.userId = userId;
-    console.log(`👤 Registered for updates: ${userId}`);
+socket.on("registerUser", async (userId) => {
+  if (!userId) return;
+  socket.userId = userId;
+  console.log(`👤 Registered for updates: ${userId}`);
 
-    try {
-      const user = await User.findById(userId);
-      if (user) {
-        user.active = true;
-        await user.save();
-        broadcastUserStatus(userId, true);
-      }
-    } catch (err) {
-      console.error("❌ registerUser error:", err);
+  try {
+    const user = await User.findById(userId);
+    if (user && user.active) {
+      broadcastUserStatus(userId, true);
+    } else {
+      console.log(`🚫 Inactive user tried to connect: ${userId}`);
     }
-  });
+  } catch (err) {
+    console.error("❌ registerUser error:", err);
+  }
+});
 
   // ✅ Mark inactive on disconnect
   socket.on("disconnect", async () => {
