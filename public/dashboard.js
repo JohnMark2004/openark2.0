@@ -2077,6 +2077,7 @@ function renderBrowseBooks(books) {
 }
 
 
+
   // --- Init ---
 if (browseTab) {
   browseTab.addEventListener("click", (e) => {

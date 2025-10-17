@@ -59,37 +59,77 @@ document.addEventListener("DOMContentLoaded", () => {
     loadBooks();
   });
 
-  // --- Render Users (STATIC ACTIVE) ---
-  function renderUsers(users) {
-    userTableBody.innerHTML = "";
+function renderUsers(users) {
+  userTableBody.innerHTML = "";
 
-    if (!Array.isArray(users) || users.length === 0) {
-      userTableBody.innerHTML =
-        "<tr><td colspan='6' style='text-align:center;opacity:0.7;'>No users found.</td></tr>";
-      return;
-    }
-
-    users.forEach((u) => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td><img src="${u.profilePic || 'assets/default-pfp.png'}" alt="pfp"></td>
-        <td>${u.username || "N/A"}</td>
-        <td>${u.email || "N/A"}</td>
-        <td>${u.role || "student"}</td>
-        <td><span class="status active">Active</span></td>
-        <td>
-          <button class="action-btn delete" data-id="${u._id}">Delete Account</button>
-        </td>
-      `;
-      userTableBody.appendChild(tr);
-    });
-
-    totalUsers.textContent = users.length;
-    activeUsers.textContent = users.length;
-    inactiveUsers.textContent = 0;
-
-    attachDeleteEvents();
+  if (!Array.isArray(users) || users.length === 0) {
+    userTableBody.innerHTML =
+      "<tr><td colspan='6' style='text-align:center;opacity:0.7;'>No users found.</td></tr>";
+    return;
   }
+
+  users.forEach((u) => {
+    const tr = document.createElement("tr");
+    const isActive = u.active;
+
+    tr.innerHTML = `
+      <td><img src="${u.profilePic || 'assets/default-pfp.png'}" alt="pfp"></td>
+      <td>${u.username || "N/A"}</td>
+      <td>${u.email || "N/A"}</td>
+      <td>${u.role || "student"}</td>
+      <td><span class="status ${isActive ? "active" : "inactive"}">
+        ${isActive ? "Active" : "Pending"}
+      </span></td>
+      <td>
+        ${
+          isActive
+            ? `<button class="action-btn delete" data-id="${u._id}">Delete</button>`
+            : `
+              <button class="action-btn approve" data-id="${u._id}">Approve</button>
+              <button class="action-btn delete" data-id="${u._id}">Delete</button>
+            `
+        }
+      </td>
+    `;
+
+    userTableBody.appendChild(tr);
+  });
+
+  // update stats
+  totalUsers.textContent = users.length;
+  activeUsers.textContent = users.filter((u) => u.active).length;
+  inactiveUsers.textContent = users.filter((u) => !u.active).length;
+
+  attachUserActionEvents();
+}
+
+function attachUserActionEvents() {
+  const token = sessionStorage.getItem("token");
+
+  // ✅ Approve user
+  document.querySelectorAll(".action-btn.approve").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const userId = btn.dataset.id;
+      try {
+        const res = await fetch(`${API_URL}/api/users/approve/${userId}`, {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const data = await res.json();
+        showPopup(data.message || "User approved successfully!");
+        loadUsers();
+      } catch (err) {
+        console.error("Approve failed:", err);
+        showPopup("Failed to approve user");
+      }
+    });
+  });
+
+  // 🗑️ Delete user (you already have this function)
+  attachDeleteEvents();
+}
+
 
   // --- Load Users ---
   async function loadUsers() {
@@ -171,6 +211,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- Initial Load ---
   loadUsers();
+
+// ===============================
+// ✅ STATUS FILTER FOR USERS (Step 5)
+// ===============================
+document.getElementById("statusFilter").addEventListener("change", async (e) => {
+  const value = e.target.value;
+  const token = sessionStorage.getItem("token");
+  const res = await fetch(`${API_URL}/api/users`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const users = await res.json();
+
+  if (value === "all") renderUsers(users);
+  else if (value === "active") renderUsers(users.filter((u) => u.active));
+  else renderUsers(users.filter((u) => !u.active));
+});
 
   // ===============================
   // 📚 BOOK MANAGEMENT TAB LOGIC

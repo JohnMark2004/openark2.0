@@ -555,6 +555,20 @@ body {
   margin-bottom: 5px;
 }
 
+.action-btn.approve {
+  background-color: #4CAF50; /* green */
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.action-btn.approve:hover {
+  background-color: #45a049;
+}
+
 
 @media (max-width: 768px) {
   .activity-export {

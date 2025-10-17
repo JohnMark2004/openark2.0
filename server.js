@@ -23,6 +23,25 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const gemini = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
+const nodemailer = require("nodemailer");
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.ADMIN_GMAIL,      // e.g. openark.library@gmail.com
+    pass: process.env.ADMIN_GMAIL_PASS, // app password (NOT your real Gmail password)
+  },
+});
+
+transporter.verify(function(error, success) {
+  if (error) {
+    console.error("Mail server verify failed:", error);
+  } else {
+    console.log("Mail server is ready to take messages");
+  }
+});
+
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
@@ -53,6 +72,56 @@ const io = new Server(httpServer, {
     credentials: true,
   },
 });
+
+app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "User not found" });
+    if (user.active) return res.status(400).json({ error: "User already active" });
+
+    user.active = true;
+    await user.save();
+
+    // 🔔 Build the Gmail message
+    const loginUrl = process.env.FRONTEND_URL || "https://openark2-0.onrender.com/intro.html";
+    const mailOptions = {
+      from: `${process.env.SENDER_NAME || "OpenArk"} <${process.env.ADMIN_GMAIL}>`,
+      to: user.email,
+      subject: "🎉 Your OpenArk account is approved",
+      text: `Hi ${user.username},\n\nYour OpenArk account has been approved by the admin. You can now log in at: ${loginUrl}\n\n— OpenArk Team`,
+      html: `<p>Hi <strong>${user.username}</strong>,</p>
+             <p>Your OpenArk account has been <strong>approved</strong>. You can now <a href="${loginUrl}">log in</a>.</p>
+             <p>Best,<br/>OpenArk Team</p>`,
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    await Activity.create({
+      user: "Admin",
+      action: "Approved User",
+      details: `${user.username} (${user.email})`,
+    });
+
+    res.json({ message: "✅ User approved and notification sent" });
+  } catch (err) {
+    console.error("❌ Approve user error:", err);
+    res.status(500).json({ error: "Failed to approve user" });
+  }
+});
+
+
+app.post("/api/login", async (req, res) => {
+  // ... find user, check password
+  if (!user.active) {
+    return res.status(403).json({ error: "Your account is pending admin approval." });
+  }
+  // proceed to create token, etc.
+});
+
 
 
 // ===============================
