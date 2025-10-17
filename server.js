@@ -56,6 +56,30 @@ if (!fs.existsSync(path.join(__dirname, "uploads"))) {
 const app = express();
 
 // ===============================
+// Middleware
+// ===============================
+app.use(
+  cors({
+    origin: [
+      "http://localhost:5500",   // VS Code Live Server
+      "http://127.0.0.1:5500",
+      "http://localhost:3000",   // optional for React/Vite
+      "https://openark2-0.onrender.com" // deployed domain
+    ],
+    credentials: true,
+  })
+);
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// ===============================
+// Serve static files
+// ===============================
+app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // uploaded book images
+app.use(express.static(path.join(__dirname, "public"))); // frontend (HTML/CSS/JS)
+
+// ===============================
 // HTTP & Socket.IO Server Setup
 // ===============================
 const httpServer = http.createServer(app);
@@ -130,41 +154,6 @@ app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
     res.status(500).json({ error: "Failed to approve user" });
   }
 });
-
-
-app.post("/api/login", async (req, res) => {
-  // ... find user, check password
-  if (!user.active) {
-    return res.status(403).json({ error: "Your account is pending admin approval." });
-  }
-  // proceed to create token, etc.
-});
-
-
-
-// ===============================
-// Middleware
-// ===============================
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5500",   // VS Code Live Server
-      "http://127.0.0.1:5500",
-      "http://localhost:3000",   // optional for React/Vite
-      "https://openark2-0.onrender.com" // deployed domain
-    ],
-    credentials: true,
-  })
-);
-
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-
-// ===============================
-// Serve static files
-// ===============================
-app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // uploaded book images
-app.use(express.static(path.join(__dirname, "public"))); // frontend (HTML/CSS/JS)
 
 // ===============================
 // MongoDB Setup
