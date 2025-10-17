@@ -23,23 +23,37 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const gemini = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
-const nodemailer = require("nodemailer");
+// ===============================
+// 📧 MailerSend Setup
+// ===============================
+const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.ADMIN_GMAIL,      // e.g. openark.library@gmail.com
-    pass: process.env.ADMIN_GMAIL_PASS, // app password (NOT your real Gmail password)
-  },
+const mailerSend = new MailerSend({
+  apiKey: process.env.MAILERSEND_API_KEY,
 });
 
-transporter.verify(function(error, success) {
-  if (error) {
-    console.error("Mail server verify failed:", error);
-  } else {
-    console.log("Mail server is ready to take messages");
+async function sendApprovalEmail(user) {
+  try {
+    const from = new Sender(process.env.SENDER_EMAIL, process.env.SENDER_NAME || "OpenArk");
+    const recipients = [new Recipient(user.email, user.username)];
+
+    const loginUrl = process.env.FRONTEND_URL || "https://openark2-0.onrender.com/intro.html";
+
+    const emailParams = new EmailParams()
+      .setFrom(from)
+      .setTo(recipients)
+      .setSubject("🎉 Your OpenArk account is approved")
+      .setHtml(`<p>Hi <strong>${user.username}</strong>,</p>
+                <p>Your OpenArk account has been <strong>approved</strong>.</p>
+                <p><a href="${loginUrl}">Click here to log in</a>.</p>
+                <p>— OpenArk Team</p>`);
+
+    await mailerSend.email.send(emailParams);
+    console.log(`✅ Approval email sent to ${user.email}`);
+  } catch (err) {
+    console.error("❌ Failed to send MailerSend email:", err);
   }
-});
+}
 
 
 cloudinary.config({
@@ -140,7 +154,8 @@ app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
              <p>Best,<br/>OpenArk Team</p>`,
     };
 
-    await transporter.sendMail(mailOptions);
+   await sendApprovalEmail(user);
+
 
     await Activity.create({
       user: "Admin",
@@ -154,6 +169,16 @@ app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
     res.status(500).json({ error: "Failed to approve user" });
   }
 });
+
+app.get("/api/test-mailersend", async (req, res) => {
+  await sendApprovalEmail({
+    username: "Test User",
+    email: process.env.ADMIN_GMAIL, // send to yourself first
+  });
+  res.send("✅ MailerSend test email sent!");
+});
+
+
 
 // ===============================
 // MongoDB Setup
