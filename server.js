@@ -23,42 +23,6 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const gemini = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
-// ===============================
-// 📧 Brevo SMTP (Nodemailer)
-// ===============================
-const nodemailer = require("nodemailer");
-
-const transporter = nodemailer.createTransport({
-  host: process.env.BREVO_SMTP_HOST,
-  port: process.env.BREVO_SMTP_PORT,
-  auth: {
-    user: process.env.BREVO_SMTP_USER,
-    pass: process.env.BREVO_SMTP_PASS,
-  },
-});
-
-async function sendApprovalEmail(user) {
-  try {
-    const loginUrl = process.env.FRONTEND_URL || "https://openark2-0.onrender.com/intro.html";
-    const mailOptions = {
-      from: `"${process.env.SENDER_NAME || "OpenArk"}" <${process.env.SENDER_EMAIL}>`,
-      to: user.email,
-      subject: "🎉 Your OpenArk account is approved",
-      html: `
-        <p>Hi <strong>${user.username}</strong>,</p>
-        <p>Your OpenArk account has been <strong>approved</strong>.</p>
-        <p><a href="${loginUrl}">Click here to log in</a>.</p>
-        <p>— OpenArk Team</p>
-      `,
-    };
-
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Approval email sent to ${user.email}`);
-  } catch (err) {
-    console.error("❌ Failed to send approval email:", err);
-  }
-}
-
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,

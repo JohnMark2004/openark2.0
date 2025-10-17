@@ -104,12 +104,13 @@ function renderUsers(users) {
 }
 
 function attachUserActionEvents() {
-  const token = sessionStorage.getItem("token");
-
   // ✅ Approve user
   document.querySelectorAll(".action-btn.approve").forEach((btn) => {
     btn.addEventListener("click", async () => {
+        const token = sessionStorage.getItem("token");
       const userId = btn.dataset.id;
+
+      showPopup("Approval in progress... click again to confirm");
       try {
         const res = await fetch(`${API_URL}/api/users/approve/${userId}`, {
           method: "PUT",
@@ -148,6 +149,45 @@ function attachUserActionEvents() {
         "<tr><td colspan='6' style='text-align:center;opacity:0.7;'>Failed to load users.</td></tr>";
     }
   }
+
+  // ===============================
+// 🔍 USER SEARCH + ROLE FILTER FIX
+// ===============================
+const searchInput = document.getElementById("searchInput");
+const roleFilter = document.getElementById("roleFilter");
+
+if (searchInput && roleFilter) {
+  // Search by name or email
+  searchInput.addEventListener("input", async () => {
+    const query = searchInput.value.toLowerCase();
+    const token = sessionStorage.getItem("token");
+    const res = await fetch(`${API_URL}/api/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const users = await res.json();
+
+    const filtered = users.filter(
+      (u) =>
+        u.username?.toLowerCase().includes(query) ||
+        u.email?.toLowerCase().includes(query)
+    );
+    renderUsers(filtered);
+  });
+
+  // Filter by role
+  roleFilter.addEventListener("change", async () => {
+    const role = roleFilter.value;
+    const token = sessionStorage.getItem("token");
+    const res = await fetch(`${API_URL}/api/users`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const users = await res.json();
+
+    if (role === "all") renderUsers(users);
+    else renderUsers(users.filter((u) => u.role === role));
+  });
+}
+
 
   // --- Delete User Modal ---
   function attachDeleteEvents() {

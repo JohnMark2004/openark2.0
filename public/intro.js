@@ -93,7 +93,9 @@ closeModal(modal);
 // FORM HANDLING (Signup / Login)
 // ===============================
 
-// Signup
+// ===============================
+// SIGNUP FORM HANDLER
+// ===============================
 document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   e.preventDefault();
 
@@ -107,17 +109,22 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
   const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 
   if (password !== confirmPassword) {
-    showPopup("Passwords do not match", "error");
+    showPopup("❌ Passwords do not match", "error");
     return;
   }
 
   if (!passwordRegex.test(password)) {
     showPopup(
-      "Password must be at least 6 characters and include uppercase, lowercase, and a number.",
+      "⚠️ Password must be at least 6 characters and include uppercase, lowercase, and a number.",
       "error"
     );
     return;
   }
+
+  // 🚀 Show "Processing" toast right away
+        setTimeout(() => {
+        showPopup("Signup request submitted! Please wait for admin approval.", "info");
+      }, 1500);
 
   try {
     const res = await fetch(`${API_URL}/api/signup`, {
@@ -130,13 +137,14 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
     console.log("Signup response:", data);
 
     if (res.ok) {
-      // Show pending approval notice
-      showPopup(
-        "✅ Signup successful! Please wait for admin approval before logging in.",
-        "success"
-      );
+      // ✅ Success: show pending approval toasts
+      showPopup("✅ Signup successful!", "success");
 
-      // Save basic info (not logged in yet)
+      setTimeout(() => {
+        showPopup("Your account request is pending admin approval.", "info");
+      }, 1500);
+
+      // Save info (not logged in yet)
       localStorage.setItem("username", username);
       localStorage.setItem("email", email);
       localStorage.setItem("collegeYear", collegeYear);
@@ -146,8 +154,9 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
       setTimeout(() => {
         closeModal(signupModal);
         openModal(loginModal);
-      }, 2500);
+      }, 3500);
     } else {
+      // ❌ Server returned an error
       showPopup(data.error || "Signup failed", "error");
     }
   } catch (err) {
@@ -155,7 +164,6 @@ document.querySelector(".signup-form").addEventListener("submit", async (e) => {
     showPopup("Signup request failed. Please try again later.", "error");
   }
 });
-
 
 // Login
 document.querySelector(".login-form").addEventListener("submit", async (e) => {

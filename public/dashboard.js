@@ -1611,22 +1611,26 @@ document.getElementById("generateOutlineBtn").addEventListener("click", async ()
 const bookmarksTab = document.getElementById("bookmarksTab");
 const bookmarksSection = document.getElementById("bookmarksSection");
 const bookmarksGrid = document.getElementById("bookmarksGrid");
+const viewAllBookmarksBtn = document.getElementById("viewAllBookmarksBtn");
 
-// ✅ THEN keep the listener
 if (bookmarksTab) {
-  bookmarksTab.addEventListener("click", (e) => {
+  bookmarksTab.addEventListener("click", async (e) => {
     e.preventDefault();
+
+    // Hide all other sections
     homeSection.classList.add("hidden");
-    conversionSection.classList.add("hidden");
     browseSection.classList.add("hidden");
+    conversionSection.classList.add("hidden");
     bookDetailsSection.classList.add("hidden");
     bookCreationSection.classList.add("hidden");
     bookReaderSection.classList.add("hidden");
+
+    // Show bookmarks
     bookmarksSection.classList.remove("hidden");
-    loadBookmarks();
+
+    await loadBookmarks();
   });
 }
-
 
 const token = sessionStorage.getItem("token");
 const profilePicInput = document.getElementById("profilePicInput");
@@ -1898,7 +1902,6 @@ if (role === "librarian" && conversionSection) {
   conversionSection.style.display = "";
 }
 
-
 // --- Load bookmarks ---
 async function loadBookmarks() {
   showLoader("loadingSpinnerBookmarks");
@@ -1911,28 +1914,61 @@ async function loadBookmarks() {
 
     const bookmarks = await res.json();
     bookmarksGrid.innerHTML = "";
+
+    if (!Array.isArray(bookmarks) || bookmarks.length === 0) {
+      bookmarksGrid.innerHTML = `
+        <p style="text-align:center;opacity:0.7;margin-top:1rem;">
+          📚 You haven’t bookmarked any books yet.
+        </p>
+      `;
+      return;
+    }
+
     bookmarks.forEach((book) => {
       const div = document.createElement("div");
       div.className = "book";
-const firstGenre = Array.isArray(book.category)
-  ? book.category[0]
-  : (book.category?.split(",")[0] || "Unknown");
+      const firstGenre = Array.isArray(book.category)
+        ? book.category[0]
+        : (book.category?.split(",")[0] || "Unknown");
 
-div.innerHTML = `
-  <img src="${book.img}" alt="${book.title}">
-  <h4>${book.title}</h4>
- <p class="genre-label">${firstGenre.trim()}</p>
-`;
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <h4>${book.title}</h4>
+        <p class="genre-label">${firstGenre.trim()}</p>
+      `;
 
-      div.addEventListener("click", () => showBookDetails(book, bookmarksSection));
+      div.addEventListener("click", () =>
+        showBookDetails(book, bookmarksSection)
+      );
       bookmarksGrid.appendChild(div);
     });
   } catch (err) {
     console.error("❌ Error loading bookmarks:", err);
+    bookmarksGrid.innerHTML =
+      `<p style="text-align:center;opacity:0.7;">Failed to load bookmarks.</p>`;
   }
   hideLoader("loadingSpinnerBookmarks");
 }
+
 const viewAllBtn = document.getElementById("viewAllBtn");
+if (viewAllBookmarksBtn) {
+  viewAllBookmarksBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // hide all other sections
+    bookmarksSection.classList.add("hidden");
+    homeSection.classList.add("hidden");
+    conversionSection.classList.add("hidden");
+    bookDetailsSection.classList.add("hidden");
+    bookCreationSection.classList.add("hidden");
+    bookReaderSection.classList.add("hidden");
+
+    // show browse
+    browseSection.classList.remove("hidden");
+    loadBrowseBooks();
+  });
+}
+
 if (viewAllBtn) {
   viewAllBtn.addEventListener("click", () => {
     const home = document.getElementById("homeSection");
