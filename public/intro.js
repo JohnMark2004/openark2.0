@@ -230,10 +230,8 @@ document.addEventListener("click", (e) => {
     e.target.src = isHidden ? "img/eye-password-show-svgrepo-com.svg" : "img/eye-password-hide-svgrepo-com.svg";
   }
 });
-
-
 // ===============================
-// POPULATE INTRO SLIDESHOW & COUNT (Infinite Carousel)
+// POPULATE INTRO SLIDESHOW & COUNT (Auto-Scrolling Carousel with Adjustable Speed)
 // ===============================
 async function loadIntroBooks() {
   try {
@@ -248,54 +246,56 @@ async function loadIntroBooks() {
     // Clear old content
     track.innerHTML = "";
 
-    if (!books || books.length === 0) {
+    // If no books available
+    if (!Array.isArray(books) || books.length === 0) {
       track.innerHTML = `<p class="no-books">No books available yet.</p>`;
       if (countEl) countEl.textContent = "Available Books: 0";
       return;
     }
 
-    // --- Duplicate content for seamless infinite scrolling ---
-    const allBooks = [...books, ...books]; // doubled list
+    // ✅ Duplicate once for seamless infinite scroll
+    const allBooks = [...books, ...books];
 
     allBooks.forEach((book) => {
       const img = document.createElement("img");
-      img.src = book.img;
-      img.alt = book.title;
+      img.src = book.img || "img/default-book.png";
+      img.alt = book.title || "Untitled";
       img.className = "book";
+      img.title = book.title || "Unknown";
       track.appendChild(img);
     });
 
-    // --- Update count ---
+    // ✅ Update count
     if (countEl) countEl.textContent = `Available Books: ${books.length}`;
 
-    // --- Animate infinite scroll ---
+    // ✅ Smooth continuous scroll animation
     let position = 0;
-    const speed = 0.4; // adjust this for faster/slower scroll
+    const speed = 10; // 🔧 adjust this value (lower = slower, higher = faster)
 
     function animate() {
       position -= speed;
       if (Math.abs(position) >= track.scrollWidth / 2) {
-        position = 0; // reset smoothly at halfway point
+        position = 0; // reset halfway for seamless loop
       }
       track.style.transform = `translateX(${position}px)`;
       requestAnimationFrame(animate);
     }
 
+    // ✅ Style
     track.style.display = "flex";
     track.style.gap = "20px";
     track.style.transition = "none";
     track.style.willChange = "transform";
+    track.style.overflow = "hidden";
+
     requestAnimationFrame(animate);
   } catch (err) {
     console.error("❌ Error loading intro books:", err);
   }
 }
 
+// ✅ Run on load
 document.addEventListener("DOMContentLoaded", loadIntroBooks);
-
-// Run on load
-document.addEventListener("DOMContentLoaded", loadIntroBooks);
-
 
 // ===============================
 // CHECK LOGIN STATUS (optional)
