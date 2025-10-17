@@ -73,6 +73,26 @@ const io = new Server(httpServer, {
   },
 });
 
+// ===============================
+// ✅ Authentication Middleware
+// ===============================
+function authenticateMiddleware(req, res, next) {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader)
+      return res.status(401).json({ error: "Missing authorization header" });
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch (err) {
+    console.error("Auth error:", err);
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+}
+
+// ✅ Protected Approve route
 app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
   try {
     if (req.user.role !== "admin") {
@@ -86,13 +106,11 @@ app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
     user.active = true;
     await user.save();
 
-    // 🔔 Build the Gmail message
     const loginUrl = process.env.FRONTEND_URL || "https://openark2-0.onrender.com/intro.html";
     const mailOptions = {
       from: `${process.env.SENDER_NAME || "OpenArk"} <${process.env.ADMIN_GMAIL}>`,
       to: user.email,
       subject: "🎉 Your OpenArk account is approved",
-      text: `Hi ${user.username},\n\nYour OpenArk account has been approved by the admin. You can now log in at: ${loginUrl}\n\n— OpenArk Team`,
       html: `<p>Hi <strong>${user.username}</strong>,</p>
              <p>Your OpenArk account has been <strong>approved</strong>. You can now <a href="${loginUrl}">log in</a>.</p>
              <p>Best,<br/>OpenArk Team</p>`,
@@ -106,9 +124,9 @@ app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
       details: `${user.username} (${user.email})`,
     });
 
-    res.json({ message: "✅ User approved and notification sent" });
+    res.json({ message: "User approved and notification sent" });
   } catch (err) {
-    console.error("❌ Approve user error:", err);
+    console.error("Approve user error:", err);
     res.status(500).json({ error: "Failed to approve user" });
   }
 });
