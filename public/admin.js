@@ -1,31 +1,32 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const API_URL =
-    window.location.hostname === "localhost"
-      ? "http://localhost:5000"
-      : "https://openark2-0.onrender.com";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+} from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
-  // --- Element References ---
-  const userTab = document.getElementById("userTab");
-  const booksTab = document.getElementById("booksTab");
-  const reportsTab = document.getElementById("reportsTab");
-  const usersSection = document.getElementById("usersSection");
-  const booksSection = document.getElementById("booksSection");
-  const reportsSection = document.getElementById("reportsSection");
+document.addEventListener("DOMContentLoaded", () => {
+  const db = window.db; // from admin.html script
   const userTableBody = document.getElementById("userTableBody");
-  const popup = document.getElementById("popup");
   const totalUsers = document.getElementById("totalUsers");
   const activeUsers = document.getElementById("activeUsers");
   const inactiveUsers = document.getElementById("inactiveUsers");
-  const activityTableBody = document.getElementById("activityTableBody");
-  const activitySort = document.getElementById("activitySort"); // ✅ new reference
+  const popup = document.getElementById("popup");
 
-  // ✅ Redirect non-admins away
-  if (localStorage.getItem("role") !== "admin") {
-    window.location.href = "intro.html";
-    return;
-  }
+  const totalBooks = document.getElementById("totalBooks");
+  const recentBooks = document.getElementById("recentBooks");
+  const deletedBooks = document.getElementById("deletedBooks");
+  const bookTableBody = document.getElementById("bookTableBody");
 
-  // --- Popup ---
+  const reportTotalUsers = document.getElementById("reportTotalUsers");
+  const reportTotalBooks = document.getElementById("reportTotalBooks");
+  const reportTopCategory = document.getElementById("reportTopCategory");
+  const reportTopBook = document.getElementById("reportTopBook");
+
+  // --- Popup helper ---
   function showPopup(message) {
     popup.textContent = message;
     popup.classList.add("show");
@@ -33,265 +34,101 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ===============================
-  // 👤 USER TAB LOGIC
+  // 👤 USERS (Firestore)
   // ===============================
-  userTab.addEventListener("click", (e) => {
-    e.preventDefault();
-    userTab.classList.add("active");
-    booksTab.classList.remove("active");
-    reportsTab.classList.remove("active");
-
-    usersSection.classList.remove("hidden");
-    booksSection.classList.add("hidden");
-    reportsSection.classList.add("hidden");
-  });
-
-  booksTab.addEventListener("click", (e) => {
-    e.preventDefault();
-    booksTab.classList.add("active");
-    userTab.classList.remove("active");
-    reportsTab.classList.remove("active");
-
-    usersSection.classList.add("hidden");
-    booksSection.classList.remove("hidden");
-    reportsSection.classList.add("hidden");
-
-    loadBooks();
-  });
-
-function renderUsers(users) {
-  userTableBody.innerHTML = "";
-
-  if (!Array.isArray(users) || users.length === 0) {
-    userTableBody.innerHTML =
-      "<tr><td colspan='6' style='text-align:center;opacity:0.7;'>No users found.</td></tr>";
-    return;
-  }
-
-  users.forEach((u) => {
-    const tr = document.createElement("tr");
-    const isActive = u.active;
-
-    tr.innerHTML = `
-      <td><img src="${u.profilePic || 'assets/default-pfp.png'}" alt="pfp"></td>
-      <td>${u.username || "N/A"}</td>
-      <td>${u.email || "N/A"}</td>
-      <td>${u.role || "student"}</td>
-      <td><span class="status ${isActive ? "active" : "inactive"}">
-        ${isActive ? "Active" : "Pending"}
-      </span></td>
-      <td>
-        ${
-          isActive
-            ? `<button class="action-btn delete" data-id="${u._id}">Delete</button>`
-            : `
-              <button class="action-btn approve" data-id="${u._id}">Approve</button>
-              <button class="action-btn delete" data-id="${u._id}">Delete</button>
-            `
-        }
-      </td>
-    `;
-
-    userTableBody.appendChild(tr);
-  });
-
-  // update stats
-  totalUsers.textContent = users.length;
-  activeUsers.textContent = users.filter((u) => u.active).length;
-  inactiveUsers.textContent = users.filter((u) => !u.active).length;
-
-  attachUserActionEvents();
-}
-
-function attachUserActionEvents() {
-  // ✅ Approve user
-  document.querySelectorAll(".action-btn.approve").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-        const token = sessionStorage.getItem("token");
-      const userId = btn.dataset.id;
-
-      showPopup("Approval in progress... click again to confirm");
-      try {
-        const res = await fetch(`${API_URL}/api/users/approve/${userId}`, {
-          method: "PUT",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = await res.json();
-        showPopup(data.message || "User approved successfully!");
-        loadUsers();
-      } catch (err) {
-        console.error("Approve failed:", err);
-        showPopup("Failed to approve user");
-      }
-    });
-  });
-
-  // 🗑️ Delete user (you already have this function)
-  attachDeleteEvents();
-}
-
-
-  // --- Load Users ---
   async function loadUsers() {
     try {
-      const token = sessionStorage.getItem("token");
-      const res = await fetch(`${API_URL}/api/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!res.ok) throw new Error("Failed to load users");
-      const users = await res.json();
+      const snapshot = await getDocs(collection(db, "users"));
+      const users = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
       renderUsers(users);
     } catch (err) {
       console.error("Error loading users:", err);
       userTableBody.innerHTML =
-        "<tr><td colspan='6' style='text-align:center;opacity:0.7;'>Failed to load users.</td></tr>";
+        "<tr><td colspan='6' style='text-align:center;'>Failed to load users.</td></tr>";
     }
   }
 
-  // ===============================
-// 🔍 USER SEARCH + ROLE FILTER FIX
-// ===============================
-const searchInput = document.getElementById("searchInput");
-const roleFilter = document.getElementById("roleFilter");
+  function renderUsers(users) {
+    userTableBody.innerHTML = "";
+    if (users.length === 0) {
+      userTableBody.innerHTML =
+        "<tr><td colspan='6' style='text-align:center;'>No users found.</td></tr>";
+      return;
+    }
 
-if (searchInput && roleFilter) {
-  // Search by name or email
-  searchInput.addEventListener("input", async () => {
-    const query = searchInput.value.toLowerCase();
-    const token = sessionStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/users`, {
-      headers: { Authorization: `Bearer ${token}` },
+    users.forEach((u) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><img src="${u.profilePic || "img/default-pfp.png"}" alt="pfp" style="width:45px;height:45px;border-radius:50%;"></td>
+        <td>${u.username}</td>
+        <td>${u.email}</td>
+        <td>${u.role || "student"}</td>
+        <td><span class="status ${u.active ? "active" : "inactive"}">
+          ${u.active ? "Active" : "Pending"}
+        </span></td>
+        <td>
+          ${
+            u.active
+              ? `<button class="action-btn delete" data-id="${u.id}">Delete</button>`
+              : `
+                <button class="action-btn approve" data-id="${u.id}">Approve</button>
+                <button class="action-btn delete" data-id="${u.id}">Delete</button>
+              `
+          }
+        </td>
+      `;
+      userTableBody.appendChild(tr);
     });
-    const users = await res.json();
 
-    const filtered = users.filter(
-      (u) =>
-        u.username?.toLowerCase().includes(query) ||
-        u.email?.toLowerCase().includes(query)
-    );
-    renderUsers(filtered);
-  });
+    totalUsers.textContent = users.length;
+    activeUsers.textContent = users.filter((u) => u.active).length;
+    inactiveUsers.textContent = users.filter((u) => !u.active).length;
 
-  // Filter by role
-  roleFilter.addEventListener("change", async () => {
-    const role = roleFilter.value;
-    const token = sessionStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/users`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const users = await res.json();
+    attachUserActions();
+  }
 
-    if (role === "all") renderUsers(users);
-    else renderUsers(users.filter((u) => u.role === role));
-  });
-}
-
-
-  // --- Delete User Modal ---
-  function attachDeleteEvents() {
-    const modal = document.getElementById("deleteModal");
-    const confirmBtn = document.getElementById("confirmDelete");
-    const cancelBtn = document.getElementById("cancelDelete");
-    let targetUserId = null;
-
-    document.querySelectorAll(".action-btn.delete").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        targetUserId = btn.dataset.id;
-        modal.classList.add("show");
+  function attachUserActions() {
+    document.querySelectorAll(".action-btn.approve").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const userId = btn.dataset.id;
+        try {
+          await updateDoc(doc(db, "users", userId), { active: true });
+          showPopup("User approved!");
+          loadUsers();
+        } catch (err) {
+          console.error(err);
+          showPopup("Failed to approve user");
+        }
       });
     });
 
-    cancelBtn.addEventListener("click", () => {
-      modal.classList.remove("show");
-      targetUserId = null;
-    });
-
-    confirmBtn.addEventListener("click", async () => {
-      if (!targetUserId) return;
-      const token = sessionStorage.getItem("token");
-
-      try {
-        const res = await fetch(`${API_URL}/api/users/${targetUserId}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        const data = await res.json();
-        showPopup(data.message || "User deleted");
-        modal.classList.remove("show");
-        loadUsers();
-      } catch (err) {
-        console.error("Delete failed:", err);
-        showPopup("Failed to delete user");
-        modal.classList.remove("show");
-      }
+    document.querySelectorAll(".action-btn.delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        const userId = btn.dataset.id;
+        try {
+          await deleteDoc(doc(db, "users", userId));
+          showPopup("User deleted!");
+          loadUsers();
+        } catch (err) {
+          console.error(err);
+          showPopup("Failed to delete user");
+        }
+      });
     });
   }
 
-  // --- Logout ---
-  document.getElementById("logoutBtn").addEventListener("click", async () => {
-    const token = sessionStorage.getItem("token");
-    if (token) {
-      try {
-        await fetch(`${API_URL}/api/logout`, {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-      } catch (err) {
-        console.error("Logout error:", err);
-      }
-    }
-
-    sessionStorage.removeItem("token");
-    localStorage.clear();
-    window.location.href = "intro.html";
-  });
-
-  // --- Initial Load ---
-  loadUsers();
-
-// ===============================
-// ✅ STATUS FILTER FOR USERS (Step 5)
-// ===============================
-document.getElementById("statusFilter").addEventListener("change", async (e) => {
-  const value = e.target.value;
-  const token = sessionStorage.getItem("token");
-  const res = await fetch(`${API_URL}/api/users`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  const users = await res.json();
-
-  if (value === "all") renderUsers(users);
-  else if (value === "active") renderUsers(users.filter((u) => u.active));
-  else renderUsers(users.filter((u) => !u.active));
-});
-
   // ===============================
-  // 📚 BOOK MANAGEMENT TAB LOGIC
+  // 📚 BOOKS (Firestore)
   // ===============================
-  const bookTableBody = document.getElementById("bookTableBody");
-  const totalBooks = document.getElementById("totalBooks");
-  const recentBooks = document.getElementById("recentBooks");
-  const deletedBooks = document.getElementById("deletedBooks");
-  const bookSearch = document.getElementById("bookSearch");
-  const categoryFilter = document.getElementById("categoryFilter");
-  let allBooks = [];
-  let deletedCount = 0;
-
   async function loadBooks() {
     try {
-      const res = await fetch(`${API_URL}/api/books`);
-      const books = await res.json();
-      allBooks = books;
+      const snapshot = await getDocs(collection(db, "books"));
+      const books = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
       renderBooks(books);
-      updateBookStats(books);
-      populateCategories(books);
     } catch (err) {
       console.error("Error loading books:", err);
       bookTableBody.innerHTML =
-        "<tr><td colspan='6' style='text-align:center;opacity:0.7;'>Failed to load books.</td></tr>";
+        "<tr><td colspan='6' style='text-align:center;'>Failed to load books.</td></tr>";
     }
   }
 
@@ -299,349 +136,108 @@ document.getElementById("statusFilter").addEventListener("change", async (e) => 
     bookTableBody.innerHTML = "";
     if (books.length === 0) {
       bookTableBody.innerHTML =
-        "<tr><td colspan='6' style='text-align:center;opacity:0.7;'>No books found.</td></tr>";
+        "<tr><td colspan='6' style='text-align:center;'>No books found.</td></tr>";
       return;
     }
 
     books.forEach((b) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td><img src="${b.img}" alt="${b.title}" style="width:45px;height:60px;border-radius:6px;object-fit:cover;"></td>
+        <td><img src="${b.img || "img/default-book.png"}" alt="${b.title}" style="width:45px;height:60px;border-radius:6px;object-fit:cover;"></td>
         <td>${b.title}</td>
         <td>${b.author}</td>
         <td>${Array.isArray(b.category) ? b.category.join(", ") : b.category}</td>
         <td>${b.publisher || "N/A"}</td>
-        <td>${b.year}</td>
-        <td>
-          <button class="action-btn view" data-id="${b._id}">View</button>
-          <button class="action-btn delete" data-id="${b._id}">Delete</button>
-        </td>
+        <td>${b.year || "-"}</td>
+        <td><button class="action-btn delete" data-id="${b.id}">Delete</button></td>
       `;
       bookTableBody.appendChild(tr);
     });
 
-    attachBookEvents();
-  }
-
-  function updateBookStats(books) {
     totalBooks.textContent = books.length;
     recentBooks.textContent = books.slice(-5).length;
-    deletedBooks.textContent = deletedCount;
-  }
+    deletedBooks.textContent = "0"; // session placeholder
 
-  function populateCategories(books) {
-    const categories = new Set();
-    books.forEach((b) => {
-      if (Array.isArray(b.category)) b.category.forEach((c) => categories.add(c));
-      else if (b.category) categories.add(b.category);
-    });
-    categoryFilter.innerHTML = `<option value="all">All Categories</option>`;
-    categories.forEach((c) => {
-      const opt = document.createElement("option");
-      opt.value = c;
-      opt.textContent = c;
-      categoryFilter.appendChild(opt);
+    document.querySelectorAll(".action-btn.delete").forEach((btn) => {
+      btn.addEventListener("click", async () => {
+        try {
+          await deleteDoc(doc(db, "books", btn.dataset.id));
+          showPopup("Book deleted!");
+          loadBooks();
+        } catch (err) {
+          console.error(err);
+          showPopup("Failed to delete book");
+        }
+      });
     });
   }
-
-  function attachBookEvents() {
-    document.querySelectorAll(".action-btn.view").forEach((btn) => {
-      btn.addEventListener("click", () => openBookModal(btn.dataset.id));
-    });
-
-document.querySelectorAll("#booksSection .action-btn.delete").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const bookId = btn.dataset.id;
-    const modal = document.getElementById("bookDeleteModal");
-    const confirmBtn = document.getElementById("confirmBookDelete");
-    const cancelBtn = document.getElementById("cancelBookDelete");
-
-    modal.classList.add("show");
-
-    cancelBtn.onclick = () => {
-      modal.classList.remove("show");
-    };
-
-    confirmBtn.onclick = async () => {
-      const token = sessionStorage.getItem("token");
-      try {
-        const res = await fetch(`${API_URL}/api/books/${bookId}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-        showPopup(data.message || "Book deleted successfully");
-        modal.classList.remove("show");
-        deletedCount++;
-        loadBooks();
-      } catch (err) {
-        console.error("Delete book failed:", err);
-        showPopup("Failed to delete book. Please try again.");
-        modal.classList.remove("show");
-      }
-    };
-  });
-});
-
-  }
-
-  // --- Modal Logic ---
-  const bookModal = document.getElementById("bookModal");
-  const closeBookModal = document.getElementById("closeBookModal");
-  const deleteBookBtn = document.getElementById("deleteBookBtn");
-
-  async function openBookModal(id) {
-    const book = allBooks.find((b) => b._id === id);
-    if (!book) return;
-
-    document.getElementById("modalBookTitle").textContent = book.title;
-    document.getElementById("modalBookAuthor").textContent = book.author;
-    document.getElementById("modalBookCategory").textContent = Array.isArray(book.category)
-      ? book.category.join(", ")
-      : book.category;
-    document.getElementById("modalBookYear").textContent = book.year;
-    document.getElementById("modalCover").src = book.img || "img/default-book.png";
-    deleteBookBtn.dataset.id = book._id;
-
-    bookModal.classList.add("show");
-  }
-
-  closeBookModal.addEventListener("click", () => {
-    bookModal.classList.remove("show");
-  });
-
-  deleteBookBtn.addEventListener("click", async () => {
-    const id = deleteBookBtn.dataset.id;
-    const token = sessionStorage.getItem("token");
-    const res = await fetch(`${API_URL}/api/books/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data = await res.json();
-    showPopup(data.message || "Book deleted");
-    deletedCount++;
-    bookModal.classList.remove("show");
-    loadBooks();
-  });
-
-  // --- Search + Filter ---
-  bookSearch.addEventListener("input", () => {
-    const query = bookSearch.value.toLowerCase();
-    const filtered = allBooks.filter((b) => {
-      const title = (b.title || "").toLowerCase();
-      const author = (b.author || "").toLowerCase();
-      const publisher = (b.publisher || "").toLowerCase();
-      const year = String(b.year || "").toLowerCase();
-      return (
-        title.includes(query) ||
-        author.includes(query) ||
-        publisher.includes(query) ||
-        year.includes(query)
-      );
-    });
-    renderBooks(filtered);
-  });
-
-  categoryFilter.addEventListener("change", () => {
-    const value = categoryFilter.value;
-    if (value === "all") renderBooks(allBooks);
-    else renderBooks(allBooks.filter((b) => b.category.includes(value)));
-  });
-
-  booksTab.addEventListener("click", loadBooks);
 
   // ===============================
-  // 📊 REPORTS TAB LOGIC
+  // 📊 REPORTS (Firestore)
   // ===============================
-  const reportTotalUsers = document.getElementById("reportTotalUsers");
-  const reportTotalBooks = document.getElementById("reportTotalBooks");
-  const reportTopCategory = document.getElementById("reportTopCategory");
-  const reportTopBook = document.getElementById("reportTopBook");
-
-  let allActivities = [];
-
-  reportsTab.addEventListener("click", async (e) => {
-    e.preventDefault();
-    userTab.classList.remove("active");
-    booksTab.classList.remove("active");
-    reportsTab.classList.add("active");
-
-    usersSection.classList.add("hidden");
-    booksSection.classList.add("hidden");
-    reportsSection.classList.remove("hidden");
-
-    await loadReports();
-  });
-
   async function loadReports() {
     try {
-      const token = sessionStorage.getItem("token");
+      const usersSnap = await getDocs(collection(db, "users"));
+      const booksSnap = await getDocs(collection(db, "books"));
 
-      // Summary
-      const reportRes = await fetch(`${API_URL}/api/report-summary`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const totalUsersCount = usersSnap.size;
+      const totalBooksCount = booksSnap.size;
+
+      const categoryCount = {};
+      booksSnap.docs.forEach((d) => {
+        const cats = Array.isArray(d.data().category)
+          ? d.data().category
+          : [d.data().category];
+        cats.forEach((c) => {
+          if (c) categoryCount[c] = (categoryCount[c] || 0) + 1;
+        });
       });
-      const report = await reportRes.json();
 
-      reportTotalUsers.textContent = report.totalUsers || 0;
-      reportTotalBooks.textContent = report.totalBooks || 0;
-      reportTopCategory.textContent = report.topCategory || "N/A";
-      reportTopBook.textContent = report.topBook || "N/A";
+      const topCategory =
+        Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0]?.[0] ||
+        "N/A";
+      let topBook = "N/A";
+      if (!booksSnap.empty) {
+        let max = null;
+        booksSnap.docs.forEach((d) => {
+          const data = d.data();
+          if (!max || (data.pages || []).length > (max.pages || []).length)
+            max = data;
+        });
+        if (max) topBook = `${max.title} (${(max.pages || []).length} pages)`;
+      }
 
-      // Activities
-      const activityRes = await fetch(`${API_URL}/api/activity`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      allActivities = await activityRes.json();
-
-      renderActivities();
+      reportTotalUsers.textContent = totalUsersCount;
+      reportTotalBooks.textContent = totalBooksCount;
+      reportTopCategory.textContent = topCategory;
+      reportTopBook.textContent = topBook;
     } catch (err) {
       console.error("Error loading reports:", err);
-      activityTableBody.innerHTML =
-        "<tr><td colspan='4' style='text-align:center;'>Failed to load report data.</td></tr>";
     }
   }
 
-  // ✅ Sorting + Rendering for Activities
-  function renderActivities() {
-    if (!Array.isArray(allActivities) || allActivities.length === 0) {
-      activityTableBody.innerHTML = `<tr><td colspan='4' style='text-align:center;'>No recent activity found.</td></tr>`;
-      return;
-    }
-
-    let sorted = [...allActivities];
-    switch (activitySort?.value) {
-      case "oldest":
-        sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
-        break;
-      case "user":
-        sorted.sort((a, b) => (a.user || "").localeCompare(b.user || ""));
-        break;
-      case "action":
-        sorted.sort((a, b) => (a.action || "").localeCompare(b.action || ""));
-        break;
-      default:
-        sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
-
-    activityTableBody.innerHTML = sorted
-      .slice(0, 10)
-      .map(
-        (a) => `
-        <tr>
-          <td>${new Date(a.date).toLocaleString()}</td>
-          <td>${a.user || "Unknown"}</td>
-          <td>${a.action || "N/A"}</td>
-          <td>${a.details || ""}</td>
-        </tr>`
-      )
-      .join("");
-  }
-
-  if (activitySort) activitySort.addEventListener("change", renderActivities);
-
-// ✅ Filter Activities by Month + Year
-const monthFilter = document.getElementById("monthFilter");
-
-if (monthFilter) {
-  monthFilter.addEventListener("change", () => {
-    const monthValue = monthFilter.value; // e.g. "2025-10"
-    if (!monthValue) {
-      renderActivities(); // show all if no month picked
-      return;
-    }
-
-    const [year, month] = monthValue.split("-").map(Number);
-
-    // ✅ Filter activities by selected month
-    const filtered = allActivities.filter(a => {
-      const d = new Date(a.date);
-      return d.getFullYear() === year && d.getMonth() + 1 === month;
-    });
-
-    // ✅ Apply sorting again
-    let sorted = [...filtered];
-    switch (activitySort?.value) {
-      case "oldest":
-        sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
-        break;
-      case "user":
-        sorted.sort((a, b) => (a.user || "").localeCompare(b.user || ""));
-        break;
-      case "action":
-        sorted.sort((a, b) => (a.action || "").localeCompare(b.action || ""));
-        break;
-      default:
-        sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
-
-    // ✅ Render results
-    activityTableBody.innerHTML = sorted.length
-      ? sorted
-          .map(a => `
-            <tr>
-              <td>${new Date(a.date).toLocaleString()}</td>
-              <td>${a.user || "Unknown"}</td>
-              <td>${a.action || "N/A"}</td>
-              <td>${a.details || ""}</td>
-            </tr>
-          `)
-          .join("")
-      : `<tr><td colspan='4' style='text-align:center;'>No activity found for this month.</td></tr>`;
-  });
-}
-
-// ===============================
-// 📤 EXPORT RECENT ACTIVITY (FIXED)
-// ===============================
-const exportPNG = document.getElementById("exportPNG");
-const exportPDF = document.getElementById("exportPDF");
-const exportExcel = document.getElementById("exportExcel");
-
-if (exportPNG || exportPDF || exportExcel) {
-  // 🖼️ Export as PNG
-  exportPNG?.addEventListener("click", async () => {
-    const table = document.querySelector("#reportsSection table.user-table");
-    if (!table) return alert("No activity table found!");
-    const canvas = await html2canvas(table, { scale: 2 });
-    const link = document.createElement("a");
-    link.download = "Recent_Activity.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+  // ===============================
+  // 🚪 LOGOUT
+  // ===============================
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "intro.html";
   });
 
-  // 📄 Export as PDF (same as PNG view)
-  exportPDF?.addEventListener("click", async () => {
-    const table = document.querySelector("#reportsSection table.user-table");
-    if (!table) return alert("No activity table found!");
-
-    // Render visible table as image
-    const canvas = await html2canvas(table, { scale: 2 });
-    const imgData = canvas.toDataURL("image/png");
-
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF("p", "mm", "a4");
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const imgWidth = pageWidth - 20;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
-
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(16);
-    pdf.text("Recent Activity Report", pageWidth / 2, 20, { align: "center" });
-
-    pdf.addImage(imgData, "PNG", 10, 30, imgWidth, imgHeight);
-    pdf.save("Recent_Activity_Report.pdf");
+  // ===============================
+  // 🔁 Real-time updates
+  // ===============================
+  onSnapshot(collection(db, "users"), () => loadUsers());
+  onSnapshot(collection(db, "books"), () => {
+    loadBooks();
+    loadReports();
   });
 
-  // 📊 Export as Excel
-  exportExcel?.addEventListener("click", () => {
-    const table = document.querySelector("#reportsSection table.user-table");
-    if (!table) return alert("No activity table found!");
-    const wb = XLSX.utils.table_to_book(table, { sheet: "Recent Activity" });
-    XLSX.writeFile(wb, "Recent_Activity.xlsx");
-  });
-}
-
-
-
+  // ===============================
+  // INITIAL LOAD
+  // ===============================
+  loadUsers();
+  loadBooks();
+  loadReports();
 });

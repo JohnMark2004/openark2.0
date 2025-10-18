@@ -1,36 +1,22 @@
-<section id="browseSection" class="hidden">
-  <h2 id="browseHeading">Browse Library</h2>
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-  <div class="browse-controls">
-    <input type="text" id="browseSearch" placeholder="Search..." />
-    <button id="browseSearchBtn">Search</button>
-    <button id="advancedSearchToggle">Advanced Search</button>
-  </div>
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyCT6iAeGe8R-HUtzKYvS84yyONkBy2zmBw",
+  authDomain: "openark-6b5c5.firebaseapp.com",
+  projectId: "openark-6b5c5",
+  storageBucket: "openark-6b5c5.firebasestorage.app",
+  messagingSenderId: "481903001195",
+  appId: "1:481903001195:web:8761987ed292a9470dbb2e",
+  measurementId: "G-4FRMNLRXW5"
+};
 
-  <div id="advancedSearchSection" class="hidden">
-    <input type="text" id="keywordSearch" placeholder="Keyword (Description)">
-    <input type="text" id="authorSearch" placeholder="Author Name">
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
 
-    <div class="genre-filters" id="genreFilters">
-      <button class="genre-btn active" data-genre="all">All</button>
-      <button class="genre-btn" data-genre="Accountancy">Accountancy</button>
-      <button class="genre-btn" data-genre="Criminology">Criminology</button>
-      <button class="genre-btn" data-genre="Computer Science">Computer Science</button>
-      <button class="genre-btn" data-genre="Engineering">Engineering</button>
-      <button class="genre-btn" data-genre="Commerce">Commerce</button>
-      <button class="genre-btn" data-genre="Maritime">Maritime</button>
-      <button class="genre-btn" data-genre="Mass Communication">Mass Communication</button>
-      <button class="genre-btn" data-genre="Political Science">Political Science</button>
-      <button class="genre-btn" data-genre="Psychology">Psychology</button>
-      <button class="genre-btn" data-genre="Aviation">Aviation</button>
-      <button class="genre-btn" data-genre="Fiction">Fiction</button>
-      <button class="genre-btn" data-genre="Filipiana">Filipiana</button>
-      <button class="genre-btn" data-genre="General Education">General Education</button>
-      <button class="genre-btn" data-genre="Senior High">Senior High</button>
-    </div>
-  </div>
-
-  <h3 id="currentGenreTitle">Showing: All</h3>
-  <div id="loadingSpinnerBrowse" class="spinner hidden"></div>
-  <div class="browse-grid" id="browseBooks"></div>
-</section>

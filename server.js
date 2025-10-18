@@ -1,51 +1,55 @@
-// ===============================
-// server.js (CommonJS syntax)
-// ===============================
-
+// server.js (CommonJS)
 require("dotenv").config();
 const cloudinary = require("cloudinary").v2;
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const http = require("http");
 const { Server } = require("socket.io");
-const gTTS = require('gtts');
+const gTTS = require("gtts");
+const admin = require("firebase-admin");
+
+// ---- Firebase admin initialization ----
+const serviceAccount = require("./openark-6b5c5-firebase-adminsdk-fbsvc-46552f02fe.json"); // adjust filename
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+});
+const db = admin.firestore();
 
 // ✅ Gemini import MUST come before it's used
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-
-// ✅ Now safely create the Gemini client
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const gemini = genAI.getGenerativeModel({ model: "gemini-2.5-pro" });
 
+const staticLibrarians = [
+  { email: "librarian1@gmail.com", password: "lib123", username: "Librarian 1" },
+  { email: "librarian2@gmail.com", password: "lib123", username: "Librarian 2" },
+  { email: "librarian3@gmail.com", password: "lib123", username: "Librarian 3" },
+];
+
+// Cloudinary config
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// ✅ Ensure uploads folder exists
+// ensure uploads folder
 if (!fs.existsSync(path.join(__dirname, "uploads"))) {
   fs.mkdirSync(path.join(__dirname, "uploads"));
 }
 
 const app = express();
 
-// ===============================
-// Middleware
-// ===============================
 app.use(
   cors({
     origin: [
-      "http://localhost:5500",   // VS Code Live Server
+      "http://localhost:5500",
       "http://127.0.0.1:5500",
-      "http://localhost:3000",   // optional for React/Vite
-      "https://openark2-0.onrender.com" // deployed domain
+      "http://localhost:3000",
+      "https://openark2-0.onrender.com",
     ],
     credentials: true,
   })
@@ -54,39 +58,30 @@ app.use(
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// ===============================
-// Serve static files
-// ===============================
-app.use("/uploads", express.static(path.join(__dirname, "uploads"))); // uploaded book images
-app.use(express.static(path.join(__dirname, "public"))); // frontend (HTML/CSS/JS)
+// static serving
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use(express.static(path.join(__dirname, "public")));
 
-// ===============================
-// HTTP & Socket.IO Server Setup
-// ===============================
+// http + socket.io
 const httpServer = http.createServer(app);
-
 const io = new Server(httpServer, {
   cors: {
     origin: [
-      "http://localhost:5500",   // VS Code Live Server
+      "http://localhost:5500",
       "http://127.0.0.1:5500",
-      "http://localhost:3000",   // React/Vite local
-      "https://openark2-0.onrender.com" // deployed domain
+      "http://localhost:3000",
+      "https://openark2-0.onrender.com",
     ],
     methods: ["GET", "POST"],
     credentials: true,
   },
 });
 
-// ===============================
-// ✅ Authentication Middleware
-// ===============================
+// -------------------- helpers --------------------
 function authenticateMiddleware(req, res, next) {
   try {
     const authHeader = req.headers.authorization;
-    if (!authHeader)
-      return res.status(401).json({ error: "Missing authorization header" });
-
+    if (!authHeader) return res.status(401).json({ error: "Missing authorization header" });
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
@@ -97,198 +92,40 @@ function authenticateMiddleware(req, res, next) {
   }
 }
 
-// ✅ Protected Approve route
-app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
+async function addActivity({ user = "System", action, details = "" }) {
   try {
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-    if (user.active) return res.status(400).json({ error: "User already active" });
-
-    user.active = true;
-    await user.save();
-
-    const loginUrl = process.env.FRONTEND_URL || "https://openark2-0.onrender.com/intro.html";
-    const mailOptions = {
-      from: `${process.env.SENDER_NAME || "OpenArk"} <${process.env.ADMIN_GMAIL}>`,
-      to: user.email,
-      subject: "🎉 Your OpenArk account is approved",
-      html: `<p>Hi <strong>${user.username}</strong>,</p>
-             <p>Your OpenArk account has been <strong>approved</strong>. You can now <a href="${loginUrl}">log in</a>.</p>
-             <p>Best,<br/>OpenArk Team</p>`,
-    };
-
-   await sendApprovalEmail(user);
-
-
-    await Activity.create({
-      user: "Admin",
-      action: "Approved User",
-      details: `${user.username} (${user.email})`,
+    await db.collection("activities").add({
+      user,
+      action,
+      details,
+      date: new Date(),
     });
-
-    res.json({ message: "User approved and notification sent" });
   } catch (err) {
-    console.error("Approve user error:", err);
-    res.status(500).json({ error: "Failed to approve user" });
-  }
-});
-
-app.get("/api/test-mailersend", async (req, res) => {
-  await sendApprovalEmail({
-    username: "Test User",
-    email: process.env.ADMIN_GMAIL, // send to yourself first
-  });
-  res.send("✅ MailerSend test email sent!");
-});
-
-
-
-// ===============================
-// MongoDB Setup
-// ===============================
-mongoose
-  .connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-  .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.error("❌ MongoDB Connection Failed:", err));
-
-// ===============================
-// Schemas
-// ===============================
-const userSchema = new mongoose.Schema({
-  username: String,
-  email: { type: String, unique: true },
-  password: String,
-  collegeYear: String,
-  role: { type: String, enum: ["student", "librarian"], default: "student" },
-  bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
-    continueReading: [
-    {
-      bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book" },
-      lastPage: { type: Number, default: 1 },
-      updatedAt: { type: Date, default: Date.now },
-    },
-  ],
-  profilePic: { type: String, default: "assets/default-pfp.jpg" },
-  active: { type: Boolean, default: false }
-
-});
-const User = mongoose.model("User", userSchema);
-
-const pageSchema = new mongoose.Schema({
-  img: String,
-  text: String,
-});
-
-const bookSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  author: { type: String, required: true },
-  publisher: { type: String, required: true },
-  year: { type: Number, required: true },
-  category: { type: [String], required: true },
-  img: { type: String, default: "img/default-book.png" },
-  description: { type: String, default: "" },
-  pages: [pageSchema],
-});
-const Book = mongoose.model("Book", bookSchema);
-
-// ---- Comments: schema and routes ----
-// add this after bookSchema (or near other schemas)
-const commentSchema = new mongoose.Schema({
-  bookId: { type: mongoose.Schema.Types.ObjectId, ref: "Book", required: true },
-  authorId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  text: { type: String, required: true },
-  createdAt: { type: Date, default: Date.now },
-});
-const Comment = mongoose.model("Comment", commentSchema);
-
-// ===============================
-// 📄 ACTIVITY LOG MODEL
-// ===============================
-const activitySchema = new mongoose.Schema({
-  user: { type: String, required: true }, // username or role
-  action: { type: String, required: true }, // e.g. "Added Book", "Deleted User"
-  details: { type: String },
-  date: { type: Date, default: Date.now },
-});
-
-const Activity = mongoose.model("Activity", activitySchema);
-
-// ===============================
-// 📊 REPORT MODEL
-// ===============================
-const reportSchema = new mongoose.Schema({
-  totalUsers: { type: Number, default: 0 },
-  totalBooks: { type: Number, default: 0 },
-  topCategory: { type: String, default: "N/A" },
-  topBook: { type: String, default: "N/A" },
-  lastUpdated: { type: Date, default: Date.now },
-});
-
-const Report = mongoose.model("Report", reportSchema);
-
-// ===============================
-// 📈 REPORT AUTO-UPDATER
-// ===============================
-async function updateReport() {
-  try {
-    const usersCount = await User.countDocuments();
-    const books = await Book.find();
-
-    // Count category frequency
-    const categoryCount = {};
-    books.forEach(b => {
-      const cats = Array.isArray(b.category) ? b.category : [b.category];
-      cats.forEach(c => {
-        if (c) categoryCount[c] = (categoryCount[c] || 0) + 1;
-      });
-    });
-
-    // Find top category
-    const topCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0];
-
-    // Find "top book" by number of pages (as a simple metric)
-    const topBook =
-      books.length > 0
-        ? books.reduce((max, b) => (b.pages.length > max.pages.length ? b : max))
-        : null;
-
-    await Report.findOneAndUpdate(
-      {},
-      {
-        totalUsers: usersCount,
-        totalBooks: books.length,
-        topCategory: topCategory ? topCategory[0] : "N/A",
-        topBook: topBook ? topBook.title : "N/A",
-        lastUpdated: Date.now(),
-      },
-      { upsert: true, new: true }
-    );
-  } catch (err) {
-    console.error("❌ Failed to update report:", err);
+    console.error("Failed to add activity:", err);
   }
 }
 
+// NOTE: you must implement sendApprovalEmail elsewhere (or replace with your mailer)
+async function sendApprovalEmail(user) {
+  // simple placeholder - replace with your mailer implementation
+  console.log("sendApprovalEmail called for:", user.email);
+  // Example: use nodemailer / Brevo / Mailersend here
+  return;
+}
 
-
+// -------------------- OCR using Gemini (image inlineData) --------------------
 app.post("/api/ocr", async (req, res) => {
   try {
     const { imageBase64, mimeType } = req.body;
+    if (!imageBase64) return res.status(400).json({ error: "Missing imageBase64" });
 
     const result = await gemini.generateContent({
       contents: [
         {
           role: "user",
           parts: [
-            {
-              inlineData: { data: imageBase64, mimeType },
-            },
-            {
-              text: "Extract all readable text from this image clearly and accurately.",
-            },
+            { inlineData: { data: imageBase64, mimeType } },
+            { text: "Extract all readable text from this image clearly and accurately." },
           ],
         },
       ],
@@ -297,498 +134,247 @@ app.post("/api/ocr", async (req, res) => {
     const text = result.response.text();
     res.json({ text });
   } catch (err) {
-    console.error("❌ OCR error:", err);
+    console.error("OCR error:", err);
     res.status(500).json({ error: "OCR failed" });
   }
 });
 
-// POST a comment to a book (authenticated)
-app.post("/api/books/:id/comments", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const book = await Book.findById(req.params.id);
-    if (!book) return res.status(404).json({ error: "Book not found" });
-
-    const { text } = req.body;
-    if (!text?.trim()) return res.status(400).json({ error: "Empty comment" });
-
-    const comment = new Comment({
-      bookId: book._id,
-      authorId: user._id,
-      text: text.trim(),
-    });
-    await comment.save();
-
-    const populated = await Comment.findById(comment._id).populate({
-      path: "authorId",
-      select: "username profilePic role",
-    });
-
-    // ✅ broadcast AFTER populate
-    broadcastComment(book._id, "new", {
-      _id: populated._id,
-      text: populated.text,
-      createdAt: populated.createdAt,
-      author: {
-        _id: populated.authorId._id,
-        username: populated.authorId.username,
-        profilePic: populated.authorId.profilePic,
-        role: populated.authorId.role,
-      },
-    });
-
-    res.json({
-      message: "Comment saved",
-      comment: {
-        _id: populated._id,
-        text: populated.text,
-        createdAt: populated.createdAt,
-        author: {
-          _id: populated.authorId._id,
-          username: populated.authorId.username,
-          profilePic: populated.authorId.profilePic,
-          role: populated.authorId.role,
-        },
-      },
-    });
-  } catch (err) {
-    console.error("❌ Add comment error:", err);
-    res.status(500).json({ error: "Failed to add comment" });
-  }
-});
-
-
-// GET comments for a book (sorted newest first)
-app.get("/api/books/:id/comments", async (req, res) => {
-  try {
-    const book = await Book.findById(req.params.id);
-    if (!book) return res.status(404).json({ error: "Book not found" });
-
-    const comments = await Comment.find({ bookId: book._id })
-      .sort({ createdAt: -1 })
-      .populate({ path: "authorId", select: "username profilePic role" });
-
-    const payload = comments.map(c => ({
-      _id: c._id,
-      text: c.text,
-      createdAt: c.createdAt,
-      author: {
-        _id: c.authorId._id,
-        username: c.authorId.username,
-        profilePic: c.authorId.profilePic,
-        role: c.authorId.role,
-      },
-    }));
-
-    res.json(payload);
-  } catch (err) {
-    console.error("❌ Get comments error:", err);
-    res.status(500).json({ error: "Failed to load comments" });
-  }
-});
-
-// DELETE a comment (only author or librarian)
-app.delete("/api/comments/:commentId", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const comment = await Comment.findById(req.params.commentId).populate("authorId");
-    if (!comment) return res.status(404).json({ error: "Comment not found" });
-
-    // allow deletion if requester is comment author OR librarian
-    if (comment.authorId._id.toString() !== user._id.toString() && user.role !== "librarian") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    await Comment.deleteOne({ _id: comment._id });
-    broadcastComment(comment.bookId, "delete", { _id: comment._id });
-    res.json({ message: "Comment deleted", commentId: comment._id });
-  } catch (err) {
-    console.error("❌ Delete comment error:", err);
-    res.status(500).json({ error: "Failed to delete comment" });
-  }
-});
-
-
-// ===============================
-// Get Single Book by ID
-// ===============================
-app.get("/api/books/:id", async (req, res) => {
-  try {
-    const book = await Book.findById(req.params.id);
-    if (!book) return res.status(404).json({ error: "Book not found" });
-    res.json(book);
-  } catch (err) {
-    console.error("❌ Fetch book by ID error:", err);
-    res.status(500).json({ error: "Failed to load book" });
-  }
-});
-
-
-// ===============================
-// Multer Setup
-// ===============================
+// -------------------- multer --------------------
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "uploads"));
-  },
-  filename: function (req, file, cb) {
-    const uniqueName =
-      Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname);
-    cb(null, uniqueName);
-  },
+  destination: (req, file, cb) => cb(null, path.join(__dirname, "uploads")),
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + "-" + Math.round(Math.random() * 1e9) + path.extname(file.originalname)),
 });
 const upload = multer({ storage });
 
-// ===============================
-// User Routes
-// ===============================
+// -------------------- Signup (Firestore) --------------------
 app.post("/api/signup", async (req, res) => {
   try {
     const { username, email, password, collegeYear } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: "Email already registered" });
+    // Create user in Firebase Authentication
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: username,
+    });
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({
+    // Save extra info in Firestore
+    await db.collection("users").doc(userRecord.uid).set({
       username,
       email,
-      password: hashedPassword,
       collegeYear,
       role: "student",
+      active: false, // wait for admin approval
+      profilePic: "assets/default-pfp.jpg",
+      createdAt: new Date(),
     });
-        await newUser.save();
 
-        // 🔔 Notify admin that a new signup awaits approval
-// 🔔 Notify admin that a new signup awaits approval
-try {
-  await transporter.sendMail({
-    from: `"${process.env.SENDER_NAME || "OpenArk"}" <${process.env.SENDER_EMAIL}>`,
-    to: process.env.ADMIN_GMAIL,
-    subject: "🕐 New user awaiting approval - OpenArk",
-    html: `
-      <p>A new user <strong>${username}</strong> (${email}) just signed up.</p>
-      <p>Login to your admin dashboard to approve this account.</p>
-    `,
-  });
-  console.log("📧 Admin notified of new signup via Brevo SMTP");
-} catch (err) {
-  console.error("❌ Failed to notify admin via Brevo SMTP:", err);
-}
-
-
-
-    // ✅ Log activity AFTER saving
-    await Activity.create({
-      user: username,
-      action: "Registered Account",
-      details: `New user registered (${email})`,
+    res.json({
+      message: "Signup successful. Please verify your email and wait for admin approval.",
     });
-    await updateReport();
-    res.json({ message: "Signup successful" });
   } catch (err) {
-    console.error("❌ Signup error:", err);
-    res.status(500).json({ error: "Signup failed" });
+    console.error("Signup error:", err);
+    res.status(500).json({ error: err.message });
   }
 });
 
-app.post("/api/login", async (req, res) => {
-  console.log("📩 /api/login request received");
-console.log("Request body:", req.body);
 
+// -------------------- Login (static librarians/admins + Firestore students) --------------------
+// -------------------- Login (admin + Firebase users) --------------------
+app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // ===============================
-    // ✅ 1. Static Librarian Login
-    // ===============================
-    const staticLibrarians = [
-      { email: "librarian1@gmail.com", password: "libpass1", username: "Librarian 1" },
-      { email: "librarian2@gmail.com", password: "libpass2", username: "Librarian 2" },
-      { email: "librarian3@gmail.com", password: "libpass3", username: "Librarian 3" },
-      { email: "librarian4@gmail.com", password: "libpass4", username: "Librarian 4" },
-      { email: "librarian5@gmail.com", password: "libpass5", username: "Librarian 5" },
-    ];
-
-    const matchedLibrarian = staticLibrarians.find(
-      (lib) => lib.email === email && lib.password === password
-    );
-
-if (matchedLibrarian) {
-  const index = staticLibrarians.indexOf(matchedLibrarian);
-  const librarianImages = [
-    "assets/librarian1.png",
-    "assets/librarian1.png",
-    "assets/librarian1.png",
-    "assets/librarian1.png",
-    "assets/librarian1.png",
-  ];
-
-  let librarianUser = await User.findOne({ email: matchedLibrarian.email });
-  if (!librarianUser) {
-    librarianUser = new User({
-      username: matchedLibrarian.username,
-      email: matchedLibrarian.email,
-      password: await bcrypt.hash(matchedLibrarian.password, 10),
-      role: "librarian",
-      collegeYear: "N/A",
-      profilePic: librarianImages[index],
-    });
-  } else if (librarianUser.profilePic !== librarianImages[index]) {
-    librarianUser.profilePic = librarianImages[index];
-  }
-
-  librarianUser.active = false;
-  await librarianUser.save();
-
-  const token = jwt.sign(
-    { id: librarianUser._id, role: "librarian", email: matchedLibrarian.email },
-    process.env.JWT_SECRET || "fallback_secret",
-    { expiresIn: "24h" }
-  );
-
-  return res.json({
-    message: "Login successful",
-    token,
-    _id: librarianUser._id,
-    role: "librarian",
-    email: librarianUser.email,
-    username: librarianUser.username,
-    profilePic: librarianUser.profilePic,
-  });
-}
-
-    // ===============================
-    // ✅ 2. ✨ Static Admin Login (INSERTED HERE!)
-    // ===============================
-    const staticAdmins = [
-      { email: "admin@gmail.com", password: "admin123", username: "Admin", role: "admin" }
-    ];
-
-    const matchedAdmin = staticAdmins.find(
-      (admin) => admin.email === email && admin.password === password
-    );
-
-    if (matchedAdmin) {
-      const token = jwt.sign(
-        { id: matchedAdmin.email, role: "admin", email: matchedAdmin.email },
-        process.env.JWT_SECRET || "fallback_secret",
-        { expiresIn: "24h" }
-      );
-
+    // ✅ Step 1: Check if admin login
+    if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
       return res.json({
         message: "Admin login successful",
-        token,
-        _id: matchedAdmin.email,
         role: "admin",
-        email: matchedAdmin.email,
-        username: matchedAdmin.username,
-        profilePic: "assets/default-pfp.jpg" // Optional default
+        username: "Administrator",
+        email,
+        token: "admin-token",
       });
     }
 
-// ✅ 3. Student Login (Database)
-const user = await User.findOne({ email });
-if (!user) return res.status(401).json({ error: "Invalid credentials" });
-
-const validPass = await bcrypt.compare(password, user.password);
-if (!validPass) return res.status(401).json({ error: "Invalid credentials" });
-
-// 🔒 Check approval status
-if (!user.active) {
-  return res.status(403).json({
-    error: "Your account is pending admin approval. Please wait for confirmation.",
+    // ✅ Step 1.5: Check for static librarian login
+const librarian = staticLibrarians.find(
+  (lib) => lib.email === email && lib.password === password
+);
+if (librarian) {
+  return res.json({
+    message: "Librarian login successful",
+    role: "librarian",
+    username: librarian.username,
+    email: librarian.email,
+    token: "librarian-token",
   });
 }
 
-const token = jwt.sign(
-  { id: user._id, role: "student", email: user.email },
-  process.env.JWT_SECRET,
-  { expiresIn: "24h" }
-);
 
-res.json({
-  message: "Login successful",
-  token,
-  _id: user._id,
-  role: "student",
-  email: user.email,
-  username: user.username,
-  collegeYear: user.collegeYear,
-  profilePic: user.profilePic,
-});
+    // ✅ Step 2: Regular Firebase user login
+    const response = await fetch(
+      `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, returnSecureToken: true }),
+      }
+    );
 
+    const data = await response.json();
+    if (data.error) return res.status(401).json({ error: "Invalid credentials" });
 
+    // ✅ Step 3: Check Firestore record for approval
+    const userSnap = await db.collection("users").where("email", "==", email).get();
+    if (userSnap.empty) return res.status(404).json({ error: "User not found" });
+
+    const user = userSnap.docs[0].data();
+    if (!user.active)
+      return res.status(403).json({ error: "Your account is pending admin approval." });
+
+    res.json({
+      message: "Login successful",
+      token: data.idToken,
+      user,
+    });
   } catch (err) {
-    console.error("❌ Login error:", err);
+    console.error("Login error:", err);
     res.status(500).json({ error: "Login failed" });
   }
 });
 
-// ===============================
-// ✅ LOGOUT ROUTE
-// ===============================
-// ✅ LOGOUT ROUTE (does not set inactive)
-app.post("/api/logout", async (req, res) => {
+// -------------------- Approve user (protected) --------------------
+app.put("/api/users/approve/:id", async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+    const { id } = req.params;
+    const userRef = db.collection("users").doc(id);
+    const userDoc = await userRef.get();
 
-    // We no longer mark user inactive
-    res.json({ message: "Logout successful" });
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+
+    const user = userDoc.data();
+    if (user.active) return res.status(400).json({ error: "Already approved" });
+
+    await userRef.update({ active: true });
+
+    res.json({ message: `${user.username} has been approved.` });
   } catch (err) {
-    console.error("❌ Logout error:", err);
-    res.status(500).json({ error: "Logout failed" });
+    console.error("Approve error:", err);
+    res.status(500).json({ error: "Failed to approve user" });
   }
 });
 
-
-// ===============================
-// 👑 Admin: Manage Users
-// ===============================
-
-// 👑 Admin: Manage Users (Protected)
-app.get("/api/users", async (req, res) => {
+// -------------------- Get users (admin) --------------------
+app.get("/api/users", authenticateMiddleware, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+    if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // ✅ Ensure it's an admin account
-    if (decoded.role !== "admin") {
-      return res.status(403).json({ error: "Access denied: Admins only" });
-    }
-
-    const users = await User.find({}, "-password");
+    const usersSnap = await db.collection("users").get();
+    const users = usersSnap.docs.map((d) => ({ id: d.id, ...d.data(), password: undefined }));
     res.json(users);
   } catch (err) {
-    console.error("❌ Error fetching users:", err);
+    console.error("Fetch users error:", err);
     res.status(500).json({ error: "Failed to fetch users" });
   }
 });
 
-// Update user active status
-app.put("/api/users/:id", async (req, res) => {
+// -------------------- Update user active (admin) --------------------
+app.put("/api/users/:id", authenticateMiddleware, async (req, res) => {
   try {
-    const { id } = req.params;
+    if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
     const { active } = req.body;
+    const id = req.params.id;
+    const userRef = db.collection("users").doc(id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
 
-    const user = await User.findByIdAndUpdate(
-      id,
-      { active },
-      { new: true, runValidators: true }
-    );
-
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    res.json({ message: `User ${active ? "activated" : "deactivated"} successfully`, user });
+    await userRef.update({ active });
+    res.json({ message: `User ${active ? "activated" : "deactivated"} successfully` });
   } catch (err) {
-    console.error("❌ Error updating user:", err);
+    console.error("Update user error:", err);
     res.status(500).json({ error: "Failed to update user" });
   }
 });
 
-app.delete("/api/users/:id", async (req, res) => {
+// -------------------- Delete user (admin) --------------------
+app.delete("/api/users/:id", authenticateMiddleware, async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
+    if (req.user.role !== "admin") return res.status(403).json({ error: "Admins only" });
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "admin") return res.status(403).json({ error: "Access denied" });
+    const id = req.params.id;
+    const userRef = db.collection("users").doc(id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+    const user = userDoc.data();
+    await userRef.delete();
 
-    const { id } = req.params;
-    const deletedUser = await User.findByIdAndDelete(id);
-    if (!deletedUser) return res.status(404).json({ error: "User not found" });
-
-    await Activity.create({
+    await db.collection("activities").add({
       user: "Admin",
       action: "Deleted User",
-      details: `Removed account: ${deletedUser.username} (${deletedUser.email})`,
+      details: `Removed account: ${user.username} (${user.email})`,
+      date: new Date(),
     });
 
-    res.json({ message: "User account deleted successfully" });
+    res.json({ message: "User deleted" });
   } catch (err) {
-    console.error("❌ Error deleting user:", err);
+    console.error("Delete user error:", err);
     res.status(500).json({ error: "Failed to delete user" });
   }
 });
 
-// ===============================
-// Upload Profile Picture (Students only)
-// ===============================
+// -------------------- Upload profile pic (students only) --------------------
 app.post("/api/upload-profile-pic", upload.single("profilePic"), async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
+    const userRef = db.collection("users").doc(decoded.id);
+    const userDoc = await userRef.get();
 
-    // ❌ Librarians cannot upload
-    if (user.role === "librarian") {
-      return res.status(403).json({ error: "Librarians cannot change profile picture" });
+    // handle static librarians (not in DB)
+    if (!userDoc.exists && decoded.role === "librarian") {
+      const uploadedUrl = `/uploads/${req.file.filename}`;
+      return res.json({ message: "Profile picture updated", profilePic: uploadedUrl });
+    }
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+
+    const user = userDoc.data();
+    if (user.role === "librarian") return res.status(403).json({ error: "Librarians cannot change profile picture" });
+
+    // upload to cloudinary if configured
+    let imageUrl = `/uploads/${req.file.filename}`;
+    if (process.env.CLOUDINARY_CLOUD_NAME) {
+      const uploadRes = await cloudinary.uploader.upload(req.file.path, { folder: "profile_pics" });
+      imageUrl = uploadRes.secure_url;
+      fs.unlinkSync(req.file.path);
     }
 
-    // ✅ Students upload normally
-    const result = await cloudinary.uploader.upload(req.file.path, {
-      folder: "openark/profile_pics",
-    });
-    fs.unlinkSync(req.file.path);
-
-    user.profilePic = result.secure_url;
-    await user.save();
-
-    res.json({ message: "Profile picture updated", profilePic: result.secure_url });
+    await userRef.update({ profilePic: imageUrl });
+    res.json({ message: "Profile picture updated", profilePic: imageUrl });
   } catch (err) {
-    console.error("❌ Profile pic upload error:", err);
-    res.status(500).json({ error: "Upload failed" });
+    console.error("Profile pic upload error:", err);
+    res.status(500).json({ error: "Failed to upload profile picture" });
   }
 });
 
-// ===============================
-// Book Routes
-// ===============================
-const uploadToCloudinary = (filePath, folder) => {
-  return cloudinary.uploader.upload(filePath, {
-    folder,
-    resource_type: "image",
-  });
-};
+// -------------------- Book routes --------------------
+// helper: uploadToCloudinary
+const uploadToCloudinary = (filePath, folder) => cloudinary.uploader.upload(filePath, { folder, resource_type: "image" });
 
+// add new book (librarian)
 app.post(
   "/api/books",
   (req, res, next) => {
     upload.fields([{ name: "cover", maxCount: 1 }, { name: "pages" }])(req, res, function (err) {
-      if (err) {
-        return res.status(400).json({ error: "File upload error: " + err.message });
-      }
+      if (err) return res.status(400).json({ error: "File upload error: " + err.message });
       next();
     });
   },
   async (req, res) => {
     try {
-      // 🔒 Librarian token check
       const authHeader = req.headers.authorization;
       if (!authHeader) return res.status(401).json({ error: "Missing token" });
       const token = authHeader.split(" ")[1];
@@ -797,31 +383,25 @@ app.post(
 
       const { title, author, publisher, year, category, description, pageTexts } = req.body;
 
-      // ✅ Normalize category into array
-// ✅ Normalize categories (always an array of unique, trimmed strings)
-let parsedCategories = [];
-try {
-  parsedCategories = JSON.parse(category); // frontend sends JSON string
-} catch {
-  parsedCategories = Array.isArray(category)
-    ? category
-    : category.split(",").map(c => c.trim());
-}
+      // normalize categories
+      let parsedCategories = [];
+      try {
+        parsedCategories = JSON.parse(category);
+      } catch {
+        parsedCategories = Array.isArray(category) ? category : (category || "").split(",").map((c) => c.trim());
+      }
+      parsedCategories = parsedCategories.filter((c) => c && c.trim() !== "").map((c) => c.trim());
+      parsedCategories = [...new Set(parsedCategories)];
 
-// Clean: remove empty, trim, unique
-parsedCategories = parsedCategories
-  .filter(c => c && c.trim() !== "")
-  .map(c => c.trim())
-  .filter((c, i, arr) => arr.indexOf(c) === i);
-
-      // ✅ Upload cover to Cloudinary
+      // cover upload
       let coverUrl = "";
-      if (req.files?.cover) {
+      if (req.files?.cover && req.files.cover[0]) {
         const result = await uploadToCloudinary(req.files.cover[0].path, "openark/covers");
         coverUrl = result.secure_url;
+        try { fs.unlinkSync(req.files.cover[0].path); } catch(_) {}
       }
 
-      // ✅ Handle page OCR texts
+      // page texts
       let texts = [];
       try {
         texts = JSON.parse(pageTexts || "[]");
@@ -829,7 +409,7 @@ parsedCategories = parsedCategories
         texts = [];
       }
 
-      // ✅ Upload pages to Cloudinary
+      // pages upload
       const pageUrls = [];
       for (let i = 0; i < (req.files.pages || []).length; i++) {
         const file = req.files.pages[i];
@@ -838,471 +418,427 @@ parsedCategories = parsedCategories
           img: result.secure_url,
           text: texts[i] || "",
         });
+        try { fs.unlinkSync(file.path); } catch(_) {}
       }
 
-      // ✅ Create new Book
-      const newBook = new Book({
-        title: title.trim(),
-        author: author.trim(),
-        publisher: publisher.trim(),
-        year: Number(year),
-        category: parsedCategories,   // always array
+      // create book doc
+      const bookData = {
+        title: title?.trim() || "",
+        author: author?.trim() || "",
+        publisher: publisher?.trim() || "",
+        year: Number(year) || null,
+        category: parsedCategories,
         description: description?.trim() || "",
         img: coverUrl || "img/default-book.png",
         pages: pageUrls,
+        createdAt: new Date(),
+      };
+      const bookRef = await db.collection("books").add(bookData);
+
+      await db.collection("activities").add({
+        user: "Librarian",
+        action: "Added Book",
+        details: `Added "${bookData.title}" by ${bookData.author}`,
+        date: new Date(),
       });
 
-      await newBook.save();
-      await Activity.create({
-  user: "Librarian",
-  action: "Added Book",
-  details: `Added "${newBook.title}" by ${newBook.author}`,
-});
-await updateReport();
-      res.status(201).json(newBook);
+      await updateReport();
+
+      res.status(201).json({ id: bookRef.id, ...bookData });
     } catch (err) {
-      console.error("❌ Error creating book:", err);
+      console.error("Error creating book:", err);
       res.status(500).json({ error: "Failed to create book: " + err.message });
     }
   }
 );
 
-app.delete("/api/books/:id", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
-    const token = authHeader.split(" ")[1];
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET);
-    } catch (e) {
-      return res.status(401).json({ error: "Invalid or expired token" });
-    }
-
-    // ✅ Allow both librarians AND admins
-    if (decoded.role !== "librarian" && decoded.role !== "admin") {
-      return res.status(403).json({ error: "Forbidden: Only librarians or admins can delete books" });
-    }
-
-    const deleted = await Book.findByIdAndDelete(req.params.id);
-    if (!deleted) return res.status(404).json({ error: "Book not found" });
-
-    // ✅ Log who deleted it
-    await Activity.create({
-      user: decoded.role === "admin" ? "Admin" : "Librarian",
-      action: "Deleted Book",
-      details: `Removed "${deleted.title}" by ${deleted.author}`,
-    });
-
-    res.json({ message: "Book deleted successfully" });
-  } catch (err) {
-    console.error("❌ Error deleting book:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-app.get("/api/genres", async (req, res) => {
-  try {
-    let genres = await Book.distinct("category");
-
-    // ✅ Clean up: remove empty/null, trim spaces, unique only
-    genres = genres
-      .filter(g => g && g.trim() !== "")   // remove empty/null
-      .map(g => g.trim())                  // trim spaces
-      .filter((g, i, arr) => arr.indexOf(g) === i); // unique only
-
-    res.json(genres);
-  } catch (err) {
-    console.error("❌ Error fetching genres:", err);
-    res.status(500).json({ error: "Failed to fetch genres" });
-  }
-});
-
-
+// get all books
 app.get("/api/books", async (req, res) => {
   try {
-    const books = await Book.find();
+    const booksSnap = await db.collection("books").get();
+    const books = booksSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
     res.json(books);
   } catch (err) {
+    console.error("Fetch books error:", err);
     res.status(500).json({ error: "Failed to fetch books" });
   }
 });
 
-// ===============================
-// Bookmark Routes
-// ===============================
-app.post("/api/bookmarks/:bookId", async (req, res) => {
+// get single book
+app.get("/api/books/:id", async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const { bookId } = req.params;
-    if (!mongoose.Types.ObjectId.isValid(bookId))
-      return res.status(400).json({ error: "Invalid book ID" });
-
-    if (user.bookmarks.includes(bookId)) {
-      return res.status(400).json({ error: "Book already bookmarked" });
-    }
-
-    user.bookmarks.push(bookId);
-    await user.save();
-
-    res.json({ message: "Book added to bookmarks" });
+    const doc = await db.collection("books").doc(req.params.id).get();
+    if (!doc.exists) return res.status(404).json({ error: "Book not found" });
+    res.json({ id: doc.id, ...doc.data() });
   } catch (err) {
-    console.error("❌ Add bookmark error:", err);
-    res.status(500).json({ error: "Failed to add bookmark" });
+    console.error("Fetch book error:", err);
+    res.status(500).json({ error: "Failed to load book" });
   }
 });
 
-app.delete("/api/bookmarks/:bookId", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    user.bookmarks = user.bookmarks.filter(
-      (b) => b.toString() !== req.params.bookId
-    );
-    await user.save();
-
-    res.json({ message: "Book removed from bookmarks" });
-  } catch (err) {
-    console.error("❌ Remove bookmark error:", err);
-    res.status(500).json({ error: "Failed to remove bookmark" });
-  }
-});
-
-app.get("/api/bookmarks", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id).populate("bookmarks");
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    res.json(user.bookmarks);
-  } catch (err) {
-    console.error("❌ Fetch bookmarks error:", err);
-    res.status(500).json({ error: "Failed to fetch bookmarks" });
-  }
-});
-
-// ===============================
-// Continue Reading Routes
-// ===============================
-app.post("/api/continue", async (req, res) => {
+// delete book (librarian or admin)
+app.delete("/api/books/:id", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: "Missing token" });
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "librarian" && decoded.role !== "admin") return res.status(403).json({ error: "Forbidden" });
 
-    const { bookId, lastPage } = req.body;
-    if (!bookId) return res.status(400).json({ error: "Missing bookId" });
+    const bookRef = db.collection("books").doc(req.params.id);
+    const bookDoc = await bookRef.get();
+    if (!bookDoc.exists) return res.status(404).json({ error: "Book not found" });
+    const book = bookDoc.data();
 
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const existing = user.continueReading.find(
-      (c) => c.bookId.toString() === bookId
-    );
-
-    if (existing) {
-      existing.lastPage = lastPage || existing.lastPage;
-      existing.updatedAt = Date.now();
-    } else {
-      user.continueReading.push({ bookId, lastPage: lastPage || 1 });
-    }
-
-    await user.save();
-    res.json({ message: "Progress saved" });
-  } catch (err) {
-    console.error("❌ Continue save error:", err);
-    res.status(500).json({ error: "Failed to save progress" });
-  }
-});
-
-app.get("/api/continue", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: "Missing token" });
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id).populate({
-      path: "continueReading.bookId",
-      model: "Book",
+    await bookRef.delete();
+    await db.collection("activities").add({
+      user: decoded.role === "admin" ? "Admin" : "Librarian",
+      action: "Deleted Book",
+      details: `Removed "${book.title}" by ${book.author}`,
+      date: new Date(),
     });
 
-    if (!user) return res.status(404).json({ error: "User not found" });
-
-    const books = user.continueReading
-      .filter((c) => c.bookId)
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .map((c) => ({
-        _id: c.bookId._id,
-        title: c.bookId.title,
-        author: c.bookId.author,
-        img: c.bookId.img,
-        category: c.bookId.category,
-        description: c.bookId.description,
-        lastPage: c.lastPage,
-      }));
-
-    res.json(books);
+    res.json({ message: "Book deleted successfully" });
   } catch (err) {
-    console.error("❌ Continue fetch error:", err);
-    res.status(500).json({ error: "Failed to fetch continue reading" });
+    console.error("Error deleting book:", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 
-// ===============================
-// Add more pages to existing book (Librarian only)
-// ===============================
-app.post(
-  "/api/books/:id/add-pages",
-  upload.array("pages"),
-  async (req, res) => {
-    try {
-      const authHeader = req.headers.authorization;
-      if (!authHeader) return res.status(401).json({ error: "Missing token" });
-      const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.role !== "librarian")
-        return res.status(403).json({ error: "Forbidden" });
-
-      const book = await Book.findById(req.params.id);
-      if (!book) return res.status(404).json({ error: "Book not found" });
-
-      const { pageTexts } = req.body;
-      let texts = [];
-      try {
-        texts = JSON.parse(pageTexts || "[]");
-      } catch {
-        texts = [];
-      }
-
-      const uploadedPages = [];
-      for (let i = 0; i < req.files.length; i++) {
-        const file = req.files[i];
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "openark/pages",
-        });
-        uploadedPages.push({
-          img: result.secure_url,
-          text: texts[i] || "",
-        });
-      }
-
-      book.pages.push(...uploadedPages);
-      await book.save();
-
-      res.json({ message: "✅ New pages added successfully", pages: uploadedPages });
-    } catch (err) {
-      console.error("❌ Add pages failed:", err);
-      res.status(500).json({ error: "Failed to add pages" });
-    }
-  }
-);
-
-// ===============================
-// Update specific page text (Librarian only)
-// ===============================
-app.patch("/api/books/:bookId/pages/:pageIndex", async (req, res) => {
+// add pages to book (librarian)
+app.post("/api/books/:id/add-pages", upload.array("pages"), async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "librarian")
-      return res.status(403).json({ error: "Forbidden" });
+    if (decoded.role !== "librarian") return res.status(403).json({ error: "Forbidden" });
+
+    const bookRef = db.collection("books").doc(req.params.id);
+    const bookDoc = await bookRef.get();
+    if (!bookDoc.exists) return res.status(404).json({ error: "Book not found" });
+
+    let texts = [];
+    try {
+      texts = JSON.parse(req.body.pageTexts || "[]");
+    } catch {
+      texts = [];
+    }
+
+    const uploadedPages = [];
+    for (let i = 0; i < (req.files || []).length; i++) {
+      const file = req.files[i];
+      const r = await cloudinary.uploader.upload(file.path, { folder: "openark/pages" });
+      uploadedPages.push({ img: r.secure_url, text: texts[i] || "" });
+      try { fs.unlinkSync(file.path); } catch(_) {}
+    }
+
+    const current = bookDoc.data().pages || [];
+    await bookRef.update({ pages: [...current, ...uploadedPages] });
+
+    res.json({ message: "New pages added", pages: uploadedPages });
+  } catch (err) {
+    console.error("Add pages error:", err);
+    res.status(500).json({ error: "Failed to add pages" });
+  }
+});
+
+// update page text (librarian)
+app.patch("/api/books/:bookId/pages/:pageIndex", authenticateMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "librarian") return res.status(403).json({ error: "Forbidden" });
 
     const { bookId, pageIndex } = req.params;
     const { newText } = req.body;
+    const bookRef = db.collection("books").doc(bookId);
+    const bookDoc = await bookRef.get();
+    if (!bookDoc.exists) return res.status(404).json({ error: "Book not found" });
 
-    const book = await Book.findById(bookId);
-    if (!book) return res.status(404).json({ error: "Book not found" });
+    const pages = bookDoc.data().pages || [];
+    const idx = parseInt(pageIndex, 10);
+    if (isNaN(idx) || idx < 0 || idx >= pages.length) return res.status(400).json({ error: "Invalid page index" });
 
-    const index = parseInt(pageIndex, 10);
-    if (isNaN(index) || index < 0 || index >= book.pages.length) {
-      return res.status(400).json({ error: "Invalid page index" });
-    }
-
-    book.pages[index].text = newText;
-    await book.save();
-
-    res.json({ message: "✅ Page text updated successfully" });
+    pages[idx].text = newText;
+    await bookRef.update({ pages });
+    res.json({ message: "Page text updated" });
   } catch (err) {
-    console.error("❌ Update page text failed:", err);
+    console.error("Update page text error:", err);
     res.status(500).json({ error: "Failed to update page text" });
   }
 });
 
-// ===============================
-// 📊 REPORT SUMMARY API (For Admin Reports Tab)
-// ===============================
-app.get("/api/report-summary", async (req, res) => {
-  try {
-    const totalUsers = await User.countDocuments();
-    const totalBooks = await Book.countDocuments();
-
-    const books = await Book.find({}, "category title author");
-    const categoryCount = {};
-    books.forEach(b => {
-      const cats = Array.isArray(b.category) ? b.category : [b.category];
-      cats.forEach(c => {
-        if (c) categoryCount[c] = (categoryCount[c] || 0) + 1;
-      });
-    });
-    const topCategory = Object.entries(categoryCount)
-      .sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
-
-    let topBook = "N/A";
-    if (books.length > 0) {
-      const top = books.reduce((max, b) => {
-        const views = b.views || b.readCount || 0;
-        return views > (max.views || max.readCount || 0) ? b : max;
-      });
-      topBook = `${top.title} (${top.views || top.readCount || 0} reads)`;
-    }
-
-    res.json({ totalUsers, totalBooks, topCategory, topBook });
-  } catch (err) {
-    console.error("❌ Report summary error:", err);
-    res.status(500).json({ error: "Failed to load report summary" });
-  }
-});
-
-
-
-// ===============================
-// API Fallback (must come after all /api routes)
-// ===============================
-app.use(/^\/api(\/|$)/, (req, res) => {
-  res.status(404).json({ error: "API route not found" });
-});
-
-// ===============================
-// ✅ FRONTEND ROUTES (Fixed for Render Deployment)
-// ===============================
-
-// Serve all static files from /public (includes admin.html, dashboard.html, etc.)
-app.use(express.static(path.join(__dirname, "public")));
-
-// Explicitly handle known pages to prevent 502 errors
-app.get(["/intro.html", "/admin.html", "/dashboard.html"], (req, res) => {
-  res.sendFile(path.join(__dirname, "public", req.path));
-});
-
-// ✅ Catch-all fallback (Express 5-safe)
-app.get(/^\/(?!api).*/, (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "intro.html"));
-});
-
-
-
-// ===============================
-// Profile Picture Upload (Student + Librarian)
-// ===============================
-app.post("/api/uploadProfilePic", upload.single("profilePic"), async (req, res) => {
+// -------------------- Comments (subcollection under books) --------------------
+// add comment
+app.post("/api/books/:id/comments", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader) return res.status(401).json({ error: "Missing token" });
-
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Librarians may not exist in DB, so handle both
-    let user = await User.findById(decoded.id);
+    const userRef = db.collection("users").doc(decoded.id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+    const user = userDoc.data();
 
-    // Static librarian handling (not saved in DB)
-    const staticLibrarians = [
-      "librarian1@gmail.com",
-      "librarian2@gmail.com",
-      "librarian3@gmail.com",
-      "librarian4@gmail.com",
-      "librarian5@gmail.com",
-    ];
+    const bookRef = db.collection("books").doc(req.params.id);
+    const bookDoc = await bookRef.get();
+    if (!bookDoc.exists) return res.status(404).json({ error: "Book not found" });
 
-    if (!user && decoded.role === "librarian") {
-      // Fake librarian record (not persisted)
-      const uploadedUrl = `/uploads/${req.file.filename}`;
-      return res.json({
-        message: "Profile picture updated",
-        profilePic: uploadedUrl,
-      });
-    }
+    const { text } = req.body;
+    if (!text || !text.trim()) return res.status(400).json({ error: "Empty comment" });
 
-    if (!user) return res.status(404).json({ error: "User not found" });
+    const commentRef = await bookRef.collection("comments").add({
+      authorId: decoded.id,
+      text: text.trim(),
+      createdAt: new Date(),
+    });
 
-    // Upload to Cloudinary (optional, if configured)
-    let imageUrl = `/uploads/${req.file.filename}`;
-    if (process.env.CLOUDINARY_CLOUD_NAME) {
-      const uploadRes = await cloudinary.uploader.upload(req.file.path, {
-        folder: "profile_pics",
-      });
-      imageUrl = uploadRes.secure_url;
-      fs.unlinkSync(req.file.path); // remove local temp
-    }
+    const commentDoc = await commentRef.get();
+    const payload = {
+      id: commentDoc.id,
+      text: commentDoc.data().text,
+      createdAt: commentDoc.data().createdAt,
+      author: {
+        id: decoded.id,
+        username: user.username,
+        profilePic: user.profilePic,
+        role: user.role || "student",
+      },
+    };
 
-    user.profilePic = imageUrl;
-    await user.save();
+    // broadcast to room named by book id
+    broadcastComment(req.params.id, "new", payload);
 
-    res.json({ message: "Profile picture updated", profilePic: imageUrl });
+    res.json({ message: "Comment saved", comment: payload });
   } catch (err) {
-    console.error("❌ Profile pic upload error:", err);
-    res.status(500).json({ error: "Failed to upload profile picture" });
+    console.error("Add comment error:", err);
+    res.status(500).json({ error: "Failed to add comment" });
   }
 });
 
-// === Simple GTTS endpoint ===
-app.post('/api/tts', async (req, res) => {
+// get comments
+app.get("/api/books/:id/comments", async (req, res) => {
   try {
-    const { text } = req.body;
-    if (!text || !text.trim()) {
-      return res.status(400).json({ error: 'No text provided' });
+    const bookRef = db.collection("books").doc(req.params.id);
+    const bookDoc = await bookRef.get();
+    if (!bookDoc.exists) return res.status(404).json({ error: "Book not found" });
+
+    const commentsSnap = await bookRef.collection("comments").orderBy("createdAt", "desc").get();
+    const comments = await Promise.all(
+      commentsSnap.docs.map(async (d) => {
+        const c = d.data();
+        const authorRef = db.collection("users").doc(c.authorId);
+        const authorDoc = await authorRef.get();
+        const author = authorDoc.exists ? authorDoc.data() : { username: "Unknown", profilePic: "" };
+        return {
+          id: d.id,
+          text: c.text,
+          createdAt: c.createdAt,
+          author: {
+            id: c.authorId,
+            username: author.username,
+            profilePic: author.profilePic,
+            role: author.role || "student",
+          },
+        };
+      })
+    );
+
+    res.json(comments);
+  } catch (err) {
+    console.error("Get comments error:", err);
+    res.status(500).json({ error: "Failed to load comments" });
+  }
+});
+
+// delete comment (author or librarian)
+app.delete("/api/comments/:bookId/:commentId", authenticateMiddleware, async (req, res) => {
+  try {
+    const { bookId, commentId } = req.params;
+    const decoded = req.user;
+    const userRef = db.collection("users").doc(decoded.id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+    const user = userDoc.data();
+
+    const commentRef = db.collection("books").doc(bookId).collection("comments").doc(commentId);
+    const commentDoc = await commentRef.get();
+    if (!commentDoc.exists) return res.status(404).json({ error: "Comment not found" });
+    const c = commentDoc.data();
+
+    if (c.authorId !== decoded.id && user.role !== "librarian") return res.status(403).json({ error: "Forbidden" });
+
+    await commentRef.delete();
+    broadcastComment(bookId, "delete", { id: commentId });
+
+    res.json({ message: "Comment deleted", commentId });
+  } catch (err) {
+    console.error("Delete comment error:", err);
+    res.status(500).json({ error: "Failed to delete comment" });
+  }
+});
+
+// -------------------- Genres --------------------
+app.get("/api/genres", async (req, res) => {
+  try {
+    const booksSnap = await db.collection("books").get();
+    const allCats = [];
+    booksSnap.docs.forEach((d) => {
+      const data = d.data();
+      if (Array.isArray(data.category)) allCats.push(...data.category);
+      else if (data.category) allCats.push(data.category);
+    });
+    const genres = [...new Set(allCats.map((g) => (g || "").trim()).filter(Boolean))];
+    res.json(genres);
+  } catch (err) {
+    console.error("Fetch genres error:", err);
+    res.status(500).json({ error: "Failed to fetch genres" });
+  }
+});
+
+// -------------------- Bookmarks --------------------
+app.post("/api/bookmarks/:bookId", authenticateMiddleware, async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const userRef = db.collection("users").doc(req.user.id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+    const user = userDoc.data();
+
+    const bookmarks = user.bookmarks || [];
+    if (bookmarks.includes(bookId)) return res.status(400).json({ error: "Book already bookmarked" });
+
+    bookmarks.push(bookId);
+    await userRef.update({ bookmarks });
+    res.json({ message: "Book added to bookmarks" });
+  } catch (err) {
+    console.error("Add bookmark error:", err);
+    res.status(500).json({ error: "Failed to add bookmark" });
+  }
+});
+
+app.delete("/api/bookmarks/:bookId", authenticateMiddleware, async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const userRef = db.collection("users").doc(req.user.id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+
+    const bookmarks = (userDoc.data().bookmarks || []).filter((b) => b !== bookId);
+    await userRef.update({ bookmarks });
+    res.json({ message: "Book removed from bookmarks" });
+  } catch (err) {
+    console.error("Remove bookmark error:", err);
+    res.status(500).json({ error: "Failed to remove bookmark" });
+  }
+});
+
+app.get("/api/bookmarks", authenticateMiddleware, async (req, res) => {
+  try {
+    const userRef = db.collection("users").doc(req.user.id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+
+    const bookmarks = userDoc.data().bookmarks || [];
+    // fetch book details for each (optional)
+    const books = [];
+    for (const bId of bookmarks) {
+      const bDoc = await db.collection("books").doc(bId).get();
+      if (bDoc.exists) books.push({ id: bDoc.id, ...bDoc.data() });
+    }
+    res.json(books);
+  } catch (err) {
+    console.error("Fetch bookmarks error:", err);
+    res.status(500).json({ error: "Failed to fetch bookmarks" });
+  }
+});
+
+// -------------------- Continue reading --------------------
+app.post("/api/continue", authenticateMiddleware, async (req, res) => {
+  try {
+    const { bookId, lastPage } = req.body;
+    if (!bookId) return res.status(400).json({ error: "Missing bookId" });
+
+    const userRef = db.collection("users").doc(req.user.id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+
+    const ur = userDoc.data();
+    const existing = (ur.continueReading || []).find((c) => c.bookId === bookId);
+
+    let continueReading = ur.continueReading || [];
+    if (existing) {
+      continueReading = continueReading.map((c) => (c.bookId === bookId ? { ...c, lastPage: lastPage || c.lastPage, updatedAt: new Date() } : c));
+    } else {
+      continueReading.push({ bookId, lastPage: lastPage || 1, updatedAt: new Date() });
     }
 
+    await userRef.update({ continueReading });
+    res.json({ message: "Progress saved" });
+  } catch (err) {
+    console.error("Continue save error:", err);
+    res.status(500).json({ error: "Failed to save progress" });
+  }
+});
+
+app.get("/api/continue", authenticateMiddleware, async (req, res) => {
+  try {
+    const userRef = db.collection("users").doc(req.user.id);
+    const userDoc = await userRef.get();
+    if (!userDoc.exists) return res.status(404).json({ error: "User not found" });
+
+    const continueReading = userDoc.data().continueReading || [];
+    // fetch book details
+    const books = [];
+    for (const c of continueReading.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt))) {
+      const bDoc = await db.collection("books").doc(c.bookId).get();
+      if (bDoc.exists) {
+        const data = bDoc.data();
+        books.push({
+          _id: bDoc.id,
+          title: data.title,
+          author: data.author,
+          img: data.img,
+          category: data.category,
+          description: data.description,
+          lastPage: c.lastPage,
+        });
+      }
+    }
+    res.json(books);
+  } catch (err) {
+    console.error("Continue fetch error:", err);
+    res.status(500).json({ error: "Failed to fetch continue reading" });
+  }
+});
+
+// -------------------- TTS --------------------
+app.post("/api/tts", async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text || !text.trim()) return res.status(400).json({ error: "No text provided" });
+
     const filename = `uploads/tts-${Date.now()}.mp3`;
-    const gtts = new gTTS(text, 'en');
+    const gtts = new gTTS(text, "en");
     gtts.save(path.join(__dirname, filename), (err) => {
       if (err) {
-        console.error('gTTS Error:', err);
-        return res.status(500).json({ error: 'Failed to generate speech' });
+        console.error("gTTS Error:", err);
+        return res.status(500).json({ error: "Failed to generate speech" });
       }
       res.json({ url: `/${filename}` });
     });
   } catch (err) {
-    console.error('TTS error:', err);
-    res.status(500).json({ error: 'TTS failed' });
+    console.error("TTS error:", err);
+    res.status(500).json({ error: "TTS failed" });
   }
 });
 
-// ===============================
-// 🧠 Gemini Outline Generator (PPT summary)
-// ===============================
+// -------------------- Gemini outline --------------------
 app.post("/api/gemini-outline", async (req, res) => {
   try {
     const { text } = req.body;
-    if (!text || !text.trim()) {
-      return res.status(400).json({ error: "No OCR text provided" });
-    }
+    if (!text || !text.trim()) return res.status(400).json({ error: "No OCR text provided" });
 
     const prompt = `
 You are an academic assistant. Read the following OCR text and create an outline for a PowerPoint presentation.
@@ -1316,7 +852,6 @@ Guidelines:
 - Focus on key concepts and main ideas.
 - Create 5–8 slide titles.
 - Under each slide title, list 2–4 bullet points.
-- Focus on summarizing and organizing key ideas clearly.
 - Keep the tone professional and concise.
 
 Text:
@@ -1325,106 +860,133 @@ ${text}
 
     const result = await gemini.generateContent(prompt);
     const outline = result.response.text();
-    await Activity.create({
-  user: "Librarian",
-  action: "Generated Gemini Outline",
-  details: "Created PowerPoint outline from OCR text",
-});
 
+    await db.collection("activities").add({
+      user: "Librarian",
+      action: "Generated Gemini Outline",
+      details: "Created PowerPoint outline from OCR text",
+      date: new Date(),
+    });
 
     res.json({ outline });
   } catch (err) {
-    console.error("❌ Gemini outline generation failed:", err);
+    console.error("Gemini outline error:", err);
     res.status(500).json({ error: "Failed to generate PPT outline" });
   }
 });
 
-// Helper: broadcast new or deleted comment
+// -------------------- Socket.io helpers --------------------
 function broadcastComment(bookId, type, payload) {
   io.to(bookId.toString()).emit("commentUpdate", { type, payload });
 }
-
-// ===============================
-// 🧩 SOCKET.IO REAL-TIME USER STATUS
-// ===============================
-
-io.on("connection", (socket) => {
-  console.log("🔌 Client connected:", socket.id);
-
-socket.on("registerUser", async (userId) => {
-  if (!userId) return;
-  socket.userId = userId;
-  console.log(`👤 Registered for updates: ${userId}`);
-
-  try {
-    const user = await User.findById(userId);
-    if (user && user.active) {
-      broadcastUserStatus(userId, true);
-    } else {
-      console.log(`🚫 Inactive user tried to connect: ${userId}`);
-    }
-  } catch (err) {
-    console.error("❌ registerUser error:", err);
-  }
-});
-
-  // ✅ Mark inactive on disconnect
-  socket.on("disconnect", async () => {
-    if (!socket.userId) return;
-    try {
-      const user = await User.findById(socket.userId);
-      if (user) {
-        user.active = false;
-        await user.save();
-        broadcastUserStatus(socket.userId, false);
-      }
-      console.log(`🔴 Disconnected: ${socket.userId}`);
-    } catch (err) {
-      console.error("❌ Disconnect error:", err);
-    }
-  });
-
-  // ✅ Also handle explicit logout
-  socket.on("userLoggedOut", async (userId) => {
-    try {
-      const user = await User.findById(userId);
-      if (user) {
-        user.active = false;
-        await user.save();
-        broadcastUserStatus(userId, false);
-      }
-      console.log(`🚪 Logged out: ${userId}`);
-    } catch (err) {
-      console.error("❌ userLoggedOut error:", err);
-    }
-  });
-});
-
-
-
-// Helper: tell all admins that a user’s active state changed
 function broadcastUserStatus(userId, isActive) {
   io.emit("userStatusChange", { userId, active: isActive });
 }
 
-// ===============================
-// 📊 GET RECENT ACTIVITY LOGS
-// ===============================
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
+
+  socket.on("registerUser", async (userId) => {
+    if (!userId) return;
+    socket.userId = userId;
+    try {
+      const userDoc = await db.collection("users").doc(userId).get();
+      if (userDoc.exists && userDoc.data().active) {
+        broadcastUserStatus(userId, true);
+      }
+    } catch (err) {
+      console.error("registerUser error:", err);
+    }
+  });
+
+  socket.on("disconnect", async () => {
+    if (!socket.userId) return;
+    try {
+      const userRef = db.collection("users").doc(socket.userId);
+      const userDoc = await userRef.get();
+      if (userDoc.exists) {
+        await userRef.update({ active: false });
+        broadcastUserStatus(socket.userId, false);
+      }
+      console.log("Disconnected:", socket.userId);
+    } catch (err) {
+      console.error("Disconnect error:", err);
+    }
+  });
+
+  socket.on("userLoggedOut", async (userId) => {
+    try {
+      const userRef = db.collection("users").doc(userId);
+      const userDoc = await userRef.get();
+      if (userDoc.exists) {
+        await userRef.update({ active: false });
+        broadcastUserStatus(userId, false);
+      }
+    } catch (err) {
+      console.error("userLoggedOut error:", err);
+    }
+  });
+});
+
+// -------------------- Activity logs --------------------
 app.get("/api/activity", async (req, res) => {
   try {
-    const logs = await Activity.find().sort({ date: -1 }).limit(10).lean();
+    const snap = await db.collection("activities").orderBy("date", "desc").limit(10).get();
+    const logs = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     res.json(logs);
   } catch (err) {
-    console.error("Error fetching activity logs:", err);
-    res.status(500).json({ message: "Failed to load activity logs" });
+    console.error("Fetch activity error:", err);
+    res.status(500).json({ error: "Failed to load activity logs" });
   }
 });
 
-// ===============================
-// ✅ Start the unified HTTP + Socket.IO server
-// ===============================
-const PORT = process.env.PORT || 5000;
+// -------------------- Report summary --------------------
+app.get("/api/report-summary", async (req, res) => {
+  try {
+    const usersSnap = await db.collection("users").get();
+    const booksSnap = await db.collection("books").get();
 
+    // top category
+    const categoryCount = {};
+    booksSnap.docs.forEach((d) => {
+      const cats = Array.isArray(d.data().category) ? d.data().category : [d.data().category].filter(Boolean);
+      cats.forEach((c) => {
+        if (!c) return;
+        categoryCount[c] = (categoryCount[c] || 0) + 1;
+      });
+    });
+    const topCategory = Object.entries(categoryCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "N/A";
+
+    // top book (heuristic: most pages)
+    let topBook = "N/A";
+    if (!booksSnap.empty) {
+      let max = null;
+      booksSnap.docs.forEach((d) => {
+        const data = d.data();
+        if (!max || (data.pages || []).length > (max.pages || []).length) max = data;
+      });
+      if (max) topBook = `${max.title} (${(max.pages || []).length} pages)`;
+    }
+
+    res.json({ totalUsers: usersSnap.size, totalBooks: booksSnap.size, topCategory, topBook });
+  } catch (err) {
+    console.error("Report summary error:", err);
+    res.status(500).json({ error: "Failed to load report summary" });
+  }
+});
+
+// -------------------- API fallback & frontend routes --------------------
+app.use(/^\/api(\/|$)/, (req, res) => res.status(404).json({ error: "API route not found" }));
+
+app.get(["/intro.html", "/admin.html", "/dashboard.html"], (req, res) => {
+  res.sendFile(path.join(__dirname, "public", req.path));
+});
+app.get(/^\/(?!api).*/, (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "intro.html"));
+});
+
+// -------------------- start server --------------------
+const PORT = process.env.PORT || 5000;
 httpServer.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`Server listening on port ${PORT}`);
 });

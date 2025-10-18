@@ -20,7 +20,7 @@ const socket = io(API_URL);
 
 // --- Typewriter Effect (placeholder only) ---
 const input = document.getElementById("searchInput");
-const phrases = ["Novels","Mangas","Comics","Textbooks","Magazines","Research Papers","Biographies","Science Fiction","Fantasy","Mystery","Romance"];
+const phrases = ["Filipiniana","General Education","Accountancy","Computer Studies","Criminology","Education","Engineering","Commerce","Maritime","Mass Communication","Political Science", "Psyhcology", "Aviation", "Fiction"];
 let phraseIndex = 0, charIndex = 0, deleting = false;
 
 function typeAnimation() {
@@ -231,7 +231,7 @@ document.addEventListener("click", (e) => {
   }
 });
 // ===============================
-// POPULATE INTRO SLIDESHOW & COUNT (Auto-Scrolling Carousel with Adjustable Speed)
+// POPULATE INTRO SLIDESHOW & COUNT (NO DUPLICATES)
 // ===============================
 async function loadIntroBooks() {
   try {
@@ -243,20 +243,16 @@ async function loadIntroBooks() {
     const countEl = document.getElementById("bookCount");
     if (!track) return;
 
-    // Clear old content
     track.innerHTML = "";
 
-    // If no books available
     if (!Array.isArray(books) || books.length === 0) {
       track.innerHTML = `<p class="no-books">No books available yet.</p>`;
       if (countEl) countEl.textContent = "Available Books: 0";
       return;
     }
 
-    // ✅ Duplicate once for seamless infinite scroll
-    const allBooks = [...books, ...books];
-
-    allBooks.forEach((book) => {
+    // ✅ Show each book only once
+    books.forEach((book) => {
       const img = document.createElement("img");
       img.src = book.img || "img/default-book.png";
       img.alt = book.title || "Untitled";
@@ -268,20 +264,19 @@ async function loadIntroBooks() {
     // ✅ Update count
     if (countEl) countEl.textContent = `Available Books: ${books.length}`;
 
-    // ✅ Smooth continuous scroll animation
+    // ✅ Continuous loop (wrap-around instead of duplication)
     let position = 0;
-    const speed = 10; // 🔧 adjust this value (lower = slower, higher = faster)
+    const speed = 10;
 
     function animate() {
       position -= speed;
-      if (Math.abs(position) >= track.scrollWidth / 2) {
-        position = 0; // reset halfway for seamless loop
+      if (Math.abs(position) >= track.scrollWidth) {
+        position = 0; // reset when fully off-screen
       }
       track.style.transform = `translateX(${position}px)`;
       requestAnimationFrame(animate);
     }
 
-    // ✅ Style
     track.style.display = "flex";
     track.style.gap = "20px";
     track.style.transition = "none";
@@ -293,6 +288,7 @@ async function loadIntroBooks() {
     console.error("❌ Error loading intro books:", err);
   }
 }
+
 
 // ✅ Run on load
 document.addEventListener("DOMContentLoaded", loadIntroBooks);

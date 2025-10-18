@@ -258,6 +258,26 @@
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+    <!-- ✅ Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCT6iAeGe8R-HUtzKYvS84yyONkBy2zmBw",
+      authDomain: "openark-6b5c5.firebaseapp.com",
+      projectId: "openark-6b5c5",
+      storageBucket: "openark-6b5c5.firebasestorage.app",
+      messagingSenderId: "481903001195",
+      appId: "1:481903001195:web:8761987ed292a9470dbb2e",
+      measurementId: "G-4FRMNLRXW5"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db; // optional, if admin.js ever needs access
+  </script>
   <script src="admin.js"></script>
 
 </body>
