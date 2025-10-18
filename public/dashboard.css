@@ -278,8 +278,49 @@ main {
   }
 }
 
+/* =============================
+   HIDE SECTIONS WHEN NOT ACTIVE
+   ============================= */
 .hidden {
   display: none !important;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Optional fade animation (visible ones) */
+section:not(.hidden) {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.3s ease-in-out;
+}
+
+#categoriesButtons button {
+  padding: 8px 14px;
+  border: 1px solid #9A3F3F;        /* maroon border */
+  border-radius: 8px;
+  background-color: #fff;           /* neutral */
+  color: #9A3F3F;                   /* maroon text */
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#categoriesButtons button:hover {
+  background-color: #E6CFA9;        /* beige hover */
+  color: #9A3F3F;
+  transform: scale(1.05);
+}
+
+#categoriesButtons button.active {
+  background-color: #9A3F3F;        /* maroon active */
+  color: #E6CFA9;                   /* beige text */
+  border-color: #9A3F3F;
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(154,63,63,0.3);
 }
 
 
