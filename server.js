@@ -422,7 +422,6 @@ app.delete("/api/comments/:commentId", async (req, res) => {
   }
 });
 
-
 // ===============================
 // Get Single Book by ID
 // ===============================
@@ -1072,53 +1071,75 @@ app.get("/api/continue", async (req, res) => {
 });
 
 // ===============================
-// Add more pages to existing book (Librarian only)
+// Add more pages to existing book (Librarian only) + Gemini OCR
 // ===============================
-app.post(
-  "/api/books/:id/add-pages",
-  upload.array("pages"),
-  async (req, res) => {
-    try {
-      const authHeader = req.headers.authorization;
-      if (!authHeader) return res.status(401).json({ error: "Missing token" });
-      const token = authHeader.split(" ")[1];
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      if (decoded.role !== "librarian")
-        return res.status(403).json({ error: "Forbidden" });
+app.post("/api/books/:id/add-pages", upload.array("pages"), async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) return res.status(401).json({ error: "Missing token" });
 
-      const book = await Book.findById(req.params.id);
-      if (!book) return res.status(404).json({ error: "Book not found" });
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (decoded.role !== "librarian")
+      return res.status(403).json({ error: "Forbidden" });
 
-      const { pageTexts } = req.body;
-      let texts = [];
+    const book = await Book.findById(req.params.id);
+    if (!book) return res.status(404).json({ error: "Book not found" });
+
+    const uploadedPages = [];
+
+    for (const file of req.files) {
+      // ✅ Upload page image to Cloudinary
+      const uploadResult = await cloudinary.uploader.upload(file.path, {
+        folder: "openark/pages",
+      });
+
+      // ✅ Convert image to base64 for Gemini OCR
+      const imageBase64 = fs.readFileSync(file.path, { encoding: "base64" });
+      fs.unlinkSync(file.path); // delete after reading
+
+      // ✅ Run Gemini OCR
+      let ocrText = "";
       try {
-        texts = JSON.parse(pageTexts || "[]");
-      } catch {
-        texts = [];
+        const result = await gemini.generateContent({
+          contents: [
+            {
+              role: "user",
+              parts: [
+                { inlineData: { data: imageBase64, mimeType: file.mimetype } },
+                { text: "Extract all readable text from this scanned page clearly and accurately." },
+              ],
+            },
+          ],
+        });
+        ocrText = result.response.text();
+      } catch (ocrErr) {
+        console.error("❌ Gemini OCR failed for page:", file.originalname, ocrErr);
+        ocrText = "(OCR failed or unreadable image)";
       }
 
-      const uploadedPages = [];
-      for (let i = 0; i < req.files.length; i++) {
-        const file = req.files[i];
-        const result = await cloudinary.uploader.upload(file.path, {
-          folder: "openark/pages",
-        });
-        uploadedPages.push({
-          img: result.secure_url,
-          text: texts[i] || "",
-        });
-      }
-
-      book.pages.push(...uploadedPages);
-      await book.save();
-
-      res.json({ message: "✅ New pages added successfully", pages: uploadedPages });
-    } catch (err) {
-      console.error("❌ Add pages failed:", err);
-      res.status(500).json({ error: "Failed to add pages" });
+      uploadedPages.push({ img: uploadResult.secure_url, text: ocrText });
     }
+
+    book.pages.push(...uploadedPages);
+    await book.save();
+
+    await Activity.create({
+      user: "Librarian",
+      action: "Added Book Pages with OCR",
+      details: `Added ${uploadedPages.length} new pages to "${book.title}"`,
+    });
+
+    res.json({
+      message: "✅ New pages added with OCR successfully",
+      pages: uploadedPages,
+    });
+  } catch (err) {
+    console.error("❌ Add pages with OCR failed:", err);
+    res.status(500).json({ error: "Failed to add pages with OCR" });
   }
-);
+});
+
 
 // ===============================
 // Update specific page text (Librarian only)
