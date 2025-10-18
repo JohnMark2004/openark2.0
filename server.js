@@ -11,11 +11,16 @@ const { Server } = require("socket.io");
 const gTTS = require("gtts");
 const admin = require("firebase-admin");
 
-// ---- Firebase admin initialization ----
-const serviceAccount = require("./openark-6b5c5-firebase-adminsdk-fbsvc-46552f02fe.json"); // adjust filename
+const admin = require("firebase-admin");
+
 admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+  }),
 });
+
 const db = admin.firestore();
 
 // ✅ Gemini import MUST come before it's used
