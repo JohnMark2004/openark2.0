@@ -15,9 +15,6 @@ const fs = require("fs");
 const http = require("http");
 const { Server } = require("socket.io");
 const gTTS = require('gtts');
-// ✅ Import the new email service
-const { sendPendingEmail, sendApprovalEmail } = require("./emailService");
-
 // ✅ Gemini import MUST come before it's used
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -101,7 +98,6 @@ function authenticateMiddleware(req, res, next) {
 
 app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
   try {
-    const adminUser = await User.findById(req.user.id);
     if (req.user.role !== "admin") {
       return res.status(403).json({ error: "Forbidden" });
     }
@@ -507,9 +503,6 @@ app.post("/api/signup", async (req, res) => {
     });
         await newUser.save();
 
-        sendPendingEmail(newUser.email, newUser.username).catch(err => {
-        console.error(`Failed to send pending email to ${newUser.email}:`, err);
-    });
     // ✅ Log activity AFTER saving
     await Activity.create({
       user: username,
