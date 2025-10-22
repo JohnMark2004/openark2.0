@@ -22,6 +22,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const activityNextBtn = document.getElementById("activityNextBtn");
   const activityPageInfo = document.getElementById("activityPageInfo");
   const monthFilter = document.getElementById("monthFilter"); // We need this
+  const pruneDateInput = document.getElementById("pruneDate");
+  const pruneLogsBtn = document.getElementById("pruneLogsBtn");
+  const pruneLogsModal = document.getElementById("pruneLogsModal");
+  const cancelPruneLogs = document.getElementById("cancelPruneLogs");
+  const confirmPruneLogs = document.getElementById("confirmPruneLogs");
+  const pruneDateConfirm = document.getElementById("pruneDateConfirm");
 
   // --- Global State ---
   let allUsers = []; // ✅ For efficient filtering
@@ -688,6 +694,76 @@ if (monthFilter) {
       XLSX.writeFile(wb, "Recent_Activity.xlsx");
     });
   }
+
+// ===============================
+  // 🗑️ PRUNE (DELETE) OLD LOGS LOGIC
+  // ===============================
+  let dateToPrune = null;
+
+  // 1. Open the confirmation modal
+  pruneLogsBtn.addEventListener("click", () => {
+    const selectedDate = pruneDateInput.value;
+    if (!selectedDate) {
+      showPopup("Please select a date first.", "error");
+      return;
+    }
+    
+    dateToPrune = new Date(selectedDate);
+    // Use toLocaleDateString() for a friendly format in the modal
+    pruneDateConfirm.textContent = dateToPrune.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    pruneLogsModal.classList.add("show");
+  });
+
+  // 2. Cancel deletion
+  cancelPruneLogs.addEventListener("click", () => {
+    pruneLogsModal.classList.remove("show");
+    dateToPrune = null;
+  });
+
+  // 3. Confirm and execute deletion
+  confirmPruneLogs.addEventListener("click", async () => {
+    if (!dateToPrune) return;
+
+    const token = sessionStorage.getItem("token");
+    confirmPruneLogs.disabled = true;
+    confirmPruneLogs.textContent = "Deleting...";
+
+    try {
+      const res = await fetch(`${API_URL}/api/activity/prune`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        // Send the date in a standard, server-friendly format
+        body: JSON.stringify({ beforeDate: dateToPrune.toISOString() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete logs");
+      }
+
+      showPopup(data.message || "Logs deleted successfully!");
+      await loadReports(); // Refresh the activity list
+
+    } catch (err) {
+      console.error("Prune logs error:", err);
+      showPopup(err.message, "error");
+    } finally {
+      // Reset modal and button
+      pruneLogsModal.classList.remove("show");
+      confirmPruneLogs.disabled = false;
+      confirmPruneLogs.textContent = "Confirm & Delete";
+      dateToPrune = null;
+      pruneDateInput.value = ""; // Clear the date input
+    }
+  });
 
   // --- Initial Load ---
   loadUsers();

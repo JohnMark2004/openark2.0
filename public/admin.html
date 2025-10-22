@@ -200,6 +200,18 @@
         <button id="exportPDF" class="btn small">Download PDF</button>
         <button id="exportExcel" class="btn small">Download Excel</button>
       </div>
+
+      <div class="activity-prune" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee;">
+        <h4>Delete Old Logs</h4>
+        <p style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 0.75rem;">
+          Permanently delete all activity logs created <strong>before</strong> the selected date.
+        </p>
+        <div class="filter-section">
+          <label for="pruneDate">Delete logs before:</label>
+          <input type="date" id="pruneDate" style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc;">
+          <button id="pruneLogsBtn" class="btn delete small">Delete Logs</button>
+        </div>
+      </div>
     </section>
   </main>
 
@@ -236,6 +248,17 @@
       <div class="modal-buttons">
         <button id="cancelBookDelete" class="btn cancel">Cancel</button>
         <button id="confirmBookDelete" class="btn delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="pruneLogsModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Confirm Log Deletion</h3>
+      <p>Are you sure you want to permanently delete all logs before <strong id="pruneDateConfirm"></strong>? This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button id="cancelPruneLogs" class="btn cancel">Cancel</button>
+        <button id="confirmPruneLogs" class="btn delete">Confirm & Delete</button>
       </div>
     </div>
   </div>

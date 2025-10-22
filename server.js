@@ -1362,6 +1362,50 @@ app.get("/api/activity", async (req, res) => {
   } catch (err) {
     console.error("Error fetching activity logs:", err);
     res.status(500).json({ message: "Failed to load activity logs" });
+  }``
+});
+
+// ===============================
+// 🗑️ DELETE OLD ACTIVITY LOGS (Admin only)
+// ===============================
+app.delete("/api/activity/prune", authenticateMiddleware, async (req, res) => {
+  try {
+    // 1. Check for Admin role
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ error: "Forbidden: Admins only" });
+    }
+
+    // 2. Get the date from the request body
+    const { beforeDate } = req.body;
+    if (!beforeDate) {
+      return res.status(400).json({ error: "No 'beforeDate' specified" });
+    }
+
+    const targetDate = new Date(beforeDate);
+    if (isNaN(targetDate.getTime())) {
+      return res.status(400).json({ error: "Invalid date format" });
+    }
+
+    // 3. Perform the deletion
+    // { date: { $lt: targetDate } } means "where the date is LESS THAN the targetDate"
+    const result = await Activity.deleteMany({ date: { $lt: targetDate } });
+
+    // 4. Log this action (ironically)
+    await Activity.create({
+      user: "Admin",
+      action: "Pruned Activity Logs",
+      details: `Deleted ${result.deletedCount} logs created before ${targetDate.toLocaleDateString()}`,
+    });
+
+    // 5. Send success response
+    res.json({
+      message: `Successfully deleted ${result.deletedCount} old logs.`,
+      deletedCount: result.deletedCount,
+    });
+
+  } catch (err) {
+    console.error("Error pruning activity logs:", err);
+    res.status(500).json({ message: "Failed to prune activity logs" });
   }
 });
 
