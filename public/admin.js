@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let allActivities = []; // Holds all fetched activities
   let sortedActivities = []; // Holds filtered and sorted activities
   let activityCurrentPage = 1;
-  const activityItemsPerPage = 9;
+  const activityItemsPerPage = 10;
 
   // ✅ Redirect non-admins away
   if (localStorage.getItem("role") !== "admin") {
