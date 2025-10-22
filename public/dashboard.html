@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard | OpenArk</title>
+  <link rel="stylesheet" href="dashboard.css"/>
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+</head>
+<body class="dashboard-body">
+  <div class="dashboard-wrapper">
+    <header class="topbar" data-aos="fade-down" data-aos-duration="1000">
+    <div class="left" data-aos="fade-right" data-aos-duration="1200">
+      <img src="img/logo.png" class="logo" alt="Logo">
+      <h1>OpenArk</h1>
+    </div>
+    <nav data-aos="fade-down" data-aos-duration="1200">
+      <a href="#" id="homeTab">Home</a>
+<div class="nav-dropdown" id="conversionMenu">
+  <a href="#" id="conversionTab">Conversion ▾</a>
+  <div class="nav-dropdown-menu hidden">
+    <div class="nav-option" data-value="organization">Book Creation (Add Book)</div>
+    <div class="nav-option" data-value="project">Book Management (Books)</div>
+  </div>
+</div>
+
+      <a href="#" id="browseTab">Browse</a>
+      <a href="#" id="bookmarksTab">MyBookmarks</a>
+    </nav>
+    <div class="right" data-aos="fade-left" data-aos-duration="1200">
+<div class="profile-menu">
+  <img src="assets/default-pfp.png" id="navProfileImg" alt="Profile" class="nav-pfp">
+
+  <div class="profile-dropdown hidden" id="profileDropdown">
+  <div class="profile-info">
+    <img src="assets/default-pfp.png" id="dropdownProfileImg" alt="Profile Picture" class="dropdown-pfp">
+    <div class="user-text">
+      <h4 id="dropdownUsername">User Name</h4>
+      <p id="dropdownEmail">user@email.com</p>
+    </div>
+  </div>
+
+  <div class="profile-upload" style="margin-top: 10px; text-align: center;">
+    <input type="file" id="profilePicInput" accept="image/*" style="display: none;">
+    <button id="uploadTriggerBtn" class="btn" style="margin-bottom: 6px;">Change Picture</button>
+    <button id="saveProfilePicBtn" class="btn">Save</button>
+  </div>
+
+  <hr />
+  <button id="logoutBtn" class="logout-btn">Log out</button>
+</div>
+
+</div>
+
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <div id="globalLoader" class="global-spinner hidden">
+  <div class="spinner"></div>
+  <p>Loading OpenArk...</p>
+</div>
+
+    <section id="homeSection">
+      
+      <section class="book-slideshow-container" data-aos="fade-up" data-aos-duration="1500">
+      <div id="loadingSpinnerSlide" class="spinner hidden"></div>
+  <div class="book-slideshow" id="bookSlideshow"></div>
+
+  <button class="slide-btn prev" id="prevSlide">❮</button>
+  <button class="slide-btn next" id="nextSlide">❯</button>
+</section>
+<section class="weekly-featured" id="homeSectionContent" data-aos="fade-up"> <div class="section-header">
+    <h2>Recently Added</h2>
+    <button id="viewAllBtn" class="btn-view-all">View All →</button>
+  </div>
+    <div id="loadingSpinner" class="spinner hidden"></div>
+  <div class="book-grid" id="dashboardBooks"></div>
+</section>
+<section class="continue-reading" data-aos="fade-up"> <div class="section-header">
+    <h2>Last Read</h2>
+  </div>
+      <div id="loadingSpinnerContinue" class="spinner hidden"></div>
+  <div class="book-grid" id="continueReadingGrid"></div>
+</section>
+<div id="loadingSpinnerHome" class="spinner hidden"></div>
+    </section>
+
+<section id="conversionSection" class="hidden" data-aos="fade-up"> <h2>Library Book Management</h2>
+
+  <div class="conversion-dropdown">
+  <div id="loadingSpinnerConversion" class="spinner hidden"></div>
+
+  <div id="conversionBooks" class="featured-grid hidden"></div>
+  <div id="loadingSpinnerConversion" class="hidden loader"></div>
+  </div>
+</section>
+
+    <section id="bookDetailsSection" class="hidden" data-aos="fade-up"> <div class="book-read-container">
+        <button id="backToHomeBtn" class="btn btn-back">← Back to Library</button>
+
+        <div class="book-read-grid">
+          <div class="book-read-cover">
+            <img id="detailCover" src="img/default-book.png" alt="Book Cover">
+          </div>
+
+          <div class="book-read-info">
+            <p class="breadcrumbs">
+              <span id="detailCategory">Category</span> &gt; <span id="detailTitleBreadcrumb">Book Name</span>
+            </p>
+            <h2 id="detailTitle">Book Title Goes Here</h2>
+            <div class="book-stats">
+              <span><strong>Category:</strong> <span id="detailCategoryStat">N/A</span></span>
+              <span><strong>Pages:</strong> <span id="detailChapters">N/A</span></span>
+            </div>
+                        <div class="book-stats">
+            </div>
+            <p class="author-info"><span id="detailAuthor">Author Name</span></p>
+            
+            <div class="action-buttons">
+              <button id="readBookBtn" class="btn btn-read">READ</button>
+              <button class="btn btn-add-bookmark">+ ADD TO BOOKMARK</button>
+              <button id="addMorePagesBtn" class="btn hidden">+ Add Page (OCR)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="book-read-tabs">
+          <div class="tab active" data-tab="about">About</div>
+        </div>
+
+        <div class="book-read-content">
+          <div id="content-about">
+            <h3>Description</h3>
+            <p id="detailDescription">No description available.</p>
+            <p id="disclaimer" class="disclaimer"></p>
+          </div>
+          <div id="commentsWrapper" class="comments-wrapper" style="margin-top:1rem;">
+  <h4>Comments</h4>
+
+  <div id="commentForm" class="comment-form" style="display:none; margin-bottom:0.8rem;">
+    <img id="commenterPfpSmall" src="assets/default-pfp.png" alt="pfp" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:0.6rem;vertical-align:middle;">
+    <textarea id="commentText" placeholder="Write a comment..." style="width:70%;min-height:60px;vertical-align:middle;padding:0.6rem;border-radius:8px;border:1px solid #ccc;"></textarea>
+    <div style="margin-top:0.5rem;">
+      <button id="postCommentBtn" class="btn">Post</button>
+    </div>
+  </div>
+
+  <div id="commentLoginPrompt" style="opacity:0.85;margin-bottom:0.6rem;">
+    <small>Log in to post a comment.</small>
+  </div>
+<div id="loadingSpinnerComment" class="spinner hidden"></div>
+  <div id="commentsList" class="comments-list" style="margin-top:0.6rem;"></div>
+</div>
+<div id="content-toc" class="hidden">
+            <h3>Table of Contents</h3>
+            <p>Page previews will be available here.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="bookReaderSection" class="hidden" data-aos="fade-up"> <div class="reader-header">
+        <button id="backToDetailsBtn" class="btn">← Back to Details</button>
+        <h2 id="readerBookTitle"></h2>
+      </div>
+      <div id="readerContent" class="reader-content">
+        </div>
+    </section>
+
+
+    <section id="bookCreationSection" class="hidden" data-aos="fade-up"> <h2>Book Creation</h2>
+      <div class="creation-step" id="step1">
+        <h3>Step 1: Book Information</h3>
+        <form id="bookMetaForm">
+<p><label>Book Title: <span style="color:red">*</span><br>
+  <input type="text" name="title" required>
+</label></p>
+
+<p><label>Author: <span style="color:red">*</span><br>
+  <input type="text" name="author" required>
+</label></p>
+
+<p><label>Publisher: <span style="color:red">*</span><br>
+  <input type="text" name="publisher" required>
+</label></p>
+
+<p><label>Year: <span style="color:red">*</span><br>
+  <input type="number" name="year" required>
+</label></p>
+          <p>
+  <label>Categories: <span style="color:red">*</span><br></label>
+<div id="categoriesButtons" class="genres-buttons">
+  <button type="button" class="genre-btn" data-genre="Accountancy">Accountancy</button>
+  <button type="button" class="genre-btn" data-genre="Criminology">Criminology</button>
+  <button type="button" class="genre-btn" data-genre="Computer Science">Computer Science</button>
+  <button type="button" class="genre-btn" data-genre="Engineering">Engineering</button>
+  <button type="button" class="genre-btn" data-genre="Commerce">Commerce</button>
+  <button type="button" class="genre-btn" data-genre="Maritime">Maritime</button>
+  <button type="button" class="genre-btn" data-genre="Mass Communication">Mass Communication</button>
+  <button type="button" class="genre-btn" data-genre="Political Science">Political Science</button>
+  <button type="button" class="genre-btn" data-genre="Psychology">Psychology</button>
+  <button type="button" class="genre-btn" data-genre="Aviation">Aviation</button>
+  <button type="button" class="genre-btn" data-genre="Fiction">Fiction</button>
+  <button type="button" class="genre-btn" data-genre="Filipiana">Filipiana</button>
+  <button type="button" class="genre-btn" data-genre="General Education">General Education</button>
+  <button type="button" class="genre-btn" data-genre="Senior High">Senior High</button>
+</div>
+
+          </p>
+<p><label>Description: <span style="color:red">*</span><br>
+  <textarea name="description" required></textarea>
+</label></p>
+<p>
+  <label>Cover Image: <span style="color:red">*</span><br>
+    <div class="file-input-wrapper">
+      <input type="file" id="coverUpload" accept="image/*" required>
+      <span class="file-label">Choose Cover</span>
+    </div>
+    <span id="coverFileName" class="file-name">No file chosen</span>
+  </label>
+</p>
+          <div class="form-actions">
+            <button type="button" class="btn" id="backToConversion">← Back</button>
+            <button type="button" class="btn" id="nextToStep2">Next →</button>
+          </div>
+        </form>
+      </div>
+      <div id="ocrSpinner" class="spinner hidden" style="margin: 10px auto;"></div>
+      <div class="creation-step hidden" id="step2">
+        <h3>Step 2: Upload Pages</h3>
+        <div id="pageList"></div>
+<div class="file-input-wrapper">
+  <input type="file" id="pageUpload" accept="image/*">
+  <span class="file-label">Choose Page</span>
+</div>
+<span id="pageFileName" class="file-name">No file chosen</span>
+
+<div id="ocrSpinner" class="spinner hidden" style="margin: 10px auto;"></div>
+
+<button type="button" class="btn" id="addPageBtn">Add Page</button>
+
+        <div class="form-actions">
+          <button type="button" class="btn" id="backToStep1">← Back</button>
+          <button type="button" class="btn" id="nextToStep3">Next →</button>
+        </div>
+      </div>
+      <div id="publishSpinner" class="spinner hidden"></div>
+
+      <div class="creation-step hidden" id="step3">
+        <h3>Step 3: Publish</h3>
+        <p>Review your book and publish it to the library.</p>
+        <div class="form-actions">
+          <button type="button" class="btn" id="backToStep2">← Back</button>
+          <button type="button" class="btn" id="publishBookBtn">Publish</button>
+        </div>
+      </div>
+    </section>
+
+<section id="browseSection" class="hidden" data-aos="fade-up"> <h2 id="browseHeading">Browse Library</h2>
+
+  <div class="browse-controls">
+  <input type="text" id="browseSearch" placeholder="Search by title..." />
+
+<button id="advancedSearchToggle" class="btn">Advanced Search</button>
+
+  </div>
+
+  <div id="advancedSearchSection">
+  <div class="advanced-row">
+    <label>Keyword (Description)</label>
+    <input type="text" id="keywordSearch" placeholder="Enter any word from description">
+  </div>
+
+  <div class="advanced-row">
+    <label>Author</label>
+    <input type="text" id="authorSearch" placeholder="Enter author name">
+  </div>
+
+  <div class="advanced-row">
+    <label>Publisher</label>
+    <input type="text" id="publisherSearch" placeholder="Enter publisher name">
+  </div>
+
+  <div class="advanced-row">
+    <label>Year Published</label>
+    <select id="yearSearch">
+      <option value="">Select Year</option>
+      <option value="2025">2025</option>
+      <option value="2024">2024</option>
+      <option value="2023">2023</option>
+      <option value="2022">2022</option>
+      <option value="2021">2021</option>
+      <option value="2020">2020</option>
+    </select>
+  </div>
+  <h4>Categories</h4>
+  <div class="genre-filters" id="genreFilters">
+      <button class="genre-btn active" data-genre="all">All</button>
+      <button class="genre-btn" data-genre="Accountancy">Accountancy</button>
+      <button class="genre-btn" data-genre="Criminology">Criminology</button>
+      <button class="genre-btn" data-genre="Computer Science">Computer Science</button>
+      <button class="genre-btn" data-genre="Engineering">Engineering</button>
+      <button class="genre-btn" data-genre="Commerce">Commerce</button>
+      <button class="genre-btn" data-genre="Maritime">Maritime</button>
+      <button class="genre-btn" data-genre="Mass Communication">Mass Communication</button>
+      <button class="genre-btn" data-genre="Political Science">Political Science</button>
+      <button class="genre-btn" data-genre="Psychology">Psychology</button>
+      <button class="genre-btn" data-genre="Aviation">Aviation</button>
+      <button class="genre-btn" data-genre="Fiction">Fiction</button>
+      <button class="genre-btn" data-genre="Filipiana">Filipiana</button>
+      <button class="genre-btn" data-genre="General Education">General Education</button>
+      <button class="genre-btn" data-genre="Senior High">Senior High</button>
+  </div>
+  </div>
+ <h3 id="currentGenreTitle">Showing: All</h3>
+   <div id="loadingSpinnerBrowse" class="spinner hidden"></div>
+  <div class="browse-grid" id="browseBooks"></div>
+</section>
+
+<section id="bookmarksSection" class="hidden" data-aos="fade-up"> <div class="section-header">
+    <h2>My Bookmarks</h2>
+    <button id="viewAllBookmarksBtn" class="btn-view-all">Browse More...</button>
+  </div>
+
+  <div class="book-grid" id="bookmarksGrid"></div>
+</section>
+
+  </main>
+
+<div id="deleteModal" class="modal hidden">
+  <div class="modal-content">
+    <p id="deleteModalMessage">Are you sure you want to delete this book?</p>
+    <div class="modal-actions">
+      <button id="confirmDeleteBtn" class="btn danger">Delete</button>
+      <button id="cancelDeleteBtn" class="btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="deleteCommentModal" class="modal hidden">
+  <div class="modal-content">
+    <p id="deleteCommentMessage">Are you sure you want to delete this comment?</p>
+    <div class="modal-buttons">
+      <button id="confirmDeleteCommentBtn" class="confirm-btn">Yes, delete</button>
+      <button id="cancelDeleteCommentBtn" class="cancel-btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+  <div id="popup" class="popup hidden"></div>
+
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>
+    AOS.init();
+  </script>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+
+  
+  </div>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>

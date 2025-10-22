@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to OpenArk</title>
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+  <link rel="stylesheet" href="intro.css">
+</head>
+<body>
+  <div class="container">
+    <header data-aos="fade-down" data-aos-duration="1000">
+      <img data-aos="fade-zoom-in"
+           data-aos-easing="ease-in-back"
+           data-aos-delay="300"
+           data-aos-offset="0"
+           data-aos-duration="500"
+           class="logo-image"
+           src="img/logo.png"
+           alt="logo">
+
+      <h1 data-aos="fade-zoom-in"
+          data-aos-easing="ease-in-back"
+          data-aos-delay="300"
+          data-aos-offset="0"
+          data-aos-duration="500"
+          class="name">OpenArk</h1>
+    </header>
+
+    <main>
+      <div class="content">
+        <div class="search" data-aos="flip-left"
+             data-aos-easing="ease-out-cubic"
+             data-aos-duration="1000">
+          <input type="text" id="searchInput" placeholder="">
+          <svg viewBox="0 0 24 24">
+            <path d="M21 20l-5.8-5.8a7 7 0 10-1.4 1.4L20 21l1-1zM10 16a6 6 0 110-12 6 6 0 010 12z"/>
+          </svg>
+        </div>
+        
+        <h1 data-aos="fade-zoom-in"
+            data-aos-easing="ease-in-back"
+            data-aos-delay="300"
+            data-aos-offset="0"
+            data-aos-duration="500">Access Knowledge <br>Anytime. Anywhere.</h1>
+
+        <p data-aos="fade-zoom-in"
+           data-aos-easing="ease-in-back"
+           data-aos-delay="300"
+           data-aos-offset="0"
+           data-aos-duration="700"
+           class="description">
+          OpenArk is an online library that provides students with access to a wide range of educational resources, including textbooks, research papers, and study guides. Our mission is to make learning more accessible and convenient for students and librarians.
+        </p>
+        
+        <div data-aos="fade-zoom-in"
+             data-aos-easing="ease-in-back"
+             data-aos-delay="300"
+             data-aos-offset="0"
+             data-aos-duration="1000"
+             class="buttons">
+          <a href="#" class="btn-login">Get Started &gt;</a>
+        </div>
+      </div>
+
+      <div data-aos="fade-zoom-in"
+           data-aos-easing="ease-in-back"
+           data-aos-delay="300"
+           data-aos-offset="0"
+           data-aos-duration="1000"
+           class="slideshow-wrapper">
+        <div class="book-slideshow">
+          <div class="book-track" id="introBookTrack"></div>
+        </div>
+        <div class="book-count-wrapper">
+          <span id="bookCount" class="book-count-btn"></span>
+        </div>
+      </div>
+
+      <!-- Scroll Down Indicator -->
+      <div class="scroll-indicator" onclick="document.querySelector('.features-section').scrollIntoView({behavior: 'smooth'})">
+        <span>Explore More</span>
+        <svg viewBox="0 0 24 24">
+          <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+        </svg>
+      </div>
+    </main>
+  </div>
+
+  <!-- Features Section -->
+  <section class="features-section" data-aos="fade-up" data-aos-duration="1000">
+    <h2>OpenArk Features</h2>
+    <div class="features-grid">
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+        <!-- <div class="feature-icon">📚</div> -->
+        <h3>Collections</h3>
+        <p>Access textbooks, research papers, and study materials across all disciplines. Our library grows daily with new additions.</p>
+      </div>
+      
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+        <!-- <div class="feature-icon">🔍</div> -->
+        <h3>Advanced Search</h3>
+        <p>Find exactly what you need with our advanced search features. Filter by category, author, year, and more to save time.</p>
+      </div>
+      
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+        <!-- <div class="feature-icon">💾</div> -->
+        <h3>Bookmarks & Progress</h3>
+        <p>Save your favorite books and track your reading progress. Pick up right where you left off, anytime, anywhere.</p>
+      </div>
+      
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+        <!-- <div class="feature-icon">🎯</div> -->
+        <h3>Personalized</h3>
+        <p>Get book recommendations based on your year level and interests.</p>
+      </div>
+      
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="500">
+        <!-- <div class="feature-icon">🔊</div> -->
+        <h3>Text-to-Speech</h3>
+        <p>Listen to your textbooks with our built-in text-to-speech feature. Perfect for auditory learners and multitasking.</p>
+      </div>
+      
+      <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
+        <!-- <div class="feature-icon">💬</div> -->
+        <h3>Community</h3>
+        <p>Engage with fellow students through book comments and discussions. Share insights and learn together.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats Section -->
+  <section class="stats-section" data-aos="fade-up" data-aos-duration="1000">
+    <h2>OpenArk 2025</h2>
+  </section>
+
+  <!-- Login Modal -->
+  <div id="loginModal" class="modal hidden">
+    <div class="login-container">
+      <form class="login-form">
+        <div class="login-header">
+          <img src="img/logo.png" alt="Logo" class="login-logo">
+          <h2>Log In</h2>
+        </div>
+        <input type="text" placeholder="Email" required>
+        <div class="password-field">
+          <input type="password" placeholder="Password" id="loginPassword" required>
+          <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="loginPassword" alt="Show Password">
+        </div>
+        <button class="button" type="submit">Log In</button>
+        <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Signup Modal -->
+  <div id="signupModal" class="modal hidden">
+    <div class="signup-container">
+      <form class="signup-form">
+        <div class="signup-header">
+          <img src="img/logo.png" alt="Logo" class="signup-logo">
+          <h2>Sign Up</h2>
+        </div>
+        <input type="text" placeholder="Username" required>
+        <input type="email" placeholder="Email" required>
+        <div class="password-field">
+          <input type="password" placeholder="Password" id="signupPassword" required>
+          <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="signupPassword" alt="Show Password">
+        </div>
+        <div class="password-field">
+          <input type="password" placeholder="Confirm Password" id="signupConfirmPassword" required>
+          <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="signupConfirmPassword" alt="Show Password">
+        </div>
+        <select class="college-year" required>
+          <option value="" disabled selected>Select Year Level</option>
+          <option value="senior-high">Senior High</option>
+          <option value="freshman">College Freshman (1st year)</option>
+          <option value="sophomore">College Sophomore (2nd year)</option>
+          <option value="junior">College Junior (3rd year)</option>
+          <option value="senior">College Senior (4th year)</option>
+        </select>
+        <button class="button" type="submit">Sign Up</button>
+        <p class="login-link">Already have an account? <a href="#">Log In</a></p>
+      </form>
+    </div>
+  </div>
+
+  <div id="popup" class="popup hidden"></div>
+
+  <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+  <script>AOS.init();</script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="intro.js"></script>
+</body>
+</html>

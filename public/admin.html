@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | OpenArk</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="left">
+      <img src="img/logo.png" class="logo" alt="Logo">
+      <h1>OpenArk Admin</h1>
+    </div>
+    <nav>
+      <a href="#" id="userTab" class="active">Users</a>
+      <a href="#" id="booksTab">Books</a>
+      <a href="#" id="reportsTab">Reports</a>
+    </nav>
+    <div class="right">
+      <button id="logoutBtn" class="btn">Logout</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <!-- USERS TAB -->
+    <section id="usersSection" class="tab-content">
+      <h2>Users Management</h2>
+
+      <div class="stats-container">
+        <div class="stat-card">
+          <h3 id="totalUsers">0</h3>
+          <p>Total Users</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="activeUsers">0</h3>
+          <p>Active Users</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="inactiveUsers">0</h3>
+          <p>Pending Approval</p>
+        </div>
+      </div>
+
+      <div class="search-sort-bar">
+        <div class="search-bar">
+          <input type="text" id="searchInput" placeholder="Search users by name or email...">
+        </div>
+        <div class="filters">
+          <div class="sort-dropdown">
+            <select id="roleFilter">
+              <option value="all">All Roles</option>
+              <option value="student">Student</option>
+              <option value="librarian">Librarian</option>
+            </select>
+          </div>
+          <div class="status-dropdown">
+            <select id="statusFilter">
+              <option value="all">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Pending</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-table-container">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Profile</th>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody">
+            <tr><td colspan="6" style="text-align:center;padding:2rem;">Loading users...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- BOOKS TAB -->
+    <section id="booksSection" class="tab-content hidden">
+      <h2>Books Management</h2>
+
+      <div class="stats-container">
+        <div class="stat-card">
+          <h3 id="totalBooks">0</h3>
+          <p>Total Books</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="recentBooks">0</h3>
+          <p>Recently Added</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="deletedBooks">0</h3>
+          <p>Deleted (Session)</p>
+        </div>
+      </div>
+
+      <div class="search-sort-bar">
+        <div class="search-bar">
+          <input type="text" id="bookSearch" placeholder="Search books by title or author...">
+        </div>
+        <div class="filters">
+          <div class="sort-dropdown">
+            <select id="categoryFilter">
+              <option value="all">All Categories</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-table-container">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Cover</th>
+              <th>Title</th>
+              <th>Author</th>
+              <th>Category</th>
+              <th>Publisher</th>
+              <th>Year</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="bookTableBody">
+            <tr><td colspan="7" style="text-align:center;padding:2rem;">Loading books...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- REPORTS TAB -->
+    <section id="reportsSection" class="tab-content hidden">
+      <h2>Reports Dashboard</h2>
+
+      <div class="stats-container">
+        <div class="stat-card">
+          <h3 id="reportTotalUsers">0</h3>
+          <p>Total Users</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="reportTotalBooks">0</h3>
+          <p>Total Books</p>
+        </div>
+        <div class="stat-card">
+          <h3 id="reportTopCategory">-</h3>
+          <p>Top Category</p>
+        </div>
+        <!-- <div class="stat-card"> -->
+          <!-- <h3 id="reportTopBook">-</h3> -->
+          <!-- <p>Most Read</p> -->
+        </div>
+      </div>
+
+      <div class="activity-controls">
+        <h3>Recent Activity</h3>
+        <div class="activity-options">
+          <div class="sort-section">
+            <label for="activitySort">Sort by:</label>
+            <select id="activitySort">
+              <option value="newest">Newest → Oldest</option>
+              <option value="oldest">Oldest → Newest</option>
+              <option value="user">User Name (A–Z)</option>
+              <option value="action">Action Type (A–Z)</option>
+            </select>
+          </div>
+          <div class="filter-section">
+            <label for="monthFilter">Month:</label>
+            <input type="month" id="monthFilter">
+            <button id="filterMonthBtn" class="btn">Filter</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="user-table-container">
+        <table class="user-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="activityTableBody">
+            <tr><td colspan="4" style="text-align:center;padding:2rem;">No recent activity.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="activity-export">
+        <button id="exportPNG" class="btn small">Download PNG</button>
+        <button id="exportPDF" class="btn small">Download PDF</button>
+        <button id="exportExcel" class="btn small">Download Excel</button>
+      </div>
+    </section>
+  </main>
+
+  <!-- User Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Confirm Deletion</h3>
+      <p>Are you sure you want to permanently delete this user account?</p>
+      <div class="modal-buttons">
+        <button id="cancelDelete" class="btn cancel">Cancel</button>
+        <button id="confirmDelete" class="btn delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book View/Edit Modal -->
+  <div id="bookModal" class="modal hidden">
+    <div class="modal-content">
+      <h3 id="modalTitle">Book Details</h3>
+      <img id="modalCover" src="img/default-book.png" style="width:120px;height:170px;border-radius:12px;margin-bottom:1.5rem;">
+      <p><strong>Title:</strong> <span id="modalBookTitle"></span></p>
+      <p><strong>Author:</strong> <span id="modalBookAuthor"></span></p>
+      <p><strong>Category:</strong> <span id="modalBookCategory"></span></p>
+      <p><strong>Year:</strong> <span id="modalBookYear"></span></p>
+      <div class="modal-buttons">
+        <button id="closeBookModal" class="btn cancel">Close</button>
+        <button id="deleteBookBtn" class="btn delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Book Delete Confirmation Modal -->
+  <div id="bookDeleteModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Confirm Book Deletion</h3>
+      <p>Are you sure you want to permanently delete this book from the library?</p>
+      <div class="modal-buttons">
+        <button id="cancelBookDelete" class="btn cancel">Cancel</button>
+        <button id="confirmBookDelete" class="btn delete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="popup" class="popup"></div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>

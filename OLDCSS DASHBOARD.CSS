@@ -1,0 +1,2103 @@
+/* Color palette and style to match intro.css */
+:root {
+  --pink-bg: #e7e7e7;
+  --beige: #e4cea2;
+  --white: #fff;
+  --dusty: #2E2E2E;
+  --rose: #E7BFC4;
+  --gray: #F5F5F5;
+  --text-main: #2E2E2E;
+  --text-secondary: #555555;
+}
+
+/* Prevent text/image selection on all book elements */
+.book, 
+.book * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+
+img {
+  user-select: none;
+}
+
+/* Re-enable selection in inputs/textareas only */
+input, textarea {
+  user-select: text;
+}
+
+
+
+/* ====== FIXED DASHBOARD WIDTH LIKE 9ANIME ====== */
+body.dashboard-body {
+  display: flex;
+  justify-content: center;
+  background-color: var(--pink-bg);
+}
+
+.dashboard-wrapper {
+  width: 100%;
+  max-width: 1280px; /* adjust to your liking (9anime uses ~1280–1360px) */
+  background-color: var(--pink-bg);
+  /* box-shadow: 0 0 30px rgba(0,0,0,0.05); */
+  min-height: 100vh;
+}
+
+
+/* Soft neutral background */
+body {
+  font-family: 'Montserrat', sans-serif;
+  background: var(--pink-bg);
+  color: var(--text-main);
+  margin: 0;
+  min-height: 100vh;
+  line-height: 1.5;
+}
+
+
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.1rem 3rem;
+  background: #9A3F3F;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  box-shadow: 0 2px 12px 0 rgba(212, 165, 165, 0.07);
+}
+
+.topbar .left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.topbar .logo {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.topbar h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.1rem;
+  color: #C9A227;
+  cursor: pointer;
+}
+
+.topbar nav a {
+  margin: 0 1rem;
+  text-decoration: none;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: color 0.2s;
+}
+
+.topbar nav a:hover {
+  color: #C9A227;
+}
+
+.topbar .right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.topbar .right a {
+  color: var(--text-main);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.topbar .right a:hover {
+  color: var(--white);
+}
+
+.btn {
+  padding: 0.75rem 2rem;
+  border-radius: 50px;
+  box-shadow: 0 0 15px rgba(156, 149, 149, 0.3);
+  background-color: #E6CFA9;
+  color:  #9A3F3F;
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.btn:hover {
+  background-color:  #9A3F3F;
+  color: #E6CFA9;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Layout */
+main {
+  padding: 2rem 5rem;
+}
+
+/* Weekly Main Section */
+.weekly-main {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 3rem;
+  margin-bottom: 3rem;
+}
+
+/* ===========================================
+   📚 Unified Book Card Font & Spacing (All Sections)
+   =========================================== */
+.book h4,
+.browse-grid .book h4,
+.continue-reading .book h4,
+.bookmarks-grid .book h4 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #C9A227;
+  margin: 0.45rem 0 0.15rem;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* First genre below title (e.g. "(Fantasy …)") */
+.book .genre-label,
+.browse-grid .book .genre-label,
+.continue-reading .book .genre-label,
+.bookmarks-grid .book .genre-label {
+  font-size: 0.75rem;
+  color: white;
+  text-align: center;
+  margin-bottom: 0.4rem;
+  opacity: 0.9;
+  font-style: italic;
+}
+
+/* Ensure consistent image spacing */
+.book img,
+.browse-grid .book img,
+.continue-reading .book img,
+.bookmarks-grid .book img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+
+.weekly-book h2,
+.meet h2,
+.weekly-featured h2 {
+  margin-bottom: 1rem;
+  color: var(--dusty);
+  font-weight: 700;
+  letter-spacing: 0.03rem;
+}
+
+.book {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+}
+.book:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+
+.book-feature {
+  display: flex;
+  gap: 1.5rem;
+  background: var(--white);
+  padding: 1rem;
+  border-radius: 16px;
+}
+
+.book-feature img {
+  width: 250px;
+  border-radius: 12px;
+}
+
+.book-feature .info {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.book-feature h3 {
+  color: var(--dusty);
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.book-feature p {
+  color: var(--text-secondary);
+  opacity: 0.85;
+}
+
+/* Meet section */
+.meet .meet-card {
+  background: var(--beige);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 12px;
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+/* Weekly Featured */
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 2rem;
+}
+
+/* 🔄 Loading Spinner (OpenArk Style) */
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 5px solid #e0d6c2;
+  border-top-color: var(--dusty);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 2rem auto;
+  display: block;
+  filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =============================
+   HIDE SECTIONS WHEN NOT ACTIVE
+   ============================= */
+.hidden {
+  display: none !important;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Optional fade animation (visible ones) */
+section:not(.hidden) {
+  display: block;
+  opacity: 1;
+  pointer-events: auto;
+  transition: opacity 0.3s ease-in-out;
+}
+
+#categoriesButtons button {
+  padding: 8px 14px;
+  border: 1px solid #9A3F3F;        /* maroon border */
+  border-radius: 8px;
+  background-color: #fff;           /* neutral */
+  color: #9A3F3F;                   /* maroon text */
+  font-weight: 600;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+#categoriesButtons button:hover {
+  background-color: #E6CFA9;        /* beige hover */
+  color: #9A3F3F;
+  transform: scale(1.05);
+}
+
+#categoriesButtons button.active {
+  background-color: #9A3F3F;        /* maroon active */
+  color: #E6CFA9;                   /* beige text */
+  border-color: #9A3F3F;
+  transform: scale(1.08);
+  box-shadow: 0 0 10px rgba(154,63,63,0.3);
+}
+
+
+@media (max-width: 1200px) {
+  .featured-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .featured-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .featured-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Modal (same style as intro modals) */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.hidden {
+  display: none;
+}
+
+.profile-container {
+  background: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 16px;
+  min-width: 320px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+
+.profile-header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #2E2E2E;
+}
+
+.profile-logo {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.profile-details p {
+  margin: 0.5rem 0;
+  font-size: 1rem;
+  color: #555;
+}
+
+.closeProfileBtn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  cursor: pointer;
+  color: #555;
+}
+
+/* Add this at the bottom of your existing CSS */
+
+/* Fade effect for slideshow */
+.fade-out {
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+
+.book-feature img,
+.book-feature h3,
+.book-feature p {
+  transition: opacity 0.5s ease;
+}
+
+.hidden {
+  display: none;
+}
+
+.add-book {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: bold;
+  color: var(--dusty);
+}
+
+.add-book span {
+  font-size: 3rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Styled form inputs */
+.profile-container form input {
+  width: 90%;
+  padding: 0.6rem 1rem;
+  margin-top: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.profile-container form input:focus {
+  border-color: var(--dusty);
+  box-shadow: 0 0 6px rgba(46, 46, 46, 0.2);
+}
+
+.profile-container form p {
+  margin: 0.8rem 0;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.profile-container form button {
+  margin-right: 0.5rem;
+}
+/* Center modal form buttons */
+.profile-container form .form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* Form container spacing */
+.profile-container form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem 1.5rem;
+}
+
+/* Each field takes full width */
+.profile-container form p {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  grid-column: span 1;
+}
+
+/* Title should span full width */
+.profile-container form p:first-child {
+  grid-column: span 2;
+}
+
+/* Default modal size */
+.profile-container {
+  background: #fff;
+  padding: 2rem 2.5rem;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px 0 rgba(255, 255, 255, 0.3);
+  min-width: 320px;
+  max-width: 600px;   /* limit width on large screens */
+  width: 90%;         /* make it shrink nicely */
+  box-sizing: border-box;
+}
+
+.profile-container form select {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-top: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.profile-container form select:focus {
+  border-color: var(--dusty);
+  box-shadow: 0 0 6px rgba(46, 46, 46, 0.2);
+}
+
+.profile-container form textarea {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  margin-top: 0.3rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.profile-container form textarea:focus {
+  border-color: var(--dusty);
+  box-shadow: 0 0 6px rgba(46, 46, 46, 0.2);
+}
+
+.book p.desc {
+  font-size: 0.85rem;
+  color: #555;
+  text-align: center;
+  margin: 0.3rem 0;
+  line-height: 1.2em;
+  max-height: 2.4em; /* 2 lines */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+
+/* On very small devices */
+@media (max-width: 480px) {
+  .profile-container {
+    padding: 1rem;
+    border-radius: 12px;
+    width: 95%;       /* use almost full width */
+    min-width: auto;  /* remove rigid min size */
+  }
+
+  .profile-container form {
+    grid-template-columns: 1fr; /* stack all fields */
+  }
+}
+
+
+/* Action buttons full row */
+.profile-container form .form-actions {
+  grid-column: span 2;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+  .dashboard {
+    padding: 2rem;
+  }
+  .weekly-main {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 0.5rem;
+  }
+  .topbar h1 {
+    font-size: 1.5rem;
+  }
+  .dashboard {
+    padding: 1rem;
+  }
+  .book-feature img {
+    width: 150px;
+  }
+}
+
+/* Responsive: stack form fields on small screens */
+@media (max-width: 600px) {
+  .profile-container form {
+    grid-template-columns: 1fr;
+  }
+  .profile-container form p:first-child {
+    grid-column: span 1;
+  }
+  .profile-container form .form-actions {
+    grid-column: span 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    padding: 0.5rem;
+  }
+  .topbar .logo {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+  .dashboard {
+    padding: 0.5rem;
+  }
+  .book-feature img {
+    width: 90px;
+  }
+  .featured-grid img {
+    width: 80px;
+    height: 120px;
+  }
+}
+
+.book-overview {
+  margin-top: 1.5rem;
+  background: var(--white);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+}
+
+.book-overview h3 {
+  margin-bottom: 0.8rem;
+  color: var(--dusty);
+  font-weight: 700;
+}
+
+.book-overview p {
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+/* ===============================
+   BOOK CREATION WIZARD
+   =============================== */
+#bookCreationSection {
+  background: var(--white);
+  padding: 2rem;
+  border-radius: 16px;
+  margin: 2rem auto;          /* center it */
+  max-width: 700px;           /* limit width */
+  width: 90%;                 /* responsive */
+}
+
+#bookCreationSection h2 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--dusty);
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.creation-step {
+  display: none;
+}
+
+.creation-step:not(.hidden) {
+  display: block;
+  animation: fadeIn 0.4s ease-in-out;
+}
+
+.creation-step h3 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: var(--dusty);
+  padding-left: 0.6rem;
+}
+
+#bookMetaForm p {
+  margin: 1rem 0;
+}
+
+#bookMetaForm input,
+#bookMetaForm textarea {
+  width: 90%;
+  padding: 0.8rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  transition: border 0.2s, box-shadow 0.2s;
+}
+
+#bookMetaForm input:focus,
+#bookMetaForm textarea:focus {
+  border-color: var(--dusty);
+  box-shadow: 0 0 6px rgba(46, 46, 46, 0.2);
+}
+
+#pageList {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: var(--gray);
+  border-radius: 12px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,0.1);
+}
+
+#pageList p {
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  background: var(--white);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ======= Custom dropdown styling (compact wizard) ======= */
+.select-wrapper {
+  position: relative;
+  width: 90%;
+  max-width: 100%;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+/* core select styling */
+.select-wrapper select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 100%;
+  padding: 0.78rem 1rem;            /* comfortable tap target */
+  padding-right: 3rem;             /* space for arrow */
+  border-radius: 10px;
+  border: 1px solid rgba(46,46,46,0.08);
+  background: linear-gradient(180deg, #ffffff 0%, #fbf8f2 100%);
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1rem;
+  color: var(--text-main);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(231,191,196,0.06);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.08s ease;
+}
+
+/* arrow using an inline SVG so no external asset required */
+.select-wrapper::after {
+  content: "";
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'><path fill='%232E2E2E' d='M5.23 7.21l4.77 4.5 4.77-4.5 1.28 1.21-6.05 5.71L3.95 8.42z'/></svg>");
+  background-repeat: no-repeat;
+  background-position: center;
+  opacity: 0.85;
+}
+
+/* focus state */
+.select-wrapper select:focus {
+  outline: none;
+  border-color: var(--dusty);
+  box-shadow: 0 10px 30px rgba(46,46,46,0.08);
+}
+
+/* disabled / placeholder visual */
+.select-wrapper select:invalid { /* when using <option value="" disabled selected> */
+  color: #9b9b9b;
+}
+
+/* small compact variant (useful if you want a narrower select) */
+.select-wrapper.compact {
+  max-width: 420px;
+}
+
+/* Optgroup labels are browser-native and have limited styling support.
+   We add a tiny spacing tweak by targeting the select itself when open on modern browsers */
+@media (min-width: 320px) {
+  /* make select taller on mobile for easier tapping */
+  .select-wrapper select { padding: 0.9rem 1rem; padding-right: 3rem; }
+}
+
+/* NOTES:
+   - Browser-native option list (the dropdown that appears) is controlled by the OS/browser;
+     you cannot reliably style options across all browsers. The visible select control
+     itself is styled consistently above.
+*/
+
+
+/* ===============================
+   Custom File Input Styling
+   =============================== */
+.file-input-wrapper {
+  position: relative;
+  display: inline-block;
+  overflow: hidden;
+  border-radius: 10px;
+    background-color: #E6CFA9;
+    color: #9A3F3F;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 0.7rem 1.2rem;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  box-shadow: 0 4px 10px rgba(46,46,46,0.15);
+}
+
+.file-input-wrapper:hover {
+      background-color: #9A3F3F;
+    color: #E6CFA9;
+}
+
+.file-input-wrapper:active {
+  transform: scale(0.97);
+}
+
+.file-input-wrapper input[type="file"] {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  cursor: pointer;
+  height: 100%;
+  width: 100%;
+}
+
+.file-input-wrapper .file-label {
+  pointer-events: none; /* click goes to input */
+}
+
+/* ===============================
+   File Input Label + Filename
+   =============================== */
+.file-name {
+  margin-left: 0.8rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+
+
+/* Popup Notifications */
+.popup {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #2E2E2E;
+  color: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  opacity: 0;
+  transform: translateY(-20px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 2000;
+}
+
+.popup.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.popup.success {
+  background: #4CAF50;
+}
+
+.popup.error {
+  background: #E74C3C;
+}
+
+/* ===============================
+   BOOK READ / DETAILS UI
+   =============================== */
+#bookDetailsSection {
+  background: var(--white);
+  padding: 2rem 3rem;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.07);
+}
+
+.book-read-container {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.btn-back {
+  margin-bottom: 1.5rem;
+  background-color: transparent;
+  border: 1px solid #E6CFA9;
+  color: #9A3F3F;
+  font-weight: 500;
+  padding: 0.6rem 1.2rem;
+}
+
+.btn-back:hover {
+  background-color: #9A3F3F;
+  color: #E6CFA9;
+  border: 1px solid #9A3F3F;
+}
+
+.book-read-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr; /* Fixed cover width, rest for info */
+  gap: 2.5rem;
+  align-items: flex-start;
+}
+
+.book-read-cover img {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.book-read-info .breadcrumbs {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+}
+
+.book-read-info h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 1rem 0;
+  line-height: 1.2;
+}
+
+.book-read-info .book-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-size: 0.95rem;
+  color: var(--text-main);
+  margin-bottom: 1rem;
+  padding-left: 0.2rem;
+}
+
+.book-read-info .author-info {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: var(--text-secondary);
+}
+
+.book-read-info .author-info span {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.book-read-info .action-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-read {
+  background: #E6CFA9; /* Blue color from image */
+  color: #9A3F3F;
+  padding: 0.8rem 2.5rem;
+}
+
+.btn-read:hover {
+  background: #9A3F3F;
+  color: #E6CFA9;
+  box-shadow: 0 0 15px rgba(52, 152, 219, 0.4);
+}
+
+.btn-add-bookmark {
+  background: var(--white);
+  color: #9A3F3F;
+  border: 1px solid #E6CFA9;
+  padding: 0.8rem 1.5rem;
+}
+
+.btn-add-bookmark:hover {
+  background: #9A3F3F; /* A very light blue */
+  color: #E6CFA9;
+  border: 1px solid #9A3F3F;
+}
+
+.book-read-tabs {
+  margin-top: 3rem;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  gap: 2rem;
+}
+
+.book-read-tabs .tab {
+  padding: 0.8rem 0;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+  position: relative;
+  border-bottom: 3px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.book-read-tabs .tab.active {
+  color: var(--text-main);
+  border-bottom-color: var(--dusty); /* Active indicator */
+}
+
+.book-read-content {
+  padding: 1.5rem 0;
+  min-height: 150px;
+}
+
+.book-read-content h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.book-read-content p {
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.page-label {
+  max-width: 700px;
+  margin: 2rem 1rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--dusty);
+  padding-left: 0.6rem;
+}
+
+.ocr-text {
+  background: var(--white);
+  padding: 1rem 1.2rem;
+  border-radius: 12px;
+  line-height: 1.6;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  white-space: pre-wrap; /* preserves line breaks from OCR */
+    /* 🔽 New adjustments */
+  max-width: 700px;   /* keep it smaller than full screen */
+  margin: 0 auto 2rem; /* center it + spacing below */
+}
+
+
+/* Reader Section Styling */
+
+.readBookBtn{
+  background: #27ae60; /* Green color */
+  color: white;
+  padding: 0.8rem 2.5rem;
+}
+
+.reader-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 2rem;
+  background-color: #e4cea2;   /* intro header beige */
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(212, 165, 165, 0.07);
+  flex-shrink: 0;
+  color: #2E2E2E;
+}
+
+.reader-header h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  color: #2E2E2E;
+}
+
+#readerContent .page {
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 1rem;
+}
+
+.reader-content .page-break {
+  border: 0;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(0,0,0,0.2), transparent);
+  margin: 2rem 0;
+}
+
+.reader-content img {
+  max-width: 100%;
+  border-radius: 8px;
+  margin: 1rem 0;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+#readerContent .ocr-text {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f9f9f9;
+  border-radius: 8px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+#deleteModal .btn:last-child {
+  background: #e4cea2;
+  color: #2E2E2E;
+}
+#deleteModal .btn:last-child:hover {
+  background: #2E2E2E;
+  color: #e4cea2;
+}
+
+.delete-btn{
+    background-color: #E6CFA9;
+    color: #9A3F3F;
+  border: none;
+  padding: 0.2rem 1rem;
+  border-radius: 12px;
+  font-family: 'Montserrat', sans-serif;
+  cursor: pointer;
+}
+
+.delete-btn:hover{
+    background-color: #9A3F3F;
+    color: #E6CFA9;
+}
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  margin-top: 0.8rem;
+  opacity: 0.8;
+}
+
+/* Browse Tab */
+.browse-controls {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.browse-controls input[type="text"] {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.browse-controls select {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.genre-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.genre-btn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #C1856D;
+  border-radius: 20px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.genre-btn.active,
+.genre-btn:hover {
+  background: #C1856D;
+  color: white;
+}
+
+.browse-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem;
+}
+
+.browse-grid .book {
+  background: #9A3F3F;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.browse-grid .book:hover {
+  transform: translateY(-4px);
+}
+
+.browse-grid .book img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.genres-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.genres-buttons h4 {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--dusty);
+}
+
+.genres-buttons button {
+  padding: 6px 10px;
+  border: 1px solid #9A3F3F;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary, #9A3F3F);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genres-buttons button.active {
+    background-color: #E6CFA9;
+    color: #9A3F3F;
+  box-shadow: 0 0 8px #9A3F3F;
+}
+
+#detailAuthor {
+  font-weight: normal; /* default text normal */
+}
+
+#detailAuthor strong {
+  font-weight: bold; /* author bold */
+}
+
+#detailAuthor .value {
+  font-weight: bold; /* publisher + year values bold */
+}
+
+.btn-add-bookmark.bookmarked {
+    background-color: #9A3F3F;
+    color: #E6CFA9;
+  border: 1px solid #9A3F3F;
+}
+
+
+/* === Reader Page Styling === */
+.page {
+  background: #f8f9fa;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.page-label {
+  color: #003366; /* OpenArk deep blue */
+  font-weight: 600;
+  margin: 0;
+}
+
+.ocr-text {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  font-size: 16px;
+  color: #222;
+  background: #fff;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+/* === Edit Mode === */
+.edit-textarea {
+  width: 100%;
+  min-height: 180px;
+  font-size: 16px;
+  line-height: 1.6;
+  border: 2px solid #003366;
+  border-radius: 10px;
+  padding: 12px;
+  resize: vertical;
+  outline: none;
+  background-color: #fff;
+  color: #111;
+  font-family: inherit;
+}
+
+.edit-controls {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+}
+
+.edit-page-btn,
+.save-page-btn,
+.cancel-page-btn {
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.edit-page-btn {
+    background-color: #E6CFA9;
+    color: #9A3F3F;
+}
+
+.edit-page-btn:hover {
+    background-color: #9A3F3F;
+    color: #E6CFA9;
+}
+
+.save-page-btn {
+    background-color: #E6CFA9;
+    color: #9A3F3F;
+}
+
+.save-page-btn:hover {
+    background-color: #9A3F3F;
+    color: #E6CFA9;
+}
+
+.cancel-page-btn {
+    background-color: #E6CFA9;
+    color: #9A3F3F;
+}
+
+.cancel-page-btn:hover {
+    background-color: #9A3F3F;
+    color: #E6CFA9;
+}
+
+.edit-page-btn:hover,
+.save-page-btn:hover,
+.cancel-page-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  transition: all 0.3s ease;
+}
+
+/* ======================================================
+   🎞️ BOOK SLIDESHOW (Book Cover Style)
+   ====================================================== */
+.book-slideshow-container {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 2rem auto 4rem;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+  background: var(--white);
+}
+
+.book-slideshow {
+  display: flex;
+  transition: transform 0.6s ease-in-out;
+}
+
+.book-slide {
+  min-width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #9A3F3F;
+  padding: 1.5rem 2rem;
+  box-sizing: border-box;
+}
+
+/* 📘 Fix image to look like a book cover */
+.book-slide img {
+  width: 250px;            /* realistic width */
+  height: 350px;           /* book-like proportions */
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+/* Info section */
+.slide-info {
+  flex: 1;
+  margin-left: 2rem;
+  background: #fff2e1;
+  color: #2E2E2E;
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.slide-info h3 {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+  color: #2E2E2E;
+}
+
+.slide-info p {
+  margin-bottom: 0.4rem;
+  color: #2E2E2E;
+}
+
+.slide-info .synopsis {
+  color: #2E2E2E;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin-top: 0.5rem;
+  max-height: 5.5em;        /* limit lines */
+  overflow: hidden;
+  display: -webkit-box;      /* enable multi-line clamp */
+  -webkit-line-clamp: 1;     /* show up to 4 lines */
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  white-space: normal;
+}
+
+
+/* Arrow buttons */
+.slide-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #FBF9D1;
+  border: none;
+  font-size: 2rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 0.3s;
+  z-index: 5;
+}
+
+.slide-btn:hover {
+  background: rgba(255,255,255,0.9);
+}
+
+.slide-btn.prev {
+  left: 10px;
+}
+
+.slide-btn.next {
+  right: 10px;
+}
+
+/* 🎯 Slideshow "Read" Button — aligned to the right */
+.btn-read-slide {
+  margin-top: 1rem;
+  align-self: flex-end;        /* push to the right */
+  background-color: #E6CFA9;
+  color: #9A3F3F;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.btn-read-slide:hover {
+  background-color: #9A3F3F;
+  color: #E6CFA9;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+
+
+/* Responsive layout */
+@media (max-width: 768px) {
+  .book-slide {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .book-slide img {
+    width: 200px;
+    height: 280px;
+    margin-bottom: 1rem;
+  }
+
+.slide-info {
+  flex: 1;
+  margin-left: 2rem;
+  background: var(--dusty);
+  color: var(--white);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;  /* makes align-self work */
+  justify-content: center;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+}
+
+/* 🌟 Recently Added Section Header */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h2 {
+  font-size: 1.6rem;
+  color: var(--dusty);
+  font-weight: 700;
+}
+
+/* 🎯 "View All" button styling */
+.btn-view-all {
+  background: none;
+  border: none;
+  color: var(--dusty);
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: color 0.3s ease;
+}
+
+.btn-view-all:hover {
+  color: #9A3F3F;
+  text-decoration: underline;
+}
+
+/* 📚 Recently Added Book Grid */
+.book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1.2rem;
+  padding-top: 0.5rem;
+}
+
+/* 📖 Individual Book Card */
+.book {
+  background: #9A3F3F;
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  text-align: center;
+}
+
+.book:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 🖼️ Fix book image size */
+.book img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+/* ===============================
+   CONTINUE READING SECTION
+   =============================== */
+.continue-reading {
+  margin-top: 3rem;
+}
+
+.continue-reading h2 {
+  color: var(--dusty);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  letter-spacing: 0.03rem;
+}
+
+.continue-reading .book-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 2rem;
+}
+
+.continue-reading .book {
+  background: #9A3F3F;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.continue-reading .book:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.continue-reading img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.continue-reading h4 {
+  text-align: center;
+  font-size: 1rem;
+  margin: 0.5rem 0;
+  color: var(--dusty);
+}
+
+/* ===============================
+   PROFILE DROPDOWN (Google-style)
+   =============================== */
+.profile-menu {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-right: 1rem;
+}
+
+.nav-pfp {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.nav-pfp:hover {
+  transform: scale(1.05);
+}
+
+.profile-dropdown {
+  position: absolute;
+  top: 50px;
+  right: 0;
+  background: var(--white);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  padding: 1rem 1.2rem;  /* ✅ more side padding */
+  width: 260px;          /* slightly wider */
+  z-index: 100;
+  animation: fadeIn 0.2s ease;
+}
+
+
+.profile-dropdown.hidden {
+  display: none;
+}
+
+.profile-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.profile-info img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.user-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 8px; /* ✅ prevents email from touching the right edge */
+}
+
+.user-text h4 {
+  font-size: 1rem;
+  margin: 0;
+  color: var(--dusty);
+}
+
+.user-text p {
+  font-size: 0.85rem;
+  color: #777;
+  margin: 0;
+}
+
+.logout-btn {
+  width: 100%;
+  margin-top: 0.8rem;
+  padding: 0.6rem;
+  border: none;
+  background-color: #E6CFA9;
+  color: #9A3F3F;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: #9A3F3F;
+  color: #E6CFA9;
+}
+
+#dropdownEmail{
+  padding-right: 1rem;
+}
+
+/* Comments */
+.comments-wrapper h4 { margin: 0 0 0.5rem 0; color: var(--dusty); font-weight:700; }
+.comment-item { background: #fff; }
+.comment-item img { flex-shrink:0; }
+.comment-form textarea { font-family: 'Montserrat', sans-serif; }
+
+
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.add-book {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+}
+
+#conversionBooks {
+  position: relative;
+  z-index: 1;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  color: #2B2B2B;
+  padding: 1.5rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+.modal-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+.btn-danger {
+  background-color: var(--maroon);
+  color: white;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0,0,0,0.4);
+  z-index: 9999;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff;
+  border: 2px solid #800000;
+  border-radius: 10px;
+  padding: 20px;
+  max-width: 350px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.confirm-btn {
+  background-color: #800000; /* maroon */
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background-color: #d4af37; /* gold */
+  color: #000;
+  border: none;
+  border-radius: 5px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.confirm-btn:hover { background-color: #a52a2a; }
+.cancel-btn:hover { background-color: #e1c050; }
+
+.nav-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: 140%;
+  right: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  min-width: 220px;
+  z-index: 999;
+}
+
+.nav-option {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.nav-option:hover {
+  background: #f5f5f5;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.spinner {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  animation: spin 1s linear infinite;
+  margin-top: 10px;
+}
+
+.hidden {
+  display: none;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* keep title left, buttons right */
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Keep the control buttons inline, slightly spaced */
+.tts-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+}
+
+.tts-controls button {
+  padding: 0.5rem 1.5rem;
+  border-radius: 50px;
+  box-shadow: 0 0 15px rgba(156, 149, 149, 0.3);
+  background-color: #E6CFA9;
+  color:  #9A3F3F;
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.tts-btn{
+    padding: 0.5rem 1.5rem;
+  border-radius: 50px;
+  box-shadow: 0 0 15px rgba(156, 149, 149, 0.3);
+  background-color: #E6CFA9;
+  color:  #9A3F3F;
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.tts-controls button:hover {
+  background-color:  #9A3F3F;
+  color: #E6CFA9;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+.tts-btn:hover {
+  background-color:  #9A3F3F;
+  color: #E6CFA9;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* #conversionSection {
+  display: none;
+} */
+
+.ppt-outline-section {
+  margin-top: 30px;
+  padding: 16px;
+  border-top: 2px solid #ccc;
+  text-align: center;
+  background: #fafafa;
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.ppt-outline-section .btn {
+  margin-top: 10px;
+}
+
+.outline-result {
+  margin-top: 15px;
+  text-align: left;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+  white-space: pre-wrap;
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Container alignment (same as dashboard forms) */
+#advancedSearchSection {
+  width: 100%;
+  /* max-width: 800px;  ✅ Same as main.dashboard layout width */
+  /* margin: 0 auto;    ✅ Centers like dashboard sections */
+  padding-right: 10px;
+}
+
+/* Match h4 alignment to dashboard form labels */
+#advancedSearchSection h4 {
+  margin: 15px 0 5px;
+  font-size: 16px;
+  font-weight: 600;
+  width: 100%;
+}
+
+/* Make inputs match dashboard's form fields */
+#advancedSearchSection input[type="text"] {
+  width: 100%;
+  max-width: 100%;  /* ✅ Uses full dashboard width */
+  padding: 12px 15px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 15px;
+  margin-bottom: 15px;
+  box-sizing: border-box;
+  background: var(--white);
+}
+
+/* Align categories section the same way */
+#genreFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  max-width: 100%;
+  margin-top: 10px;
+}
+
+/* Advanced Search button — uses the same style as .btn */
+#advancedSearchToggle {
+  padding: 0.75rem 2rem;
+  border-radius: 5px;
+  box-shadow: 0 0 15px rgba(156, 149, 149, 0.3);
+  background-color: #E6CFA9;   /* matches your main buttons */
+  color: #9A3F3F;
+  font-weight: 600;
+  letter-spacing: 0.1rem;
+  border: none;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+#advancedSearchToggle:hover {
+  background-color: #9A3F3F;
+  color: #E6CFA9;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* Container is hidden by default with smooth height transition */
+#advancedSearchSection {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+/* When opened */
+#advancedSearchSection.open {
+  max-height: 500px; /* adjust if content gets taller */
+}
+
+#categoriesButtons button.active {
+  background-color: #9A3F3F;
+  color: #E6CFA9;
+  transform: scale(1.05);
+}
+
+#yearSearch {
+  width: 11%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  background-color: #fff;
+  transition: border-color 0.2s ease;
+}
+
+#yearSearch:focus {
+  border-color: #E6CFA9;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .book-read-grid {
+    grid-template-columns: 1fr; /* Stack on mobile */
+    text-align: center;
+  }
+  .book-read-cover {
+    margin: 0 auto 1.5rem;
+    max-width: 200px;
+  }
+  .book-read-info .book-stats,
+  .book-read-info .action-buttons {
+    justify-content: center;
+  }
+  .book-read-info h2 {
+    font-size: 2rem;
+  }
+}
