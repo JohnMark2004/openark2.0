@@ -1357,7 +1357,7 @@ io.on("connection", (socket) => {
 // ===============================
 app.get("/api/activity", async (req, res) => {
   try {
-    const logs = await Activity.find().sort({ date: -1 }).limit(10).lean();
+    const logs = await Activity.find().sort({ date: -1 }).lean();
     res.json(logs);
   } catch (err) {
     console.error("Error fetching activity logs:", err);

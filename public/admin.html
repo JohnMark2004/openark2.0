@@ -25,7 +25,6 @@
   </header>
 
   <main class="admin-main">
-    <!-- USERS TAB -->
     <section id="usersSection" class="tab-content">
       <h2>Users Management</h2>
 
@@ -85,7 +84,6 @@
       </div>
     </section>
 
-    <!-- BOOKS TAB -->
     <section id="booksSection" class="tab-content hidden">
       <h2>Books Management</h2>
 
@@ -137,7 +135,6 @@
       </div>
     </section>
 
-    <!-- REPORTS TAB -->
     <section id="reportsSection" class="tab-content hidden">
       <h2>Reports Dashboard</h2>
 
@@ -154,9 +151,6 @@
           <h3 id="reportTopCategory">-</h3>
           <p>Top Category</p>
         </div>
-        <!-- <div class="stat-card"> -->
-          <!-- <h3 id="reportTopBook">-</h3> -->
-          <!-- <p>Most Read</p> -->
         </div>
       </div>
 
@@ -196,6 +190,11 @@
         </table>
       </div>
 
+      <div class="pagination-controls" style="text-align: center; margin: 1.5rem 0;">
+        <button id="activityBackBtn" class="btn small" disabled>&laquo; Back</button>
+        <span id="activityPageInfo" style="margin: 0 1rem; font-weight: 600; font-size: 0.9rem;">Page 1 of 1</span>
+        <button id="activityNextBtn" class="btn small">Next &raquo;</button>
+      </div>
       <div class="activity-export">
         <button id="exportPNG" class="btn small">Download PNG</button>
         <button id="exportPDF" class="btn small">Download PDF</button>
@@ -204,7 +203,6 @@
     </section>
   </main>
 
-  <!-- User Delete Confirmation Modal -->
   <div id="deleteModal" class="modal hidden">
     <div class="modal-content">
       <h3>Confirm Deletion</h3>
@@ -216,7 +214,6 @@
     </div>
   </div>
 
-  <!-- Book View/Edit Modal -->
   <div id="bookModal" class="modal hidden">
     <div class="modal-content">
       <h3 id="modalTitle">Book Details</h3>
@@ -232,7 +229,6 @@
     </div>
   </div>
 
-  <!-- Book Delete Confirmation Modal -->
   <div id="bookDeleteModal" class="modal hidden">
     <div class="modal-content">
       <h3>Confirm Book Deletion</h3>

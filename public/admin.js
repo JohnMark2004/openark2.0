@@ -18,6 +18,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const inactiveUsers = document.getElementById("inactiveUsers");
   const activityTableBody = document.getElementById("activityTableBody");
   const activitySort = document.getElementById("activitySort");
+  const activityBackBtn = document.getElementById("activityBackBtn");
+  const activityNextBtn = document.getElementById("activityNextBtn");
+  const activityPageInfo = document.getElementById("activityPageInfo");
+  const monthFilter = document.getElementById("monthFilter"); // We need this
 
   // --- Global State ---
   let allUsers = []; // ✅ For efficient filtering
@@ -25,6 +29,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let deletedBookCount = 0;
   let targetUserId = null; // ✅ For delete modal
   let targetBookId = null; // ✅ For delete modal
+  let allActivities = []; // Holds all fetched activities
+  let sortedActivities = []; // Holds filtered and sorted activities
+  let activityCurrentPage = 1;
+  const activityItemsPerPage = 9;
 
   // ✅ Redirect non-admins away
   if (localStorage.getItem("role") !== "admin") {
@@ -499,9 +507,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const reportTotalUsers = document.getElementById("reportTotalUsers");
   const reportTotalBooks = document.getElementById("reportTotalBooks");
   const reportTopCategory = document.getElementById("reportTopCategory");
-  let allActivities = [];
 
-  async function loadReports() {
+async function loadReports() {
     try {
       const token = sessionStorage.getItem("token");
       // Summary
@@ -512,12 +519,14 @@ document.addEventListener("DOMContentLoaded", () => {
       reportTotalUsers.textContent = report.totalUsers || 0;
       reportTotalBooks.textContent = report.totalBooks || 0;
       reportTopCategory.textContent = report.topCategory || "N/A";
+      
       // Activities
       const activityRes = await fetch(`${API_URL}/api/activity`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      allActivities = await activityRes.json();
-      renderActivities();
+      allActivities = await activityRes.json(); // Store in master list
+      activityCurrentPage = 1; // Reset to first page
+      processAndRenderActivities(); // Call the new processing function
     } catch (err) {
       console.error("Error loading reports:", err);
       activityTableBody.innerHTML =
@@ -525,27 +534,74 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function renderActivities() {
-    if (!Array.isArray(allActivities) || allActivities.length === 0) {
-      activityTableBody.innerHTML = `<tr><td colspan='4' style='text-align:center;'>No recent activity found.</td></tr>`;
-      return;
+  // ✅ NEW: This function filters and sorts the master list
+  function processAndRenderActivities() {
+    // 1. Filter by Month
+    const monthValue = monthFilter.value;
+    let filtered = [...allActivities];
+    if (monthValue) {
+      const [year, month] = monthValue.split("-").map(Number);
+      filtered = allActivities.filter(a => {
+        const d = new Date(a.date);
+        return d.getFullYear() === year && d.getMonth() + 1 === month;
+      });
     }
-    let sorted = [...allActivities];
+    
+    // 2. Sort
     switch (activitySort?.value) {
       case "oldest":
-        sorted.sort((a, b) => new Date(a.date) - new Date(b.date));
+        filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
         break;
       case "user":
-        sorted.sort((a, b) => (a.user || "").localeCompare(b.user || ""));
+        filtered.sort((a, b) => (a.user || "").localeCompare(b.user || ""));
         break;
       case "action":
-        sorted.sort((a, b) => (a.action || "").localeCompare(b.action || ""));
+        filtered.sort((a, b) => (a.action || "").localeCompare(b.action || ""));
         break;
-      default:
-        sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
+      default: // "newest"
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
     }
-    activityTableBody.innerHTML = sorted
-      .slice(0, 10) // Show top 10
+    
+    sortedActivities = filtered; // Store the processed list
+    renderActivitiesPage(); // Render the current page
+  }
+
+  // ✅ NEW: This function updates the "Back" / "Next" buttons and page info
+  function updatePaginationUI() {
+    const totalItems = sortedActivities.length;
+    const totalPages = Math.ceil(totalItems / activityItemsPerPage);
+
+    if (totalPages <= 1) {
+      // Hide pagination if only one page or no items
+      activityBackBtn.style.display = "none";
+      activityNextBtn.style.display = "none";
+      activityPageInfo.style.display = "none";
+    } else {
+      // Show pagination and set button states
+      activityBackBtn.style.display = "inline-block";
+      activityNextBtn.style.display = "inline-block";
+      activityPageInfo.style.display = "inline-block";
+      
+      activityBackBtn.disabled = (activityCurrentPage === 1);
+      activityNextBtn.disabled = (activityCurrentPage === totalPages);
+      activityPageInfo.textContent = `Page ${activityCurrentPage} of ${totalPages || 1}`;
+    }
+  }
+  
+  // ✅ MODIFIED: This function (formerly renderActivities) now just renders the page
+  function renderActivitiesPage() {
+    if (!Array.isArray(sortedActivities) || sortedActivities.length === 0) {
+      activityTableBody.innerHTML = `<tr><td colspan='4' style='text-align:center;'>No recent activity found.</td></tr>`;
+      updatePaginationUI(); // Update UI to show 0 pages
+      return;
+    }
+    
+    // Calculate page slice
+    const startIndex = (activityCurrentPage - 1) * activityItemsPerPage;
+    const endIndex = startIndex + activityItemsPerPage;
+    const pageItems = sortedActivities.slice(startIndex, endIndex);
+
+    activityTableBody.innerHTML = pageItems
       .map(
         (a) => `
         <tr>
@@ -556,44 +612,33 @@ document.addEventListener("DOMContentLoaded", () => {
         </tr>`
       )
       .join("");
+      
+    updatePaginationUI();
   }
 
-  if (activitySort) activitySort.addEventListener("change", renderActivities);
+// ✅ NEW: Event Listeners for Pagination
+  activityNextBtn.addEventListener("click", () => {
+    activityCurrentPage++;
+    renderActivitiesPage();
+  });
+
+  activityBackBtn.addEventListener("click", () => {
+    activityCurrentPage--;
+    renderActivitiesPage();
+  });
+
+if (activitySort) {
+    activitySort.addEventListener("change", () => {
+      activityCurrentPage = 1; // Reset to page 1 on sort
+      processAndRenderActivities();
+    });
+  }
 
   // Filter Activities by Month + Year
-  const monthFilter = document.getElementById("monthFilter");
-  if (monthFilter) {
+if (monthFilter) {
     monthFilter.addEventListener("change", () => {
-      const monthValue = monthFilter.value;
-      if (!monthValue) {
-        renderActivities(); // Show all if no month picked
-        return;
-      }
-      const [year, month] = monthValue.split("-").map(Number);
-      const filtered = allActivities.filter(a => {
-        const d = new Date(a.date);
-        return d.getFullYear() === year && d.getMonth() + 1 === month;
-      });
-      // ✅ Apply sorting again and render
-      let sorted = [...filtered];
-      switch (activitySort?.value) {
-        case "oldest": sorted.sort((a, b) => new Date(a.date) - new Date(b.date)); break;
-        case "user": sorted.sort((a, b) => (a.user || "").localeCompare(b.user || "")); break;
-        case "action": sorted.sort((a, b) => (a.action || "").localeCompare(b.action || "")); break;
-        default: sorted.sort((a, b) => new Date(b.date) - new Date(a.date));
-      }
-      activityTableBody.innerHTML = sorted.length
-        ? sorted
-            .map(a => `
-              <tr>
-                <td>${new Date(a.date).toLocaleString()}</td>
-                <td>${a.user || "Unknown"}</td>
-                <td>${a.action || "N/A"}</td>
-                <td>${a.details || ""}</td>
-              </tr>
-            `)
-            .join("")
-        : `<tr><td colspan='4' style='text-align:center;'>No activity found for this.</td></tr>`;
+      activityCurrentPage = 1; // Reset to page 1 on filter
+      processAndRenderActivities();
     });
   }
 
