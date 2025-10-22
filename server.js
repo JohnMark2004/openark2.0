@@ -109,10 +109,6 @@ app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
     user.active = true;
     await user.save();
 
-    sendApprovalEmail(user.email, user.username).catch(err => {
-        console.error(`Failed to send approval email to ${user.email}:`, err);
-    });
-
     await Activity.create({
       user: "Admin",
       action: "Approved User",
