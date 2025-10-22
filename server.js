@@ -15,6 +15,8 @@ const fs = require("fs");
 const http = require("http");
 const { Server } = require("socket.io");
 const gTTS = require('gtts');
+// ✅ Import the new email service
+const { sendPendingEmail, sendApprovalEmail } = require("./emailService");
 
 // ✅ Gemini import MUST come before it's used
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -99,6 +101,7 @@ function authenticateMiddleware(req, res, next) {
 
 app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
   try {
+    const adminUser = await User.findById(req.user.id);
     if (req.user.role !== "admin") {
       return res.status(403).json({ error: "Forbidden" });
     }
@@ -110,13 +113,18 @@ app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
     user.active = true;
     await user.save();
 
+    sendApprovalEmail(user.email, user.username).catch(err => {
+        console.error(`Failed to send approval email to ${user.email}:`, err);
+    });
+
     await Activity.create({
       user: "Admin",
       action: "Approved User",
       details: `${user.username} (${user.email})`,
     });
 
-    res.json({ message: "User approved" });
+// ✅ *** MODIFY THIS LINE: Update success message ***
+    res.json({ message: "User approved successfully" });
   } catch (err) {
     console.error("Approve user error:", err);
     res.status(500).json({ error: "Failed to approve user" });
@@ -139,7 +147,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   collegeYear: String,
-  role: { type: String, enum: ["student", "librarian"], default: "student" },
+  role: { type: String, enum: ["student", "librarian", "admin"], default: "student" },
   bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
     continueReading: [
     {
@@ -499,6 +507,9 @@ app.post("/api/signup", async (req, res) => {
     });
         await newUser.save();
 
+        sendPendingEmail(newUser.email, newUser.username).catch(err => {
+        console.error(`Failed to send pending email to ${newUser.email}:`, err);
+    });
     // ✅ Log activity AFTER saving
     await Activity.create({
       user: username,
@@ -506,7 +517,8 @@ app.post("/api/signup", async (req, res) => {
       details: `New user registered (${email})`,
     });
     await updateReport();
-    res.json({ message: "Signup successful" });
+// ✅ *** MODIFY THIS LINE: Update success message ***
+    res.json({ message: "Signup successful! Your account is pending approval." });
   } catch (err) {
     console.error("❌ Signup error:", err);
     res.status(500).json({ error: "Signup failed" });
