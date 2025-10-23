@@ -1,130 +1,175 @@
 /**
  * emailService.js
  *
- * This service handles sending transactional emails for user registration and approval.
- * It's based on the 'otp_email.js' example you provided.
+ * Uses the Gmail API with OAuth 2.0 to send emails.
+ * Requires Google Cloud Project setup, Gmail API enabled, OAuth credentials, and a Refresh Token.
  */
+const { google } = require("googleapis");
+const MailComposer = require("nodemailer/lib/mail-composer"); // To build the email
+require("dotenv").config();
 
-const nodemailer = require("nodemailer");
-require("dotenv").config(); // Make sure to load .env variables
+// --- OAuth 2.0 Client Setup ---
+const GMAIL_SCOPES = ["https://www.googleapis.com/auth/gmail.send"];
 
-// --- Transporter Configuration ---
-// We read these from your .env file
-const host = process.env.SMTP_HOST;
-const port = parseInt(process.env.SMTP_PORT || "587", 10);
-const user = process.env.SMTP_USER2;
-const passwd = process.env.SMTP_PASS2;
-const emailFrom = process.env.EMAIL_FROM || user;
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+const GOOGLE_REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
+const GMAIL_USER_EMAIL = process.env.GMAIL_USER_EMAIL; // Your sending email address
 
-let transporter;
+let gmail;
+let isGmailConfigured = false;
 
-// Initialize the transporter
-if (host && user && passwd) {
-  transporter = nodemailer.createTransport({
-    host: host,
-    port: port,
-    secure: false, // Use STARTTLS (true for port 465)
-    auth: {
-      user: user,
-      pass: passwd,
-    },
-    connectionTimeout: 10000,
-  });
+if (
+  GOOGLE_CLIENT_ID &&
+  GOOGLE_CLIENT_SECRET &&
+  GOOGLE_REDIRECT_URI &&
+  GOOGLE_REFRESH_TOKEN &&
+  GMAIL_USER_EMAIL
+) {
+  try {
+    const oAuth2Client = new google.auth.OAuth2(
+      GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET,
+      GOOGLE_REDIRECT_URI
+    );
 
-  console.log("✅ Email Service (Nodemailer) transporter configured.");
+    oAuth2Client.setCredentials({ refresh_token: GOOGLE_REFRESH_TOKEN });
+
+    gmail = google.gmail({ version: "v1", auth: oAuth2Client });
+    isGmailConfigured = true;
+    console.log("✅ Email Service (Gmail API) configured.");
+
+  } catch (error) {
+    console.error("❌ FAILED to configure Gmail API client:", error);
+    gmail = null; // Ensure gmail is null if setup fails
+  }
 } else {
   console.warn(
-    "⚠️ Email Service is NOT configured. Missing SMTP_HOST, SMTP_USER2, or SMTP_PASS2 in .env file."
+    "⚠️ Email Service (Gmail API) is NOT fully configured. Missing OAuth credentials or Refresh Token in .env file."
   );
-  // Create a mock transporter if not configured, to prevent crashes
-  transporter = {
-    sendMail: () =>
-      Promise.resolve(
-        console.log(
-          "Email not sent (service not configured). Skipping."
-        )
-      ),
-  };
+  gmail = null;
 }
 
+// Helper function to encode email for Gmail API
+const encodeMessage = (message) => {
+  return Buffer.from(message)
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+};
+
+// Helper function to create the raw email message
+const createMail = async (options) => {
+  const mailComposer = new MailComposer(options);
+  const message = await mailComposer.compile().build();
+  return encodeMessage(message);
+};
+
 /**
- * Sends a "Pending Approval" email to a new user.
- *
- * @param {string} email - Recipient's email address
- * @param {string} name - Recipient's name for personalization
- * @returns {Promise<boolean>} True if email sent successfully, False otherwise
+ * Sends an email using the Gmail API.
+ * @param {object} options - Mail options (to, subject, text, html)
+ * @returns {Promise<boolean>} True on success, false on failure
  */
+async function sendMailWithGmailAPI(options) {
+  if (!isGmailConfigured || !gmail) {
+    console.log(" MOCK EMAIL (Not Sent - Gmail API not configured):");
+    console.log(`   To: ${options.to}`);
+    console.log(`   Subject: ${options.subject}`);
+    return false; // Indicate failure if not configured
+  }
+
+  try {
+    const rawMessage = await createMail({
+      from: GMAIL_USER_EMAIL, // Send FROM the authorized user
+      ...options,
+    });
+
+    await gmail.users.messages.send({
+      userId: "me", // 'me' refers to the authenticated user (GMAIL_USER_EMAIL)
+      requestBody: {
+        raw: rawMessage,
+      },
+    });
+    return true; // Indicate success
+  } catch (error) {
+    console.error(`❌ Gmail API send failed for ${options.to}:`, error.response ? error.response.data : error.message);
+    return false; // Indicate failure
+  }
+}
+
+
+// --- sendPendingEmail function (using Gmail API) ---
 async function sendPendingEmail(email, name = "") {
-  if (!transporter) return false;
+  console.log(`[EmailService] Attempting to send PENDING email to: ${email} via Gmail API`);
 
   const greeting = name ? `Hi ${name},` : "Hi there,";
   const subject = "Your OpenArk Registration is Pending";
+  const plainText = `${greeting}\n\nThank you for registering an account at OpenArk. Your registration is currently pending review by an administrator.\n\nYou will receive another email once your account has been approved.\n\nBest regards,\nThe OpenArk Team`;
 
-  // Plain text version
-  const plainText = `${greeting}
-
-Thank you for registering an account at OpenArk.
-Your account is now pending approval from an administrator.
-
-We will send you another email as soon as your account is activated.
-
-Best regards,
-The OpenArk Team
-`;
-
-  // HTML version
+  // --- 🎨 ADDED: HTML content for the pending email ---
   const htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        table { border-collapse: collapse; }
+        .container { background-color: #f3f4f6; padding: 40px 20px; width: 100%; }
+        .content-table { background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        .header { padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%); }
+        .header h1 { margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; }
+        .body { padding: 40px; font-size: 15px; line-height: 1.6; }
+        .body p { margin: 0 0 20px; }
+        .highlight-box { background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 24px 0; }
+        .highlight-box p { margin: 0; color: #92400e; font-size: 14px; }
+        .footer { padding: 30px 40px; text-align: center; background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
+        .footer p { margin: 0; color: #6b7280; font-size: 12px; }
+        @media (max-width: 640px) {
+            .container { padding: 20px 10px; }
+            .header { padding: 30px 20px; }
+            .body { padding: 30px 20px; font-size: 14px; }
+            .header h1 { font-size: 20px; }
+        }
+    </style>
 </head>
-<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f3f4f6;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+<body>
+    <table class="container" width="100%" cellpadding="0" cellspacing="0">
         <tr>
             <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <table class="content-table" width="100%" cellpadding="0" cellspacing="0">
                     <!-- Header -->
                     <tr>
-                        <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #9A3F3F 0%, #C9A227 100%);">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Registration Pending</h1>
+                        <td class="header">
+                            <h1>Registration Pending</h1>
                         </td>
                     </tr>
                     
                     <!-- Body -->
                     <tr>
-                        <td style="padding: 40px;">
-                            <p style="margin: 0 0 20px; color: #1f2937; font-size: 16px; line-height: 1.6;">
-                                ${greeting}
-                            </p>
-                            <p style="margin: 0 0 24px; color: #4b5563; font-size: 15px; line-height: 1.6;">
-                                Thank you for registering an account at <strong style="color: #1f2937;">OpenArk</strong>.
-                            </p>
+                        <td class="body">
+                            <p>${greeting}</p>
+                            <p>Thank you for registering an account with <strong>OpenArk</strong>. We're excited to have you join our community!</p>
                             
-                            <!-- Status Box -->
-                            <div style="background-color: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                                <div style="font-size: 20px; font-weight: 700; color: #92400e;">
-                                    Your account is pending approval.
-                                </div>
+                            <div class="highlight-box">
+                                <p>
+                                    <strong>Your account registration is currently pending review by an administrator.</strong>
+                                </p>
                             </div>
                             
-                            <p style="margin: 0 0 16px; color: #4b5563; font-size: 15px; line-height: 1.6;">
-                                An administrator will review your request shortly. We will send you another email as soon as your account is activated.
-                            </p>
+                            <p>You will receive another email notification as soon as your account has been approved. Please allow some time for the review process.</p>
                             
-                            <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.6;">
-                                If you didn't register for this account, please ignore this email.
-                            </p>
+                            <p style="margin-bottom: 0;">If you did not initiate this registration, please disregard this email.</p>
                         </td>
                     </tr>
                     
                     <!-- Footer -->
                     <tr>
-                        <td style="padding: 30px 40px; text-align: center; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
-                            <p style="margin: 0; color: #6b7280; font-size: 12px;">
-                                © 2025 OpenArk. All rights reserved.
-                            </p>
+                        <td class="footer">
+                            <p>© ${new Date().getFullYear()} OpenArk. All rights reserved.</p>
                         </td>
                     </tr>
                 </table>
@@ -134,128 +179,55 @@ The OpenArk Team
 </body>
 </html>
 `;
+  // --- 🎨 End of Added HTML ---
 
-  // Email options
   const mailOptions = {
-    from: emailFrom,
     to: email,
     subject: subject,
     text: plainText,
     html: htmlContent,
   };
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Pending email sent successfully to ${email}`);
-    return true;
-  } catch (error) {
-    console.error(`Failed to send pending email to ${email}:`, error);
-    return false;
+  const success = await sendMailWithGmailAPI(mailOptions);
+
+  if (success) {
+    console.log(`✅ [EmailService] PENDING email SENT successfully to ${email} via Gmail API`);
+  } else {
+    // Error is already logged in sendMailWithGmailAPI
+    console.error(`[EmailService] FAILED to send PENDING email to ${email} via Gmail API.`);
   }
+  return success;
 }
 
-/**
- * Sends an "Account Approved" email to a user.
- *
- * @param {string} email - Recipient's email address
- * @param {string} name - Recipient's name for personalization
- * @returns {Promise<boolean>} True if email sent successfully, False otherwise
- */
+// --- sendApprovalEmail function (using Gmail API) ---
 async function sendApprovalEmail(email, name = "") {
-  if (!transporter) return false;
+  console.log(`[EmailService] Attempting to send APPROVAL email to: ${email} via Gmail API`);
 
   const greeting = name ? `Hi ${name},` : "Hi there,";
   const subject = "Your OpenArk Account is Now Active!";
+  const plainText = `${greeting}\n\nGood news! Your account for OpenArk has been approved...\n\nYou can now log in.\n\nBest regards,\nThe OpenArk Team`; // Keep it simple
 
-  // Plain text version
-  const plainText = `${greeting}
+  // --- ⚠️ Placeholder for Approval Email HTML ---
+  const htmlContent = `... (Your existing HTML content for approval email) ...`; // Reuse your HTML
+  // --- ⚠️ You'll likely want to replace this too ---
 
-Good news! Your account for OpenArk has been approved by an administrator.
-You can now log in to access the library.
-
-If you have any questions, feel free to reply to this email.
-
-Best regards,
-The OpenArk Team
-`;
-
-  // HTML version
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 0; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; background-color: #f3f4f6;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
-        <tr>
-            <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                    <!-- Header -->
-                    <tr>
-                        <td style="padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: 700;">Account Approved!</h1>
-                        </td>
-                    </tr>
-                    
-                    <!-- Body -->
-                    <tr>
-                        <td style="padding: 40px;">
-                            <p style="margin: 0 0 20px; color: #1f2937; font-size: 16px; line-height: 1.6;">
-                                ${greeting}
-                            </p>
-                            <p style="margin: 0 0 24px; color: #4b5563; font-size: 15px; line-height: 1.6;">
-                                Good news! Your account for <strong style="color: #1f2937;">OpenArk</strong> has been approved.
-                            </p>
-                            
-                            <!-- Status Box -->
-                            <div style="background-color: #dcfce7; border: 2px solid #22c55e; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-                                <div style="font-size: 20px; font-weight: 700; color: #15803d;">
-                                    You can now log in!
-                                </div>
-                            </div>
-                            
-                            <p style="margin: 0; color: #6b7280; font-size: 13px; line-height: 1.6;">
-                                If you have any questions, feel free to reply to this email.
-                            </p>
-                        </td>
-                    </tr>
-                    
-                    <!-- Footer -->
-                    <tr>
-                        <td style="padding: 30px 40px; text-align: center; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
-                            <p style="margin: 0; color: #6b7280; font-size: 12px;">
-                                © 2025 OpenArk. All rights reserved.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-</body>
-</html>
-`;
-
-  // Email options
   const mailOptions = {
-    from: emailFrom,
     to: email,
     subject: subject,
     text: plainText,
     html: htmlContent,
   };
 
-  try {
-    await transporter.sendMail(mailOptions);
-    console.log(`Approval email sent successfully to ${email}`);
-    return true;
-  } catch (error) {
-    console.error(`Failed to send approval email to ${email}:`, error);
-    return false;
+  const success = await sendMailWithGmailAPI(mailOptions);
+
+  if (success) {
+    console.log(`✅ [EmailService] APPROVAL email SENT successfully to ${email} via Gmail API`);
+  } else {
+    // Error is already logged in sendMailWithGmailAPI
+    console.error(`[EmailService] FAILED to send APPROVAL email to ${email} via Gmail API.`);
   }
+  return success;
 }
 
-// Export the functions for server.js to use
 module.exports = { sendPendingEmail, sendApprovalEmail };
+

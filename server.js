@@ -15,6 +15,7 @@ const fs = require("fs");
 const http = require("http");
 const { Server } = require("socket.io");
 const gTTS = require('gtts');
+const { sendPendingEmail, sendApprovalEmail } = require("./emailService");
 // ✅ Gemini import MUST come before it's used
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -108,6 +109,11 @@ app.put("/api/users/approve/:id", authenticateMiddleware, async (req, res) => {
 
     user.active = true;
     await user.save();
+
+  // ✅ *** ADD THIS BLOCK: Send Approval Email ***
+   sendApprovalEmail(user.email, user.username).catch(err => {
+      console.error(`Failed to send approval email to ${user.email} via Gmail API:`, err);
+});
 
     await Activity.create({
       user: "Admin",
@@ -498,6 +504,11 @@ app.post("/api/signup", async (req, res) => {
       role: "student",
     });
         await newUser.save();
+
+                // ✅ *** ADD THIS BLOCK: Send Pending Email ***
+      sendPendingEmail(newUser.email, newUser.username).catch(err => {
+            console.error(`Failed to send pending email to ${newUser.email} via Gmail API:`, err);
+        });
 
     // ✅ Log activity AFTER saving
     await Activity.create({
