@@ -199,6 +199,76 @@ async function sendPendingEmail(email, name = "") {
   return success;
 }
 
+/**
+ * Sends an email using the Gmail API and notifies admin.
+ * @param {object} options - Mail options (to, subject, text, html)
+ * @param {string} emailType - Description like "PENDING" or "APPROVAL" for admin notification
+ * @returns {Promise<boolean>} True on success of primary email, false on failure
+ */
+async function sendMailWithGmailAPI(options, emailType = "Notification") {
+  if (!isGmailConfigured || !gmail) {
+    console.log(" MOCK EMAIL (Not Sent - Gmail API not configured):");
+    console.log(`   To: ${options.to}`);
+    console.log(`   Subject: ${options.subject}`);
+    return false; // Indicate failure if not configured
+  }
+
+  // --- Send PRIMARY email to the user ---
+  try {
+    const rawMessage = await createMail({
+      from: GMAIL_USER_EMAIL, // Send FROM the authorized user
+      ...options,
+    });
+
+    await gmail.users.messages.send({
+      userId: "me",
+      requestBody: {
+        raw: rawMessage,
+      },
+    });
+
+    // --- Send ADMIN NOTIFICATION email (if primary succeeded) ---
+    // Use try...catch for notification so its failure doesn't affect main result
+    try {
+        const adminSubject = `[OpenArk Admin] ${emailType} Email Sent`;
+        const adminText = `An email (${emailType}) was successfully sent to:\n\nUser: ${options.to}\nSubject: ${options.subject}\n\nTimestamp: ${new Date().toLocaleString()}`;
+        const adminHtml = `<p>An email (<b>${emailType}</b>) was successfully sent to:</p>
+                           <ul>
+                             <li><b>User:</b> ${options.to}</li>
+                             <li><b>Subject:</b> ${options.subject}</li>
+                           </ul>
+                           <p>Timestamp: ${new Date().toLocaleString()}</p>`;
+
+        const adminRawMessage = await createMail({
+            from: GMAIL_USER_EMAIL,
+            to: GMAIL_USER_EMAIL, // Send notification to self
+            subject: adminSubject,
+            text: adminText,
+            html: adminHtml,
+        });
+
+        await gmail.users.messages.send({
+            userId: "me",
+            requestBody: {
+                raw: adminRawMessage,
+            },
+        });
+        console.log(`✉️ [EmailService] Admin notification sent successfully regarding email to ${options.to}`);
+
+    } catch (adminNotifyError) {
+        console.error(`⚠️ [EmailService] FAILED to send ADMIN notification regarding email to ${options.to}:`, adminNotifyError.response ? adminNotifyError.response.data : adminNotifyError.message);
+        // We log this error but don't return false, as the main email succeeded.
+    }
+
+    return true; // Indicate success of primary email
+
+  } catch (primaryError) {
+    console.error(`❌ Gmail API send failed for ${options.to}:`, primaryError.response ? primaryError.response.data : primaryError.message);
+    return false; // Indicate failure of primary email
+  }
+}
+
+
 // --- sendApprovalEmail function (using Gmail API) ---
 async function sendApprovalEmail(email, name = "") {
   console.log(`[EmailService] Attempting to send APPROVAL email to: ${email} via Gmail API`);
@@ -215,23 +285,16 @@ async function sendApprovalEmail(email, name = "") {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body { margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; color: #1f2937; }
-        table { border-collapse: collapse; }
-        .container { background-color: #f3f4f6; padding: 40px 20px; width: 100%; }
-        .content-table { background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
-        .header { padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); } /* Changed gradient */
+        /* ... existing styles ... */
+        /* --- MODIFIED: Header background to match website --- */
+        .header { padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%); } /* Using Maroon */
         .header h1 { margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; }
-        .body { padding: 40px; font-size: 15px; line-height: 1.6; }
-        .body p { margin: 0 0 20px; }
-        .success-box { background-color: #d1fae5; border-left: 4px solid #10b981; padding: 16px; border-radius: 8px; margin: 24px 0; }
-        .success-box p { margin: 0; color: #065f46; font-size: 14px; }
-        .login-button { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%); color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 600; margin-top: 10px; box-shadow: 0 4px 10px rgba(154, 63, 63, 0.3); }
-        .footer { padding: 30px 40px; text-align: center; background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
-        .footer p { margin: 0; color: #6b7280; font-size: 12px; }
+        /* ... existing styles ... */
+        /* --- MODIFIED: Login button background to match website --- */
+        .login-button { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%); color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 600; margin-top: 10px; box-shadow: 0 4px 10px rgba(154, 63, 63, 0.3); } /* Using Maroon */
+        /* ... existing styles ... */
         @media (max-width: 640px) {
-            .container { padding: 20px 10px; }
-            .header { padding: 30px 20px; }
-            .body { padding: 30px 20px; font-size: 14px; }
+            /* ... existing media query styles ... */
             .header h1 { font-size: 20px; }
             .login-button { padding: 10px 20px; font-size: 14px;}
         }
