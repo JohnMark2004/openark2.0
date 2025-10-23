@@ -108,7 +108,7 @@ async function sendPendingEmail(email, name = "") {
   const subject = "Your OpenArk Registration is Pending";
   const plainText = `${greeting}\n\nThank you for registering an account at OpenArk. Your registration is currently pending review by an administrator.\n\nYou will receive another email once your account has been approved.\n\nBest regards,\nThe OpenArk Team`;
 
-  // --- 🎨 ADDED: HTML content for the pending email ---
+  // --- 🎨 HTML content for the pending email ---
   const htmlContent = `
 <!DOCTYPE html>
 <html>
@@ -147,25 +147,25 @@ async function sendPendingEmail(email, name = "") {
                             <h1>Registration Pending</h1>
                         </td>
                     </tr>
-                    
+
                     <!-- Body -->
                     <tr>
                         <td class="body">
                             <p>${greeting}</p>
                             <p>Thank you for registering an account with <strong>OpenArk</strong>. We're excited to have you join our community!</p>
-                            
+
                             <div class="highlight-box">
                                 <p>
                                     <strong>Your account registration is currently pending review by an administrator.</strong>
                                 </p>
                             </div>
-                            
+
                             <p>You will receive another email notification as soon as your account has been approved. Please allow some time for the review process.</p>
-                            
+
                             <p style="margin-bottom: 0;">If you did not initiate this registration, please disregard this email.</p>
                         </td>
                     </tr>
-                    
+
                     <!-- Footer -->
                     <tr>
                         <td class="footer">
@@ -179,7 +179,7 @@ async function sendPendingEmail(email, name = "") {
 </body>
 </html>
 `;
-  // --- 🎨 End of Added HTML ---
+  // --- 🎨 End of Pending HTML ---
 
   const mailOptions = {
     to: email,
@@ -205,11 +205,87 @@ async function sendApprovalEmail(email, name = "") {
 
   const greeting = name ? `Hi ${name},` : "Hi there,";
   const subject = "Your OpenArk Account is Now Active!";
-  const plainText = `${greeting}\n\nGood news! Your account for OpenArk has been approved...\n\nYou can now log in.\n\nBest regards,\nThe OpenArk Team`; // Keep it simple
+  const plainText = `${greeting}\n\nGood news! Your account registration for OpenArk has been approved by an administrator.\n\nYou can now log in and access all features.\n\nWelcome aboard!\n\nBest regards,\nThe OpenArk Team`;
 
-  // --- ⚠️ Placeholder for Approval Email HTML ---
-  const htmlContent = `... (Your existing HTML content for approval email) ...`; // Reuse your HTML
-  // --- ⚠️ You'll likely want to replace this too ---
+  // --- ✨ ADDED: HTML content for the approval email ---
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        table { border-collapse: collapse; }
+        .container { background-color: #f3f4f6; padding: 40px 20px; width: 100%; }
+        .content-table { background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        .header { padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); } /* Changed gradient */
+        .header h1 { margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; }
+        .body { padding: 40px; font-size: 15px; line-height: 1.6; }
+        .body p { margin: 0 0 20px; }
+        .success-box { background-color: #d1fae5; border-left: 4px solid #10b981; padding: 16px; border-radius: 8px; margin: 24px 0; }
+        .success-box p { margin: 0; color: #065f46; font-size: 14px; }
+        .login-button { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%); color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 600; margin-top: 10px; box-shadow: 0 4px 10px rgba(154, 63, 63, 0.3); }
+        .footer { padding: 30px 40px; text-align: center; background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
+        .footer p { margin: 0; color: #6b7280; font-size: 12px; }
+        @media (max-width: 640px) {
+            .container { padding: 20px 10px; }
+            .header { padding: 30px 20px; }
+            .body { padding: 30px 20px; font-size: 14px; }
+            .header h1 { font-size: 20px; }
+            .login-button { padding: 10px 20px; font-size: 14px;}
+        }
+    </style>
+</head>
+<body>
+    <table class="container" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center">
+                <table class="content-table" width="100%" cellpadding="0" cellspacing="0">
+                    <!-- Header -->
+                    <tr>
+                        <td class="header">
+                            <h1>Account Approved!</h1>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td class="body">
+                            <p>${greeting}</p>
+                            <p>Good news! Your account registration for <strong>OpenArk</strong> has been reviewed and approved by an administrator.</p>
+
+                            <div class="success-box">
+                                <p>
+                                    <strong>Your account is now active!</strong> You can log in using the email and password you registered with.
+                                </p>
+                            </div>
+
+                            <p>Welcome to the OpenArk library. We hope you find the resources helpful for your studies.</p>
+
+                            <!-- Optional: Add a direct link to the login page -->
+                            <p style="text-align: center;">
+                                <a href="${process.env.FRONTEND_URL || '#'}" class="login-button">Log In to OpenArk</a>
+                            </p>
+
+                            <p style="margin-bottom: 0;">If you have any questions, feel free to reply to this email.</p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer">
+                            <p>© ${new Date().getFullYear()} OpenArk. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`;
+  // --- ✨ End of Added HTML ---
 
   const mailOptions = {
     to: email,
