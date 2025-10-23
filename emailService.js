@@ -302,7 +302,19 @@ async function sendApprovalEmail(email, name = "") {
         .footer { padding: 30px 40px; text-align: center; background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
         .footer p { margin: 0; color: #6b7280; font-size: 12px; }
         /* --- MODIFIED: Login button background to match website --- */
-        .login-button { display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%); color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 600; margin-top: 10px; box-shadow: 0 4px 10px rgba(154, 63, 63, 0.3); } /* Using Maroon */
+        .login-button {
+      display: inline-block;
+      padding: 12px 24px;
+      /* 👇 This sets the BACKGROUND to maroon */
+      background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%);
+      /* 👇 This sets the TEXT COLOR to white */
+      color: #ffffff;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      margin-top: 10px;
+      box-shadow: 0 4px 10px rgba(154, 63, 63, 0.3);
+   } /* Using Maroon */
         @media (max-width: 640px) {
             .container { padding: 20px 10px; }
             .header { padding: 30px 20px; }
