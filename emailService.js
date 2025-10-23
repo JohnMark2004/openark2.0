@@ -352,7 +352,7 @@ async function sendApprovalEmail(email, name = "") {
 
                             <!-- Optional: Add a direct link to the login page -->
                             <p style="text-align: center;">
-                                <a href="${FRONTEND_URL || '#'}" class="login-button">Log In to OpenArk</a>
+                                <a href="${FRONTEND_URL || '#'}" class="login-button" style="color: #ffffff; text-decoration: none;">Log In to OpenArk</a>
                             </p>
 
                             <p style="margin-bottom: 0;">If you have any questions, feel free to reply to this email.</p>

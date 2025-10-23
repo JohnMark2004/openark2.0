@@ -245,7 +245,7 @@ if (addPageBtn) {
 
           pageUpload.value = ""; // Clear file input
           pageFileName.textContent = "No file chosen";
-          showPopup("✅ Scan complete! Text extracted.", "success");
+          showPopup("Scan complete! Text extracted.", "success");
 
       } else {
           // Handle cases where OCR returned empty text or fetch failed
@@ -405,7 +405,7 @@ document.querySelectorAll(".btn-delete").forEach((btn) => {
         const data = await res.json();
 
         if (res.ok) {
-          showPopup(`✅ Deleted “${title}” successfully`, "success");
+          showPopup(`Deleted “${title}” successfully`, "success");
           await loadBooksForDeletion();
         } else {
           showPopup(`❌ ${data.error || "Failed to delete"}`, "error");
@@ -822,7 +822,7 @@ div.querySelector(".delete-btn").addEventListener("click", (e) => {
       const data = await res.json();
 
       if (res.ok) {
-        showPopup(`✅ Deleted “${bookToDelete.title}” successfully`, "success");
+        showPopup(`Deleted “${bookToDelete.title}” successfully`, "success");
         await loadConversionBooks();
       } else {
         showPopup(`❌ ${data.error || "Failed to delete"}`, "error");
@@ -871,7 +871,7 @@ if (confirmDeleteBtn) {
       }
 
       await res.json().catch(() => {});
-      showPopup("✅ Book deleted successfully", "success");
+      showPopup("Book deleted successfully", "success");
 
       // refresh after delete
       await loadConversionBooks();
@@ -1081,7 +1081,7 @@ function enableAddMorePages(book) {
 
           const data = await res.json();
           if (res.ok) {
-            showPopup(`✅ ${files.length} page(s) added successfully!`, "success");
+            showPopup(`${files.length} page(s) added successfully!`, "success");
 
             // Update page count in UI immediately
             if (!currentBook.pages) currentBook.pages = [];
@@ -1328,7 +1328,7 @@ if (publishBookBtn) {
         throw new Error(`Failed to publish book: ${errMsg}`);
       }
 
-      showPopup("✅ Book published successfully");
+      showPopup("Book published successfully");
 
       // ✅ Hide creation form
       bookCreationSection.classList.add("hidden");
@@ -1548,7 +1548,7 @@ btn.insertAdjacentElement("afterend", controlsDiv);
 
                 const data = await res.json();
                 if (res.ok) {
-                  showPopup("✅ Page text updated successfully", "success");
+                  showPopup("Page text updated successfully", "success");
                   window.currentBook.pages[idx].text = newText;
                   textDiv.innerHTML = newText;
                 } else {

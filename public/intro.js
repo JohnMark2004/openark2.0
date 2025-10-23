@@ -156,7 +156,7 @@ if (signupForm) {
 
             if (res.ok) {
                 // Success: show pending approval toasts
-                showPopup("✅ Signup successful!", "success");
+                showPopup("Signup successful!", "success");
 
                 setTimeout(() => {
                     showPopup("Your account request is pending admin approval.", "info");
@@ -379,7 +379,7 @@ function animateValue(element, start, end, duration) {
 (function checkAuth() {
     const token = sessionStorage.getItem("token");
     if (token) {
-        console.log("✅ User already logged in, JWT found in sessionStorage");
+        console.log("User already logged in, JWT found in sessionStorage");
         // Optional: Redirect if already logged in?
         // const role = localStorage.getItem("role");
         // if (role === 'admin') window.location.href = 'admin.html';
