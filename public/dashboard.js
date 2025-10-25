@@ -12,6 +12,13 @@ document.addEventListener("DOMContentLoaded", () => {
     popup.className = `popup ${type} show`;
     setTimeout(() => popup.classList.remove("show"), 3000);
   }
+  // ✅ ADD THIS BLOCK
+  // --- Show Welcome Message on Login ---
+  if (sessionStorage.getItem("justLoggedIn") === "true") {
+    const username = localStorage.getItem("username") || "User";
+    showPopup(`Welcome ${username} to OpenArk!`, "success");
+    sessionStorage.removeItem("justLoggedIn"); // Clear the flag
+  }
 
   // API BASE URL
   // ✅ Auto-detect local vs deployed environment

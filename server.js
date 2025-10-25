@@ -15,7 +15,8 @@ const fs = require("fs");
 const http = require("http");
 const { Server } = require("socket.io");
 const gTTS = require('gtts');
-const { sendPendingEmail, sendApprovalEmail } = require("./emailService");
+const crypto = require('crypto');
+const { sendPendingEmail, sendApprovalEmail, sendPasswordResetEmail } = require("./emailService");
 // ✅ Gemini import MUST come before it's used
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -155,7 +156,9 @@ const userSchema = new mongoose.Schema({
     },
   ],
   profilePic: { type: String, default: "assets/default-pfp.jpg" },
-  active: { type: Boolean, default: false }
+  active: { type: Boolean, default: false },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date
 
 });
 const User = mongoose.model("User", userSchema);
@@ -522,6 +525,84 @@ app.post("/api/signup", async (req, res) => {
   } catch (err) {
     console.error("❌ Signup error:", err);
     res.status(500).json({ error: "Signup failed" });
+  }
+});
+
+// ===============================
+// FORGOT PASSWORD
+// ===============================
+app.post("/api/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    // 1. Always send a generic success response to prevent email enumeration
+    // We do the work *only* if the user exists.
+    if (user) {
+      // 2. Generate a token
+      const token = crypto.randomBytes(20).toString("hex");
+
+      // 3. Set token and 1-hour expiry on user
+      user.resetPasswordToken = token;
+      user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
+      await user.save();
+
+      // 4. Send the email
+      // We assume you have a function `sendPasswordResetEmail` in emailService.js
+      // and a frontend page at `/reset.html`
+      const resetLink = `https://openark2-0.onrender.com/reset.html?token=${token}`;
+      
+      // This function is assumed to exist in your emailService.js
+      sendPasswordResetEmail(user.email, user.username, resetLink).catch(err => {
+        console.error(`Failed to send password reset email to ${user.email}:`, err);
+        // Don't report failure to user
+      });
+    }
+
+    // 5. Send generic success message
+    res.json({ message: "If your email is registered, you will receive a password reset link." });
+
+  } catch (err) {
+    console.error("❌ Forgot Password error:", err);
+    // Send generic message even on server error
+    res.json({ message: "If your email is registered, you will receive a password reset link." });
+  }
+});
+
+// ===============================
+// RESET PASSWORD
+// ===============================
+app.post("/api/reset-password", async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    // 1. Find user by valid token and expiry date
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() } // $gt = greater than
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Password reset token is invalid or has expired." });
+    }
+
+    // 2. Set new password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    
+    // 3. Clear the token fields
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    
+    await user.save();
+
+    // You could also send a "password changed" confirmation email here
+
+    res.json({ message: "✅ Password has been reset successfully. You can now log in." });
+
+  } catch (err) {
+    console.error("❌ Reset Password error:", err);
+    res.status(500).json({ error: "Failed to reset password. Please try again." });
   }
 });
 

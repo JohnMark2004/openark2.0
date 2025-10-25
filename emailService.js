@@ -392,6 +392,111 @@ async function sendApprovalEmail(email, name = "") {
   // }
   return success;
 }
+// ✅ ADD THIS ENTIRE NEW FUNCTION
+// --- sendPasswordResetEmail function (using Gmail API) ---
+async function sendPasswordResetEmail(email, name = "", resetLink) {
+  const greeting = name ? `Hi ${name},` : "Hi there,";
+  const subject = "OpenArk Password Reset Request";
+  const plainText = `${greeting}\n\nWe received a request to reset your password for your OpenArk account. If you did not make this request, you can safely ignore this email.\n\nTo reset your password, click the link below:\n${resetLink}\n\nThis link will expire in 1 hour.\n\nBest regards,\nThe OpenArk Team`;
 
-module.exports = { sendPendingEmail, sendApprovalEmail };
+  // --- 🎨 HTML content for the password reset email ---
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        table { border-collapse: collapse; }
+        .container { background-color: #f3f4f6; padding: 40px 20px; width: 100%; }
+        .content-table { background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        .header { padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%); } /* Maroon Header */
+        .header h1 { margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; }
+        .body { padding: 40px; font-size: 15px; line-height: 1.6; }
+        .body p { margin: 0 0 20px; }
+        .warning-box { background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 24px 0; }
+        .warning-box p { margin: 0; color: #92400e; font-size: 14px; }
+        .footer { padding: 30px 40px; text-align: center; background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
+        .footer p { margin: 0; color: #6b7280; font-size: 12px; }
+        .reset-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%);
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            margin-top: 10px;
+            box-shadow: 0 4px 10px rgba(154, 63, 63, 0.3);
+        }
+        @media (max-width: 640px) {
+            .container { padding: 20px 10px; }
+            .header { padding: 30px 20px; }
+            .body { padding: 30px 20px; font-size: 14px; }
+            .header h1 { font-size: 20px; }
+            .reset-button { padding: 10px 20px; font-size: 14px;}
+        }
+    </style>
+</head>
+<body>
+    <table class="container" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center">
+                <table class="content-table" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="header">
+                            <h1>Password Reset</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="body">
+                            <p>${greeting}</p>
+                            <p>We received a request to reset your password for your <strong>OpenArk</strong> account. If you did not make this request, you can safely ignore this email.</p>
+
+                            <p>To create a new password, please click the button below:</p>
+                            
+                            <p style="text-align: center;">
+                                <a href="${resetLink}" class="reset-button" style="color: #ffffff; text-decoration: none;">Reset Your Password</a>
+                            </p>
+
+                            <div class="warning-box">
+                                <p>
+                                    <strong>This link is only valid for one hour.</strong>
+                                </p>
+                            </div>
+
+                            <p style="margin-bottom: 0;">If you're having trouble, copy and paste this URL into your browser:<br>
+                              <small style="color: #6b7280; word-break: break-all;">${resetLink}</small>
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer">
+                            <p>© ${new Date().getFullYear()} OpenArk. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`;
+  // --- 🎨 End of Reset HTML ---
+
+  const mailOptions = {
+    to: email,
+    subject: subject,
+    text: plainText,
+    html: htmlContent,
+  };
+
+  // Pass "PASSWORD_RESET" as the type for admin notification
+  const success = await sendMailWithGmailAPI(mailOptions, "PASSWORD_RESET");
+
+  return success;
+}
+
+module.exports = { sendPendingEmail, sendApprovalEmail, sendPasswordResetEmail };
 

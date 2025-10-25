@@ -585,7 +585,8 @@
     }
 
     .login-form,
-    .signup-form {
+    .signup-form,
+    .forgot-password-form {
       display: flex;
       flex-direction: column;
       gap: 1.2rem;
@@ -593,6 +594,7 @@
 
     .login-form input,
     .signup-form input,
+    .forgot-password-form input,
     .college-year {
       padding: 1rem;
       border: 2px solid rgba(154, 63, 63, 0.2);
@@ -638,6 +640,15 @@
     .toggle-password:hover {
       opacity: 1;
       transform: translateY(-50%) scale(1.1);
+    }
+
+    .form-description {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+      color: var(--dark);
+      opacity: 0.9;
+      line-height: 1.5;
     }
 
     .button {
@@ -719,6 +730,26 @@
     .signup-link a:hover,
     .login-link a:hover {
       color: var(--gold);
+    }
+
+    /* ✅ ADD THIS ENTIRE BLOCK */
+    .forgot-password-link {
+      text-align: right;
+      margin-top: -0.5rem; /* Pull it up closer to the password box */
+      margin-bottom: 1.2rem;
+      font-size: 0.9rem;
+    }
+
+    .forgot-password-link a {
+      color: var(--maroon);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+
+    .forgot-password-link a:hover {
+      color: var(--gold);
+      text-decoration: underline;
     }
 
     /* Popup notifications */

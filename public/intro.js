@@ -58,6 +58,10 @@ const getStartedBtn = document.querySelector(".btn-login");
 const loginModal = document.getElementById("loginModal");
 const signupModal = document.getElementById("signupModal");
 
+const forgotPasswordModal = document.getElementById("forgotPasswordModal");
+const forgotPasswordLink = document.getElementById("forgotPasswordLink");
+const backToLoginLink = document.getElementById("backToLoginLink");
+
 // Check if modals exist before adding listeners
 if (loginModal && signupModal) {
     const toSignupLink = loginModal.querySelector(".signup-link a");
@@ -94,8 +98,24 @@ if (loginModal && signupModal) {
         });
     }
 
+    if (forgotPasswordLink) {
+        forgotPasswordLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            closeModal(loginModal);
+            openModal(forgotPasswordModal);
+        });
+    }
+
+    if (backToLoginLink) {
+        backToLoginLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            closeModal(forgotPasswordModal);
+            openModal(loginModal);
+        });
+    }
+
     // Close modal when clicking outside container
-    [loginModal, signupModal].forEach((modal) => {
+    [loginModal, signupModal, forgotPasswordModal].forEach((modal) => {
         if (modal) {
             modal.addEventListener("click", (e) => {
                 const container = modal.querySelector(".login-container, .signup-container");
@@ -214,6 +234,9 @@ if (loginForm) {
                 const userId = data._id || data.id || data.userId || data.user?._id || "";
                 localStorage.setItem("userId", userId);
 
+                // ✅ ADDED THIS LINE
+                sessionStorage.setItem("justLoggedIn", "true"); // Signal for welcome message
+
                 closeModal(loginModal);
 
                 // No need to emit 'registerUser' here unless dashboard needs immediate confirmation
@@ -236,6 +259,43 @@ if (loginForm) {
     });
 }
 
+// ✅ ADD THIS ENTIRE BLOCK
+// FORGOT PASSWORD FORM HANDLER
+const forgotPasswordForm = document.querySelector(".forgot-password-form");
+if (forgotPasswordForm) {
+    forgotPasswordForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("forgotEmail").value;
+        const btn = document.getElementById("sendResetLinkBtn");
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+
+        try {
+            const res = await fetch(`${API_URL}/api/forgot-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email }),
+            });
+            
+            // We always show a generic success message for security
+            // to avoid confirming if an email exists or not.
+            const data = await res.json();
+            showPopup(data.message || "If a user with that email exists, a reset link has been sent.", "info");
+
+            setTimeout(() => {
+                closeModal(forgotPasswordModal);
+                openModal(loginModal);
+            }, 2500);
+
+        } catch (err) {
+            console.error("Forgot password error:", err);
+            showPopup("An error occurred. Please try again.", "error");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Send Reset Link";
+        }
+    });
+}
 
 // Toggle show/hide password (using eye icons)
 document.addEventListener("click", (e) => {

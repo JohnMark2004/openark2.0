@@ -151,6 +151,9 @@
           <input type="password" placeholder="Password" id="loginPassword" required>
           <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="loginPassword" alt="Show Password">
         </div>
+
+        <p class="forgot-password-link"><a href="#" id="forgotPasswordLink">Forgot Password?</a></p>
+
         <button class="button" type="submit">Log In</button>
         <p class="signup-link">Don't have an account? <a href="#">Sign Up</a></p>
       </form>
@@ -185,6 +188,21 @@
         </select>
         <button class="button" type="submit">Sign Up</button>
         <p class="login-link">Already have an account? <a href="#">Log In</a></p>
+      </form>
+    </div>
+  </div>
+  <div id="forgotPasswordModal" class="modal hidden">
+    <div class="login-container"> <form class="forgot-password-form">
+        <div class="login-header">
+          <img src="img/logo.png" alt="Logo" class="login-logo">
+          <h2>Reset Password</h2>
+        </div>
+        <p class="form-description">
+          Enter your email and we'll send you a link to reset your password.
+        </p>
+        <input type="email" id="forgotEmail" placeholder="Your Email" required>
+        <button class="button" type="submit" id="sendResetLinkBtn">Send Reset Link</button>
+        <p class="login-link">Remembered your password? <a href="#" id="backToLoginLink">Log In</a></p>
       </form>
     </div>
   </div>

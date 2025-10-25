@@ -53,6 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
     setTimeout(() => popup.classList.remove("show"), 3000);
   }
 
+  // ✅ ADD THIS BLOCK
+  // --- Show Welcome Message on Login ---
+  if (sessionStorage.getItem("justLoggedIn") === "true") {
+    const username = localStorage.getItem("username") || "Admin"; // Default to Admin
+    showPopup(`Welcome ${username} to OpenArk!`, "success");
+    sessionStorage.removeItem("justLoggedIn"); // Clear the flag
+  }
+
   // ===============================
   // 🔘 TAB SWITCHING LOGIC
   // ===============================
