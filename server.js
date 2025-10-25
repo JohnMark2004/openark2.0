@@ -675,6 +675,13 @@ librarianUser.active = true;
     { expiresIn: "24h" }
   );
 
+  // ✅ ADD THIS BLOCK FOR LIBRARIAN LOGIN LOG
+      await Activity.create({
+        user: librarianUser.username || librarianUser.email,
+        action: "Logged In",
+        details: `Librarian ${librarianUser.username || librarianUser.email} logged in`,
+      });
+
   return res.json({
     message: "Login successful",
     token,
@@ -703,6 +710,12 @@ librarianUser.active = true;
         process.env.JWT_SECRET || "fallback_secret",
         { expiresIn: "24h" }
       );
+
+      await Activity.create({
+        user: matchedAdmin.username || matchedAdmin.email,
+        action: "Logged In",
+        details: `Admin ${matchedAdmin.username || matchedAdmin.email} logged in`,
+      });
 
       return res.json({
         message: "Admin login successful",
@@ -735,6 +748,12 @@ const token = jwt.sign(
   { expiresIn: "24h" }
 );
 
+await Activity.create({
+        user: user.username || user.email,
+        action: "Logged In",
+        details: `User ${user.username || user.email} logged in`,
+      });
+
 res.json({
   message: "Login successful",
   token,
@@ -760,7 +779,32 @@ res.json({
 app.post("/api/logout", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
+    let userIdentifier = "Unknown User";
     if (!authHeader) return res.status(401).json({ error: "Missing token" });
+
+    // ✅ ADD THIS BLOCK TO DECODE TOKEN AND LOGOUT
+    if (authHeader) {
+      try {
+        const token = authHeader.split(" ")[1];
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        // Use email or username if available in the token payload
+        userIdentifier = decoded.username || decoded.email || decoded.id || "User";
+
+        await Activity.create({
+          user: userIdentifier,
+          action: "Logged Out",
+          details: `User ${userIdentifier} logged out`,
+        });
+      } catch (tokenError) {
+        console.warn("Logout log: Invalid or expired token provided.", tokenError.message);
+        // Optionally log even with invalid token
+        // await Activity.create({ user: 'Invalid Token', action: 'Logout Attempt', details: 'Logout attempted with invalid token' });
+      }
+    } else {
+        console.warn("Logout log: No token provided.");
+        // Optionally log anonymous logout attempt
+        // await Activity.create({ user: 'Anonymous', action: 'Logout Attempt', details: 'Logout attempted without token' });
+    }
 
     // We no longer mark user inactive
     res.json({ message: "Logout successful" });
