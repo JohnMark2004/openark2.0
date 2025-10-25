@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reset Password | OpenArk</title>
+  <link rel="icon" type="image/png" href="img/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="intro.css">
+  <style>
+    /* Add a style to center the modal on the page */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #F9F6F0 0%, #E6CFA9 100%);
+    }
+    .modal {
+      display: flex; /* Override .hidden */
+      position: relative; /* Not fixed */
+      backdrop-filter: none;
+      background: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="resetPasswordModal" class="modal">
+    <div class="login-container">
+      <form class="reset-password-form">
+        <div class="login-header">
+          <img src="img/logo.png" alt="Logo" class="login-logo">
+          <h2>Set New Password</h2>
+        </div>
+        
+        <p class="form-description" id="resetMessage">
+          Enter your new password.
+        </p>
+
+        <div class="password-field">
+          <input type="password" placeholder="New Password" id="resetPassword" required>
+          <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="resetPassword" alt="Show Password">
+        </div>
+        <div class="password-field">
+          <input type="password" placeholder="Confirm New Password" id="resetConfirmPassword" required>
+          <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="resetConfirmPassword" alt="Show Password">
+        </div>
+
+        <button class="button" type="submit" id="setNewPasswordBtn">Set New Password</button>
+        
+        <p class="login-link" id="backToLoginContainer" style="display: none;">
+          <a href="intro.html">Back to Log In</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <div id="popup" class="popup hidden"></div>
+
+  <script src="reset.js"></script>
+</body>
+</html>
