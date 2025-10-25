@@ -923,6 +923,12 @@ app.post("/api/upload-profile-pic", upload.single("profilePic"), async (req, res
     user.profilePic = result.secure_url;
     await user.save();
 
+    await Activity.create({
+        user: user.username || user.email,
+        action: "Updated Profile Picture",
+        details: `User ${user.username || user.email} updated their profile picture`,
+      });
+
     res.json({ message: "Profile picture updated", profilePic: result.secure_url });
   } catch (err) {
     console.error("❌ Profile pic upload error:", err);
@@ -1100,6 +1106,19 @@ app.post("/api/bookmarks/:bookId", async (req, res) => {
     user.bookmarks.push(bookId);
     await user.save();
 
+    // ✅ ADD THIS BLOCK TO LOG BOOKMARK ADDITION
+    try {
+      // Find the book title to make the log more informative
+      const book = await Book.findById(bookId).select('title').lean();
+      await Activity.create({
+        user: user.username || user.email,
+        action: "Added Bookmark",
+        details: `Bookmarked "${book?.title || 'Unknown Book'}"`,
+      });
+    } catch (logErr) {
+      console.error("Error logging bookmark addition:", logErr);
+    }
+
     res.json({ message: "Book added to bookmarks" });
   } catch (err) {
     console.error("❌ Add bookmark error:", err);
@@ -1122,6 +1141,20 @@ app.delete("/api/bookmarks/:bookId", async (req, res) => {
       (b) => b.toString() !== req.params.bookId
     );
     await user.save();
+
+    // ✅ ADD THIS BLOCK TO LOG BOOKMARK REMOVAL
+    try {
+      // Find the book title
+      const bookId = req.params.bookId;
+      const book = await Book.findById(bookId).select('title').lean();
+      await Activity.create({
+        user: user.username || user.email,
+        action: "Removed Bookmark",
+        details: `Removed bookmark for "${book?.title || 'Unknown Book'}"`,
+      });
+    } catch (logErr) {
+      console.error("Error logging bookmark removal:", logErr);
+    }
 
     res.json({ message: "Book removed from bookmarks" });
   } catch (err) {
@@ -1314,6 +1347,13 @@ app.patch("/api/books/:bookId/pages/:pageIndex", async (req, res) => {
 
     book.pages[index].text = newText;
     await book.save();
+
+    // ✅ ADD THIS LINE TO LOG PAGE TEXT EDIT
+    await Activity.create({
+        user: decoded.username || decoded.email, // Identify the librarian
+        action: "Edited Book Page Text",
+        details: `Edited Page ${index + 1} of book "${book.title}"`,
+      });
 
     res.json({ message: "✅ Page text updated successfully" });
   } catch (err) {
