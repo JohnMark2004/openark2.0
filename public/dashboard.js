@@ -91,13 +91,15 @@ const conversionTab = document.getElementById("conversionTab");
 const conversionMenu = document.querySelector(".nav-dropdown-menu");
 const conversionLink = document.querySelector("nav a:nth-child(2)");
 const role = localStorage.getItem("role") || "student";
-
+// ✅ Get Reports Tab
+const reportsTab = document.getElementById("reportsTab");
 // ✅ Hide conversion features completely for students
 if (role !== "librarian") {
   if (conversionTab) conversionTab.style.display = "none";
   if (conversionMenu) conversionMenu.classList.add("hidden");
   if (conversionLink) conversionLink.style.display = "none";
   if (conversionSection) conversionSection.classList.add("hidden");
+  if (reportsTab) reportsTab.style.display = "none";
 } else {
   // ✅ Librarian: enable normal dropdown
   if (conversionTab && conversionMenu) {
@@ -133,6 +135,7 @@ document.querySelectorAll(".nav-option").forEach(option => {
   bookDetailsSection.classList.add("hidden");
   bookReaderSection.classList.add("hidden");
   bookmarksSection.classList.add("hidden");
+  reportsSection.classList.add("hidden");
 
   // ✅ Show the container
   const conversionBooks = document.getElementById("conversionBooks");
@@ -309,6 +312,7 @@ if (addPageBtn) {
       bookCreationSection.classList.add("hidden");
       bookReaderSection.classList.add("hidden");
       bookmarksSection.classList.add("hidden");
+      reportsSection.classList.add("hidden");
     });
   }
 
@@ -320,6 +324,7 @@ function openAddBookForm() {
   document.getElementById("bookDetailsSection").classList.add("hidden");
   document.getElementById("bookReaderSection").classList.add("hidden");
   document.getElementById("bookCreationSection").classList.remove("hidden");
+  document.getElementById("reportsSection")?.classList.add("hidden");
 
   // ✅ Remove this line (no such element anymore)
   // document.getElementById("conversionDropdown").value = "";
@@ -444,6 +449,7 @@ document.querySelectorAll(".btn-delete").forEach((btn) => {
       bookCreationSection.classList.add("hidden");
       bookReaderSection.classList.add("hidden");
       bookmarksSection.classList.add("hidden");
+      reportsSection.classList.add("hidden");
       loadBrowseBooks();
     });
   }
@@ -1628,11 +1634,74 @@ document.getElementById("generateOutlineBtn").addEventListener("click", async ()
     });
 
     const data = await res.json();
-    if (res.ok && data.outline) {
+if (res.ok && data.outline) {
       outlineResult.innerHTML = `
         <h4>📋 Suggested PPT Outline</h4>
         <pre>${data.outline}</pre>
+        
+        <div class="outline-actions" style="margin-top: 1rem; display: flex; gap: 0.75rem; justify-content: flex-end;">
+          
+          <button id="copyOutlineBtn" class="btn btn-back" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <img src="img/copy-svgrepo-com.svg" alt="Copy" style="width: 16px; height: 16px;">
+            <span>Copy Text</span>
+          </button>
+
+<button id="downloadOutlinePdfBtn" class="btn" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span>Download PDF</span>
+          </button>
+
+        </div>
       `;
+
+      // --- Add listener for Copy Button ---
+      document.getElementById("copyOutlineBtn").addEventListener("click", () => {
+        try {
+          // Use data.outline to get the raw, unformatted text
+          navigator.clipboard.writeText(data.outline);
+          showPopup("✅ Outline copied to clipboard!", "success");
+        } catch (copyErr) {
+          console.error("Copy failed:", copyErr);
+          showPopup("❌ Failed to copy text", "error");
+        }
+      });
+
+      // --- Add listener for PDF Button ---
+      document.getElementById("downloadOutlinePdfBtn").addEventListener("click", () => {
+        try {
+          // Check if jsPDF library is loaded
+          if (typeof window.jspdf === 'undefined') {
+            showPopup("❌ PDF library (jsPDF) is not loaded.", "error");
+            console.error("jsPDF is not loaded. Make sure the script tag is in dashboard.html");
+            return;
+          }
+          
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+          const bookTitle = window.currentBook?.title || "Book Outline";
+          
+          // Set font style
+          doc.setFont("helvetica", "normal");
+
+          // Add Title
+          doc.setFontSize(18);
+          doc.text(`PPT Outline: ${bookTitle}`, 10, 15);
+
+          // Add Outline Text
+          doc.setFontSize(10);
+          // 'splitTextToSize' handles automatic line wrapping for long text
+          const lines = doc.splitTextToSize(data.outline, 180); // 180mm width
+          doc.text(lines, 10, 30); // Start text at y=30
+          
+          // Save the PDF
+          doc.save(`OpenArk_Outline_${bookTitle.replace(/\s+/g, '_')}.pdf`);
+          showPopup("✅ Downloading PDF...", "success");
+
+        } catch (pdfErr) {
+          console.error("PDF generation failed:", pdfErr);
+          showPopup("❌ Failed to generate PDF", "error");
+        }
+      });
+
     } else {
       showPopup("❌ Failed to generate outline", "error");
     }
@@ -1663,6 +1732,7 @@ if (bookmarksTab) {
     bookDetailsSection.classList.add("hidden");
     bookCreationSection.classList.add("hidden");
     bookReaderSection.classList.add("hidden");
+    reportsSection.classList.add("hidden");
 
     // Show bookmarks
     bookmarksSection.classList.remove("hidden");
@@ -2163,7 +2233,7 @@ if (browseTab) {
     bookCreationSection.classList.add("hidden");
     bookReaderSection.classList.add("hidden");
     bookmarksSection.classList.add("hidden");
-
+    reportsSection.classList.add("hidden");
 
     loadBrowseBooks();   // ✅ load books
   });
@@ -2172,5 +2242,287 @@ if (browseTab) {
   loadBooks();
   loadContinueReading();
   updateCommentFormVisibility();
+
+  // ✅ ADD THIS ENTIRE BLOCK (All Report Logic)
+  // ===================================================================
+  // 📊 LIBRARIAN-ONLY REPORTS TAB LOGIC (Copied from admin.js)
+  // ===================================================================
+  if (role === "librarian" && reportsTab) {
+
+    // --- Element References ---
+    const reportsSection = document.getElementById("reportsSection");
+    const activityTableBody = document.getElementById("activityTableBody");
+    const activitySort = document.getElementById("activitySort");
+    const activityBackBtn = document.getElementById("activityBackBtn");
+    const activityNextBtn = document.getElementById("activityNextBtn");
+    const activityPageInfo = document.getElementById("activityPageInfo");
+    const monthFilter = document.getElementById("monthFilter");
+    const pruneDateInput = document.getElementById("pruneDate");
+    const pruneLogsBtn = document.getElementById("pruneLogsBtn");
+    const pruneLogsModal = document.getElementById("pruneLogsModal");
+    const cancelPruneLogs = document.getElementById("cancelPruneLogs");
+    const confirmPruneLogs = document.getElementById("confirmPruneLogs");
+    const pruneDateConfirm = document.getElementById("pruneDateConfirm");
+    const reportTotalUsers = document.getElementById("reportTotalUsers");
+    const reportTotalBooks = document.getElementById("reportTotalBooks");
+    const reportTopCategory = document.getElementById("reportTopCategory");
+    const exportPNG = document.getElementById("exportPNG");
+    const exportPDF = document.getElementById("exportPDF");
+    const exportExcel = document.getElementById("exportExcel");
+
+    // --- Global State ---
+    let allActivities = [];
+    let sortedActivities = [];
+    let activityCurrentPage = 1;
+    const activityItemsPerPage = 10;
+    let dateToPrune = null;
+
+    // --- Tab Switching ---
+    reportsTab.addEventListener("click", async (e) => {
+      e.preventDefault();
+      
+      // Hide all other sections
+      homeSection.classList.add("hidden");
+      conversionSection.classList.add("hidden");
+      browseSection.classList.add("hidden");
+      bookDetailsSection.classList.add("hidden");
+      bookCreationSection.classList.add("hidden");
+      bookReaderSection.classList.add("hidden");
+      bookmarksSection.classList.add("hidden");
+
+      // Show reports
+      reportsSection.classList.remove("hidden");
+      await loadReports();
+    });
+
+    // --- Load Reports Function ---
+    async function loadReports() {
+      try {
+        const token = sessionStorage.getItem("token");
+        // Summary
+        const reportRes = await fetch(`${API_URL}/api/report-summary`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const report = await reportRes.json();
+        if (reportTotalUsers) reportTotalUsers.textContent = report.totalUsers || 0;
+        if (reportTotalBooks) reportTotalBooks.textContent = report.totalBooks || 0;
+        if (reportTopCategory) reportTopCategory.textContent = report.topCategory || "N/A";
+        
+        // Activities
+        const activityRes = await fetch(`${API_URL}/api/activity`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        allActivities = await activityRes.json();
+        activityCurrentPage = 1;
+        processAndRenderActivities();
+      } catch (err) {
+        console.error("Error loading reports:", err);
+        if (activityTableBody) activityTableBody.innerHTML =
+          "<tr><td colspan='4' style='text-align:center;'>Failed to load report data.</td></tr>";
+      }
+    }
+
+    // --- Process & Render Activities ---
+    function processAndRenderActivities() {
+      const monthValue = monthFilter.value;
+      let filtered = [...allActivities];
+      if (monthValue) {
+        const [year, month] = monthValue.split("-").map(Number);
+        filtered = allActivities.filter(a => {
+          const d = new Date(a.date);
+          return d.getFullYear() === year && d.getMonth() + 1 === month;
+        });
+      }
+      
+      switch (activitySort?.value) {
+        case "oldest":
+          filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+          break;
+        case "user":
+          filtered.sort((a, b) => (a.user || "").localeCompare(b.user || ""));
+          break;
+        case "action":
+          filtered.sort((a, b) => (a.action || "").localeCompare(b.action || ""));
+          break;
+        default: // "newest"
+          filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+      }
+      
+      sortedActivities = filtered;
+      renderActivitiesPage();
+    }
+
+    // --- Update Pagination ---
+    function updatePaginationUI() {
+      const totalItems = sortedActivities.length;
+      const totalPages = Math.ceil(totalItems / activityItemsPerPage);
+
+      if (totalPages <= 1) {
+        if (activityBackBtn) activityBackBtn.style.display = "none";
+        if (activityNextBtn) activityNextBtn.style.display = "none";
+        if (activityPageInfo) activityPageInfo.style.display = "none";
+      } else {
+        if (activityBackBtn) activityBackBtn.style.display = "inline-block";
+        if (activityNextBtn) activityNextBtn.style.display = "inline-block";
+        if (activityPageInfo) activityPageInfo.style.display = "inline-block";
+        
+        activityBackBtn.disabled = (activityCurrentPage === 1);
+        activityNextBtn.disabled = (activityCurrentPage === totalPages);
+        activityPageInfo.textContent = `Page ${activityCurrentPage} of ${totalPages || 1}`;
+      }
+    }
+    
+    // --- Render Page ---
+    function renderActivitiesPage() {
+      if (!Array.isArray(sortedActivities) || sortedActivities.length === 0) {
+        if (activityTableBody) activityTableBody.innerHTML = `<tr><td colspan='4' style='text-align:center;'>No recent activity found.</td></tr>`;
+        updatePaginationUI();
+        return;
+      }
+      
+      const startIndex = (activityCurrentPage - 1) * activityItemsPerPage;
+      const endIndex = startIndex + activityItemsPerPage;
+      const pageItems = sortedActivities.slice(startIndex, endIndex);
+
+      if (activityTableBody) activityTableBody.innerHTML = pageItems
+        .map(
+          (a) => `
+          <tr>
+            <td>${new Date(a.date).toLocaleString()}</td>
+            <td>${a.user || "Unknown"}</td>
+            <td>${a.action || "N/A"}</td>
+            <td>${a.details || ""}</td>
+          </tr>`
+        )
+        .join("");
+        
+      updatePaginationUI();
+    }
+
+    // --- Pagination Listeners ---
+    if (activityNextBtn) activityNextBtn.addEventListener("click", () => {
+      activityCurrentPage++;
+      renderActivitiesPage();
+    });
+
+    if (activityBackBtn) activityBackBtn.addEventListener("click", () => {
+      activityCurrentPage--;
+      renderActivitiesPage();
+    });
+
+    if (activitySort) activitySort.addEventListener("change", () => {
+      activityCurrentPage = 1;
+      processAndRenderActivities();
+    });
+
+    if (monthFilter) monthFilter.addEventListener("change", () => {
+      activityCurrentPage = 1;
+      processAndRenderActivities();
+    });
+
+    // --- Export Listeners ---
+    if (exportPNG) {
+      exportPNG.addEventListener("click", async () => {
+        const table = document.querySelector("#reportsSection table.user-table");
+        if (!table) return showPopup("No activity table found!", "error");
+        const canvas = await html2canvas(table, { scale: 2 });
+        const link = document.createElement("a");
+        link.download = "Recent_Activity.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+
+    if (exportPDF) {
+      exportPDF.addEventListener("click", async () => {
+        const table = document.querySelector("#reportsSection table.user-table");
+        if (!table) return showPopup("No activity table found!", "error");
+        
+        // Use window.jspdf
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "mm", "a4");
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(16);
+        pdf.text("Recent Activity Report", pdf.internal.pageSize.getWidth() / 2, 20, { align: "center" });
+        
+        // Use jsPDF-AutoTable
+        pdf.autoTable({
+          html: table,
+          startY: 30,
+          theme: 'grid',
+          headStyles: { fillColor: [154, 63, 63] } // OpenArk Maroon
+        });
+        
+        pdf.save("Recent_Activity_Report.pdf");
+      });
+    }
+
+    if (exportExcel) {
+      exportExcel.addEventListener("click", () => {
+        const table = document.querySelector("#reportsSection table.user-table");
+        if (!table) return showPopup("No activity table found!", "error");
+        const wb = XLSX.utils.table_to_book(table, { sheet: "Recent Activity" });
+        XLSX.writeFile(wb, "Recent_Activity.xlsx");
+      });
+    }
+
+    // --- Prune Logs Listeners ---
+    if (pruneLogsBtn) pruneLogsBtn.addEventListener("click", () => {
+      const selectedDate = pruneDateInput.value;
+      if (!selectedDate) {
+        showPopup("Please select a date first.", "error");
+        return;
+      }
+      
+      dateToPrune = new Date(selectedDate);
+      if (pruneDateConfirm) pruneDateConfirm.textContent = dateToPrune.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+      if (pruneLogsModal) pruneLogsModal.classList.remove("hidden");
+    });
+
+    if (cancelPruneLogs) cancelPruneLogs.addEventListener("click", () => {
+      if (pruneLogsModal) pruneLogsModal.classList.add("hidden");
+      dateToPrune = null;
+    });
+
+    if (confirmPruneLogs) confirmPruneLogs.addEventListener("click", async () => {
+      if (!dateToPrune) return;
+
+      const token = sessionStorage.getItem("token");
+      confirmPruneLogs.disabled = true;
+      confirmPruneLogs.textContent = "Deleting...";
+
+      try {
+        const res = await fetch(`${API_URL}/api/activity/prune`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ beforeDate: dateToPrune.toISOString() }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to delete logs");
+
+        showPopup(data.message || "Logs deleted successfully!", "success");
+        await loadReports(); // Refresh the activity list
+
+      } catch (err) {
+        console.error("Prune logs error:", err);
+        showPopup(err.message, "error");
+      } finally {
+        if (pruneLogsModal) pruneLogsModal.classList.add("hidden");
+        confirmPruneLogs.disabled = false;
+        confirmPruneLogs.textContent = "Confirm & Delete";
+        dateToPrune = null;
+        if (pruneDateInput) pruneDateInput.value = "";
+      }
+    });
+
+  } // End of if (role === "librarian") block
 
 });

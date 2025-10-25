@@ -559,6 +559,13 @@ app.post("/api/forgot-password", async (req, res) => {
       });
     }
 
+    // ✅ ADD THIS LINE TO LOG THE REQUEST
+    await Activity.create({
+      user: email, // Log the email that made the request
+      action: "Requested Password Reset",
+      details: `Password reset link requested for ${email}`,
+    });
+
     // 5. Send generic success message
     res.json({ message: "If your email is registered, you will receive a password reset link." });
 
@@ -595,6 +602,13 @@ app.post("/api/reset-password", async (req, res) => {
     user.resetPasswordExpires = undefined;
     
     await user.save();
+
+    // ✅ ADD THIS LINE TO LOG THE SUCCESSFUL RESET
+    await Activity.create({
+      user: user.username || user.email, // Log username or email
+      action: "Reset Password",
+      details: `Password was successfully reset for user ${user.username || user.email}`,
+    });
 
     // You could also send a "password changed" confirmation email here
 

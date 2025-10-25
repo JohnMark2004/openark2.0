@@ -28,6 +28,7 @@
 
       <a href="#" id="browseTab">Browse</a>
       <a href="#" id="bookmarksTab">Bookmarks</a>
+      <a href="#" id="reportsTab">Reports</a>
     </nav>
     <div class="right" data-aos="fade-left" data-aos-duration="1200">
 <div class="profile-menu">
@@ -328,6 +329,83 @@
   <div class="book-grid" id="bookmarksGrid"></div>
 </section>
 
+<section id="reportsSection" class="tab-content hidden" data-aos="fade-up">
+  <h2>Reports Dashboard</h2>
+
+  <div class="stats-container">
+    <div class="stat-card">
+      <h3 id="reportTotalUsers">0</h3>
+      <p>Total Users</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="reportTotalBooks">0</h3>
+      <p>Total Books</p>
+    </div>
+    <div class="stat-card">
+      <h3 id="reportTopCategory">-</h3>
+      <p>Top Category</p>
+    </div>
+  </div>
+
+  <div class="activity-controls">
+    <h3>Recent Activity</h3>
+    <div class="activity-options">
+      <div class="sort-section">
+        <label for="activitySort">Sort by:</label>
+        <select id="activitySort">
+          <option value="newest">Newest → Oldest</option>
+          <option value="oldest">Oldest → Newest</option>
+          <option value="user">User Name (A–Z)</option>
+          <option value="action">Action Type (A–Z)</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <label for="monthFilter">Month:</label>
+        <input type="month" id="monthFilter">
+      </div>
+    </div>
+  </div>
+
+  <div class="user-table-container">
+    <table class="user-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>User</th>
+          <th>Action</th>
+          <th>Details</th>
+        </tr>
+      </thead>
+      <tbody id="activityTableBody">
+        <tr><td colspan="4" style="text-align:center;padding:2rem;">No recent activity.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="pagination-controls" style="text-align: center; margin: 1.5rem 0;">
+    <button id="activityBackBtn" class="btn small" disabled>&laquo; Back</button>
+    <span id="activityPageInfo" style="margin: 0 1rem; font-weight: 600; font-size: 0.9rem;">Page 1 of 1</span>
+    <button id="activityNextBtn" class="btn small">Next &raquo;</button>
+  </div>
+  <div class="activity-export">
+    <button id="exportPNG" class="btn small">Download PNG</button>
+    <button id="exportPDF" class="btn small">Download PDF</button>
+    <button id="exportExcel" class="btn small">Download Excel</button>
+  </div>
+
+  <div class="activity-prune" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee;">
+    <h4>Delete Old Logs</h4>
+    <p style="font-size: 0.85rem; opacity: 0.7; margin-bottom: 0.75rem;">
+      Permanently delete all activity logs created <strong>before</strong> the selected date.
+    </p>
+    <div class="filter-section">
+      <label for="pruneDate">Delete logs before:</label>
+      <input type="date" id="pruneDate" style="padding: 0.5rem; border-radius: 6px; border: 1px solid #ccc;">
+      <button id="pruneLogsBtn" class="btn btn-danger small">Delete Logs</button>
+    </div>
+  </div>
+</section>
+
   </main>
 
 <div id="deleteModal" class="modal hidden">
@@ -349,7 +427,16 @@
     </div>
   </div>
 </div>
-
+<div id="pruneLogsModal" class="modal hidden">
+    <div class="modal-content">
+      <h3>Confirm Log Deletion</h3>
+      <p>Are you sure you want to permanently delete all logs before <strong id="pruneDateConfirm"></strong>? This action cannot be undone.</p>
+      <div class="modal-buttons">
+        <button id="cancelPruneLogs" class="btn btn-back">Cancel</button>
+        <button id="confirmPruneLogs" class="btn btn-danger">Confirm & Delete</button>
+      </div>
+    </div>
+  </div>
 
   <div id="popup" class="popup hidden"></div>
 
@@ -360,7 +447,11 @@
 
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   
   </div>
   <script type="module" src="dashboard.js"></script>

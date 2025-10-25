@@ -1918,6 +1918,20 @@ section:not(.hidden) {
   font-family: 'Montserrat', sans-serif;
 }
 
+/* ✅ ADD THIS ENTIRE NEW RULESET */
+.outline-result pre {
+  white-space: pre-wrap;  /* Ensures the text wraps inside the box */
+  word-wrap: break-word; /* Breaks long words if they overflow */
+  font-size: 0.9rem;      /* Makes the font slightly smaller */
+  max-height: 400px;    /* Sets a maximum height */
+  overflow-y: auto;       /* Adds a vertical scrollbar if needed */
+  background-color: #f9f9f9; /* Adds a slight background to the text area */
+  padding: 1rem;          /* Adds some internal padding */
+  border-radius: 6px;     /* Rounds the corners of the text area */
+  border: 1px solid #eee; /* Adds a subtle border */
+}
+
+
 /* Container alignment (same as dashboard forms) */
 #advancedSearchSection {
   width: 100%;
@@ -1965,6 +1979,107 @@ section:not(.hidden) {
 #yearSearch {
   width: 100%; /* Changed from 11% */
   /* Other styles already global */
+}
+
+/* Admin Modal Delete/Cancel Buttons */
+.modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.modal-buttons .btn.cancel {
+  background: linear-gradient(135deg, #ccc 0%, #bbb 100%);
+  color: var(--dark);
+  box-shadow: none;
+}
+.modal-buttons .btn.cancel:hover {
+  background: linear-gradient(135deg, #bbb 0%, #aaa 100%);
+}
+
+.modal-buttons .btn.btn-danger {
+  /* Uses .btn-danger style already in dashboard.css */
+}
+
+/* Activity Controls */
+.activity-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2rem 0 1.5rem;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.activity-controls h3 {
+  color: var(--maroon);
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.activity-options {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.activity-options > div {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.activity-options label {
+  font-weight: 600;
+  color: var(--dark);
+}
+
+.activity-options select,
+.activity-options input[type="month"] {
+  padding: 0.7rem 1.2rem;
+  border-radius: 50px;
+  border: 2px solid var(--maroon);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--maroon);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.activity-options select:hover,
+.activity-options input[type="month"]:hover {
+  background: var(--maroon);
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Pagination & Export */
+.pagination-controls .btn.small,
+.activity-export .btn.small {
+  padding: 0.6rem 1.5rem;
+  font-size: 0.95rem;
+  /* Other styles inherited from .btn */
+}
+
+.activity-export {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+/* Prune section input */
+.activity-prune .filter-section {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
 }
 
 
@@ -2053,4 +2168,154 @@ body {
 .genres-buttons button {
   cursor: pointer;
   user-select: none;
+}
+
+/* ✅ ADD ALL THESE STYLES FOR REPORT SECTION CONSISTENCY */
+
+/* Make section titles look like admin titles */
+#reportsSection h2 {
+  font-size: 2.2rem;
+  color: var(--maroon);
+  margin-bottom: 2rem;
+  font-weight: 700;
+  position: relative;
+  display: inline-block;
+}
+#reportsSection h2::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 60%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--gold) 0%, transparent 100%);
+  border-radius: 2px;
+}
+
+/* Stat Cards (from admin.css) */
+#reportsSection .stats-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+#reportsSection .stat-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  text-align: center;
+  padding: 2rem 1.5rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 2px solid transparent;
+  position: relative;
+  overflow: hidden;
+}
+#reportsSection .stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, var(--maroon) 0%, var(--gold) 100%);
+}
+#reportsSection .stat-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(154, 63, 63, 0.15);
+  border-color: var(--gold);
+}
+#reportsSection .stat-card h3 {
+  font-size: 2.5rem;
+  background: linear-gradient(135deg, var(--maroon) 0%, var(--gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0;
+  font-weight: 700;
+}
+#reportsSection .stat-card p {
+  font-weight: 600;
+  color: var(--dark); /* Use --dark instead of --text-dark */
+  margin-top: 0.5rem;
+  font-size: 1.05rem;
+}
+
+/* Table Styles specific to Reports (from admin.css) */
+#reportsSection .user-table-container {
+  overflow-x: auto;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  margin-top: 1.5rem; /* Add some space above the table */
+}
+#reportsSection .user-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  overflow: hidden;
+}
+#reportsSection .user-table th,
+#reportsSection .user-table td {
+  padding: 1.2rem 1.5rem;
+  text-align: left;
+  border-bottom: 1px solid rgba(154, 63, 63, 0.1);
+}
+#reportsSection .user-table th {
+  background: linear-gradient(135deg, var(--maroon) 0%, #B84545 100%);
+  color: white;
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: 0.05rem;
+}
+#reportsSection .user-table tbody tr {
+  transition: all 0.3s ease;
+}
+#reportsSection .user-table tbody tr:hover {
+  background: rgba(154, 63, 63, 0.05);
+  transform: scale(1.01); /* Subtle hover effect */
+}
+
+/* Prune section styles (from admin.css) */
+#reportsSection .activity-prune {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+#reportsSection .activity-prune h4 {
+  font-size: 1.2rem;
+  color: var(--maroon);
+  margin-bottom: 0.5rem;
+}
+#reportsSection .activity-prune p {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-bottom: 0.75rem;
+  color: var(--dark);
+}
+#reportsSection .activity-prune input[type="date"] {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+/* Ensure delete button style is applied */
+#reportsSection .btn.btn-danger.small {
+  background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
+  color: white;
+  /* Other styles inherited from .btn and .small */
+}
+#reportsSection .btn.btn-danger.small:hover {
+  background: linear-gradient(135deg, #C0392B 0%, #A93226 100%);
+}
+
+/* Ensure modal buttons look right for prune modal */
+#pruneLogsModal .modal-buttons .btn.btn-danger {
+  background: linear-gradient(135deg, #E74C3C 0%, #C0392B 100%);
+  color: white;
+}
+#pruneLogsModal .modal-buttons .btn.btn-danger:hover {
+  background: linear-gradient(135deg, #C0392B 0%, #A93226 100%);
 }
