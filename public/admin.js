@@ -706,6 +706,9 @@ if (monthFilter) {
 // ===============================
   // 🗑️ PRUNE (DELETE) OLD LOGS LOGIC
   // ===============================
+// ===============================
+  // 🗑️ PRUNE (DELETE) OLD LOGS LOGIC
+  // ===============================
   let dateToPrune = null;
 
   // 1. Open the confirmation modal
@@ -716,9 +719,18 @@ if (monthFilter) {
       return;
     }
     
-    dateToPrune = new Date(selectedDate);
-    // Use toLocaleDateString() for a friendly format in the modal
-    pruneDateConfirm.textContent = dateToPrune.toLocaleDateString(undefined, {
+    // -------------------
+    // ▼▼▼ START OF FIX 1.A ▼▼▼
+    // -------------------
+    // OLD: dateToPrune = new Date(selectedDate);
+    dateToPrune = selectedDate; // ✅ Store the string "YYYY-MM-DD"
+
+    // OLD: pruneDateConfirm.textContent = dateToPrune.toLocaleDateString(undefined, {
+    // ✅ Wrap in new Date() just for local display in the modal
+    pruneDateConfirm.textContent = new Date(dateToPrune).toLocaleDateString(undefined, {
+    // -------------------
+    // ▲▲▲ END OF FIX 1.A ▲▲▲
+    // -------------------
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -726,7 +738,7 @@ if (monthFilter) {
     pruneLogsModal.classList.add("show");
   });
 
-  // 2. Cancel deletion
+  // 2. Cancel deletion (This is fine, no change)
   cancelPruneLogs.addEventListener("click", () => {
     pruneLogsModal.classList.remove("show");
     dateToPrune = null;
@@ -747,8 +759,14 @@ if (monthFilter) {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        // Send the date in a standard, server-friendly format
-        body: JSON.stringify({ beforeDate: dateToPrune.toISOString() }),
+        // -------------------
+        // ▼▼▼ START OF FIX 1.B ▼▼▼
+        // -------------------
+        // OLD: body: JSON.stringify({ beforeDate: dateToPrune.toISOString() }),
+        body: JSON.stringify({ beforeDate: dateToPrune }), // ✅ Send the raw string
+        // -------------------
+        // ▲▲▲ END OF FIX 1.B ▲▲▲
+        // -------------------
       });
 
       const data = await res.json();

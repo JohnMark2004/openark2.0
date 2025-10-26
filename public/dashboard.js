@@ -2466,7 +2466,7 @@ if (browseTab) {
       });
     }
 
-    // --- Prune Logs Listeners ---
+// --- Prune Logs Listeners ---
     if (pruneLogsBtn) pruneLogsBtn.addEventListener("click", () => {
       const selectedDate = pruneDateInput.value;
       if (!selectedDate) {
@@ -2474,19 +2474,28 @@ if (browseTab) {
         return;
       }
       
-      dateToPrune = new Date(selectedDate);
-      if (pruneDateConfirm) pruneDateConfirm.textContent = dateToPrune.toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      });
+      // -------------------
+      // ▼▼▼ START OF FIX 2.A ▼▼▼
+      // -------------------
+      // OLD: dateToPrune = new Date(selectedDate);
+      dateToPrune = selectedDate; // ✅ Store the string "YYYY-MM-DD"
+      
+      if (pruneDateConfirm) {
+        // OLD: pruneDateConfirm.textContent = dateToPrune.toLocaleDateString(undefined, {
+        // ✅ Wrap in new Date() just for local display
+        pruneDateConfirm.textContent = new Date(dateToPrune).toLocaleDateString(undefined, {
+      // -------------------
+      // ▲▲▲ END OF FIX 2.A ▲▲▲
+      // -------------------
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        });
+      }
       if (pruneLogsModal) pruneLogsModal.classList.remove("hidden");
     });
 
-    if (cancelPruneLogs) cancelPruneLogs.addEventListener("click", () => {
-      if (pruneLogsModal) pruneLogsModal.classList.add("hidden");
-      dateToPrune = null;
-    });
+    if (cancelPruneLogs) { /* ... no change ... */ }
 
     if (confirmPruneLogs) confirmPruneLogs.addEventListener("click", async () => {
       if (!dateToPrune) return;
@@ -2502,7 +2511,14 @@ if (browseTab) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ beforeDate: dateToPrune.toISOString() }),
+          // -------------------
+          // ▼▼▼ START OF FIX 2.B ▼▼▼
+          // -------------------
+          // OLD: body: JSON.stringify({ beforeDate: dateToPrune.toISOString() }),
+          body: JSON.stringify({ beforeDate: dateToPrune }), // ✅ Send the raw string
+          // -------------------
+          // ▲▲▲ END OF FIX 2.B ▲▲▲
+          // -------------------
         });
 
         const data = await res.json();
