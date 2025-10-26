@@ -1560,12 +1560,12 @@ app.get("/api/activity", async (req, res) => {
 // ===============================
 app.delete("/api/activity/prune", authenticateMiddleware, async (req, res) => {
   try {
-    // 1. Check for Admin role
-    if (req.user.role !== "admin") {
-      return res.status(403).json({ error: "Forbidden: Admins only" });
+    // 1. Check for Admin role (no change)
+    if (req.user.role !== "admin" && req.user.role !== "librarian") { // ✅ Also allow librarians
+      return res.status(403).json({ error: "Forbidden: Admins or Librarians only" });
     }
 
-    // 2. Get the date from the request body
+    // 2. Get the date from the request body (no change)
     const { beforeDate } = req.body;
     if (!beforeDate) {
       return res.status(400).json({ error: "No 'beforeDate' specified" });
@@ -1575,6 +1575,17 @@ app.delete("/api/activity/prune", authenticateMiddleware, async (req, res) => {
     if (isNaN(targetDate.getTime())) {
       return res.status(400).json({ error: "Invalid date format" });
     }
+    
+    // -------------------
+    // ▼▼▼ START OF FIX ▼▼▼
+    // -------------------
+    // ✅ Advance the date by one day.
+    // This makes the query delete everything up to the END of the selected day.
+    // e.g., if you select Oct 25, this becomes Oct 26 at 00:00:00.
+    targetDate.setDate(targetDate.getDate() + 1);
+    // -------------------
+    // ▲▲▲ END OF FIX ▲▲▲
+    // -------------------
 
     // 3. Perform the deletion
     // { date: { $lt: targetDate } } means "where the date is LESS THAN the targetDate"
