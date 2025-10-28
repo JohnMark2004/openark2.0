@@ -1935,7 +1935,6 @@ section:not(.hidden) {
 /* Container alignment (same as dashboard forms) */
 #advancedSearchSection {
   width: 100%;
-  padding-right: 10px;
 }
 
 /* Match h4 alignment to dashboard form labels */
@@ -1966,7 +1965,7 @@ section:not(.hidden) {
 
 /* When opened */
 #advancedSearchSection.open {
-  max-height: 500px;
+  max-height: 600px;
   /* adjust if content gets taller */
 }
 
@@ -2109,7 +2108,7 @@ section:not(.hidden) {
 
 /* When opened */
 #advancedSearchSection.open {
-  max-height: 500px;
+  max-height: 600px;
   /* adjust if content gets taller */
 }
 

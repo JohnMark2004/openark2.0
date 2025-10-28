@@ -513,8 +513,8 @@ if (browseGenreContainer) {
             // 2. Add 'active' only to the clicked button
             clickedBtn.classList.add("active");
 
-            // 3. Trigger filtering for the browse section
-            filterAndRenderBrowseBooks(); // Use the correct filter function
+            // 3. Trigger filtering
+            gatherAllFilterValuesAndRun(); // ✅ FIXED
 
             // 4. Update "Showing: ..." title
             const genre = clickedBtn.dataset.genre;
@@ -988,15 +988,10 @@ div.innerHTML = `
   hideLoader("loadingSpinnerBrowse");
 }
 
-  // Browse filters events
+// Browse filters events
 const browseSearch = document.getElementById("browseSearch");
 if (browseSearch) {
-  browseSearch.addEventListener("input", () => {
-    const search = browseSearch.value.trim();
-    // remove or comment this if browseSort no longer exists in HTML
-    const genre = document.querySelector(".genre-btn.active")?.dataset.genre || "all";
-    loadBrowseBooks({ search, genre });
-  });
+  browseSearch.addEventListener("input", gatherAllFilterValuesAndRun);
 }
 
 
@@ -1196,32 +1191,6 @@ showBookDetails = async function (book, fromSection) {
     }
   };
 };
-
-
-
-const genreButtons = document.querySelectorAll(".genre-btn");
-genreButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    // Remove previous active
-    document.querySelector(".genre-btn.active")?.classList.remove("active");
-    btn.classList.add("active");
-
-    const genre = btn.dataset.genre;
-
-    // ✅ Update "Showing: ..."
-    const genreTitle = document.getElementById("currentGenreTitle");
-    const label = genre === "all" ? "All" : genre;
-genreTitle.textContent = `Showing: ${label}`;
-
-
-    // ✅ Trigger filtering
-    const keyword = keywordSearch?.value.trim().toLowerCase() || "";
-    const author = authorSearch?.value.trim().toLowerCase() || "";
-    filterBooks({ keyword, author, genre });
-  });
-});
-
-
 
   // --- Book Creation Wizard ---
   const bookMetaForm = document.getElementById("bookMetaForm");
@@ -2112,43 +2081,26 @@ const publisherSearch = document.getElementById("publisherSearch");
 const yearSearch = document.getElementById("yearSearch");
 
 [keywordSearch, authorSearch, publisherSearch, yearSearch].forEach(input => {
-  if (!input) return;
-  input.addEventListener("input", () => {
-    const keyword = keywordSearch?.value.trim().toLowerCase() || "";
-    const author = authorSearch?.value.trim().toLowerCase() || "";
-    const publisher = publisherSearch?.value.trim().toLowerCase() || "";
-    const year = yearSearch?.value.trim() || "";
-    const genre =
-      document.querySelector(".genre-btn.active")?.dataset.genre || "all";
-
-    filterBooks({ keyword, author, publisher, year, genre });
-  });
+  if (input) {
+    input.addEventListener("input", gatherAllFilterValuesAndRun);
+  }
 });
 
-
-if (keywordSearch) {
-keywordSearch.addEventListener("input", () => {
-  const keyword = keywordSearch.value.trim().toLowerCase();
+// ✅ NEW: Central function to gather all filter values
+function gatherAllFilterValuesAndRun() {
+  const title = browseSearch?.value.trim().toLowerCase() || "";
+  const keyword = keywordSearch?.value.trim().toLowerCase() || "";
   const author = authorSearch?.value.trim().toLowerCase() || "";
+  const publisher = publisherSearch?.value.trim().toLowerCase() || "";
+  const year = yearSearch?.value.trim() || "";
   const genre =
-    document.querySelector(".genre-btn.active")?.dataset.genre || "all";
+    document.querySelector("#genreFilters .genre-btn.active")?.dataset.genre || "all";
 
-  filterBooks({ keyword, author, genre });
-});
-}
-
-if (authorSearch) {
-  authorSearch.addEventListener("input", () => {
-    const keyword = keywordSearch?.value.trim().toLowerCase() || "";
-    const author = authorSearch.value.trim().toLowerCase();
-    const genre =
-      document.querySelector(".genre-btn.active")?.dataset.genre || "all";
-
-    filterBooks({ keyword, author, genre });
-  });
+  filterBooks({ title, keyword, author, publisher, year, genre });
 }
 
 function filterBooks({
+  title = "",
   keyword = "",
   author = "",
   publisher = "",
@@ -2158,6 +2110,10 @@ function filterBooks({
   if (!Array.isArray(allBooks)) return;
 
   let filtered = allBooks.filter(book => {
+    const matchesTitle = title
+      ? (book.title || "").toLowerCase().includes(title)
+      : true;
+
     const matchesKeyword = keyword
       ? (book.description || "").toLowerCase().includes(keyword)
       : true;
@@ -2171,16 +2127,17 @@ function filterBooks({
       : true;
 
     const matchesYear = year
-      ? String(book.year) === String(year)
+      ? String(book.year).toLowerCase().includes(year.toLowerCase())
       : true;
 
     const matchesGenre =
       genre === "all" ||
       (Array.isArray(book.category)
-        ? book.category.includes(genre)
+        ? book.category.some(c => c.toLowerCase() === genre.toLowerCase())
         : (book.category || "").toLowerCase() === genre.toLowerCase());
 
     return (
+      matchesTitle &&
       matchesKeyword &&
       matchesAuthor &&
       matchesPublisher &&
