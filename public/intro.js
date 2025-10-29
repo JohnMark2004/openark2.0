@@ -20,7 +20,7 @@ const API_URL =
 
 // --- Typewriter Effect ---
 const input = document.getElementById("searchInput");
-const phrases = ["Filipiniana","General Education","Accountancy","Computer Studies","Criminology","Education","Engineering","Commerce","Maritime","Mass Communication","Political Science", "Psychology", "Aviation", "Fiction", "Reference", "Periodical"];
+const phrases = ["Filipiniana","General Education","Accountancy","Computer Studies","Criminology","Education","Engineering","Commerce","Maritime","Mass Communication","Political Science", "Psychology", "Aviation", "Fiction", "Reference", "Periodical", "Senior High School"];
 let phraseIndex = 0, charIndex = 0, deleting = false;
 
 function typeAnimation() {
