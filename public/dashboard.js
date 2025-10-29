@@ -496,6 +496,25 @@ if (email?.includes("librarian")) {
   // --- Load Books for Home ---
   const featuredBookContainer = document.getElementById("featuredBook");
 
+  // --- Book Creation: Category Button Single-Select ---
+const categoriesContainer = document.getElementById("categoriesButtons");
+
+if (categoriesContainer) {
+  categoriesContainer.addEventListener("click", (event) => {
+    // Ensure we clicked a button
+    const clickedBtn = event.target.closest(".genre-btn");
+    if (!clickedBtn) return; // Didn't click a button
+
+    // 1. Remove 'active' from all other buttons in this container
+    categoriesContainer.querySelectorAll(".genre-btn").forEach(button => {
+        button.classList.remove("active");
+    });
+
+    // 2. Add 'active' class ONLY to the clicked button
+    clickedBtn.classList.add("active");
+  });
+}
+
 
 // ✅ Genre Filter Handler (Single Select for Browse)
 const browseGenreContainer = document.getElementById("genreFilters");
