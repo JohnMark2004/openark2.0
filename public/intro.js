@@ -344,36 +344,20 @@ async function loadIntroBooks() {
     // Update count
     if (countEl) countEl.textContent = `Available Books: ${books.length}`;
 
-    // Continuous loop animation (if track has content)
+// Continuous loop animation (if track has content)
     if (books.length > 0) {
-        let position = 0;
-        const speed = 0.5; // Slower speed might look better
-
         // Clone track content for seamless loop
+        const originalHTML = track.innerHTML; // Store the original books
         const trackWidth = track.scrollWidth;
-        const clones = Math.ceil(window.innerWidth / trackWidth) + 1; // Calculate needed clones
+        const clones = Math.ceil(window.innerWidth / trackWidth) + 1; // Calculate clones needed
+        
         for (let i = 0; i < clones; i++) {
-            track.innerHTML += track.innerHTML; // Duplicate content
+            track.innerHTML += originalHTML; // Append only the *original* set
         }
 
-
-        function animate() {
-            position -= speed;
-            // Reset position when the first set of original items is completely off-screen
-            if (Math.abs(position) >= trackWidth) {
-                position = 0;
-            }
-            track.style.transform = `translateX(${position}px)`;
-            requestAnimationFrame(animate);
-        }
-
+        // Apply styles needed for the CSS animation
         track.style.display = "flex";
         track.style.gap = "20px";
-        track.style.transition = "none"; // Ensure smooth animation without CSS transitions interfering
-        track.style.willChange = "transform";
-        // track.style.overflow = "hidden"; // This should be handled by the CSS wrapper
-
-        requestAnimationFrame(animate);
     }
 
   } catch (err) {

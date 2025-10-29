@@ -301,10 +301,10 @@
       -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
     }
 
-    .book-track {
-      display: flex;
-      animation: scrollBooks 30s linear infinite;
-    }
+.book-track {
+  display: flex;
+  animation: scrollBooks 90s linear infinite;
+}
 
     .book {
       width: 120px;
