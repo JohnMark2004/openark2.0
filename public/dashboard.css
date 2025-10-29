@@ -1863,6 +1863,7 @@ section:not(.hidden) {
 
 .nav-option:hover {
   background: var(--light-brown);
+    border-radius: 8px;
 }
 
 /* ===============================
