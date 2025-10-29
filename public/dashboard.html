@@ -132,10 +132,22 @@
           <div class="tab active" data-tab="about">About</div>
         </div>
 
-        <div class="book-read-content">
+<div class="book-read-content">
           <div id="content-about">
-            <h3>Description</h3>
+            <h3 style="display: flex; justify-content: space-between; align-items: center;">
+              <span>Description</span>
+              <button id="editDescriptionBtn" class="btn small hidden">Edit</button>
+            </h3>
             <p id="detailDescription">No description available.</p>
+
+            <div id="editDescriptionForm" class="hidden" style="margin-top: 1rem;">
+              <textarea id="editDescriptionTextarea" style="width: 100%; min-height: 150px; padding: 0.75rem; border-radius: 8px; border: 1px solid #ccc; font-family: 'Montserrat', sans-serif;"></textarea>
+              <div class="form-actions" style="justify-content: flex-end; margin-top: 0.5rem;">
+                <button id="cancelEditDescriptionBtn" class="btn btn-back small">Cancel</button>
+                <button id="saveDescriptionBtn" class="btn small">Save</button>
+              </div>
+            </div>
+            
             <p id="disclaimer" class="disclaimer"></p>
           </div>
           <div id="commentsWrapper" class="comments-wrapper" style="margin-top:1rem;">
@@ -213,8 +225,8 @@
 </div>
 
           </p>
-<p><label>Description: <span style="color:red">*</span><br>
-  <textarea name="description" required></textarea>
+<p><label>Description:<br>
+  <textarea name="description"></textarea>
 </label></p>
 <p>
   <label>Cover Image: <span style="color:red">*</span><br>

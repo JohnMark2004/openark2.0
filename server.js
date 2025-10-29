@@ -458,6 +458,45 @@ app.delete("/api/comments/:commentId", async (req, res) => {
 });
 
 // ===============================
+// ✅ EDIT BOOK DESCRIPTION (Librarian only)
+// ===============================
+app.patch("/api/books/:bookId/description", authenticateMiddleware, async (req, res) => {
+    try {
+        // 1. Authorization: Only librarians can edit
+        if (req.user.role !== "librarian") {
+            return res.status(403).json({ error: "Forbidden: Librarians only" });
+        }
+
+        const { bookId } = req.params;
+        const { newDescription } = req.body;
+
+        // 2. Find the book in the database
+        const book = await Book.findById(bookId);
+        if (!book) {
+            return res.status(404).json({ error: "Book not found" });
+        }
+
+        // 3. Update the description and save it
+        book.description = newDescription.trim();
+        await book.save();
+
+        // 4. Log this important action
+        await Activity.create({
+            user: "Librarian", 
+            action: "Edited Book Description",
+            details: `Updated description for book "${book.title}"`,
+        });
+
+        // 5. Send a success response
+        res.json({ message: "Description updated successfully", book });
+
+    } catch (err) {
+        console.error("❌ Update description failed:", err);
+        res.status(500).json({ error: "Failed to update description" });
+    }
+});
+
+// ===============================
 // Get Single Book by ID
 // ===============================
 app.get("/api/books/:id", async (req, res) => {

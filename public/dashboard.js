@@ -1142,6 +1142,85 @@ function enableAddMorePages(book) {
 }
 
 // ===============================
+// ✅ LIBRARIAN: IN-LINE DESCRIPTION EDITOR
+// ===============================
+function setupDescriptionEditor(book) {
+    const role = localStorage.getItem("role");
+    const editBtn = document.getElementById("editDescriptionBtn");
+    const descriptionP = document.getElementById("detailDescription");
+    const editForm = document.getElementById("editDescriptionForm");
+    const textarea = document.getElementById("editDescriptionTextarea");
+    const saveBtn = document.getElementById("saveDescriptionBtn");
+    const cancelBtn = document.getElementById("cancelEditDescriptionBtn");
+
+    // Hide everything by default, show based on role
+    editForm.classList.add('hidden');
+    descriptionP.classList.remove('hidden');
+
+    if (role === 'librarian') {
+        editBtn.classList.remove('hidden');
+    } else {
+        editBtn.classList.add('hidden');
+        return; // Stop here if not a librarian
+    }
+
+    // --- Event Listeners ---
+
+    // EDIT button: Show the form
+    editBtn.onclick = () => {
+        textarea.value = descriptionP.textContent; // Pre-fill with current text
+        descriptionP.classList.add('hidden');
+        editForm.classList.remove('hidden');
+        editBtn.classList.add('hidden');
+    };
+
+    // CANCEL button: Hide form and restore text view
+    cancelBtn.onclick = () => {
+        descriptionP.classList.remove('hidden');
+        editForm.classList.add('hidden');
+        editBtn.classList.remove('hidden');
+    };
+
+    // SAVE button: Send update to server
+    saveBtn.onclick = async () => {
+        const newDescription = textarea.value;
+        const token = sessionStorage.getItem("token");
+        saveBtn.disabled = true; // Prevent double-clicks
+
+        try {
+            const res = await fetch(`${API_URL}/api/books/${book._id}/description`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ newDescription })
+            });
+
+            const data = await res.json();
+            if (!res.ok) {
+                throw new Error(data.error || 'Failed to save description');
+            }
+
+            showPopup('Description updated successfully!', 'success');
+            descriptionP.textContent = newDescription; // Update UI text
+            window.currentBook.description = newDescription; // Update temp state
+
+            // Restore view
+            descriptionP.classList.remove('hidden');
+            editForm.classList.add('hidden');
+            editBtn.classList.remove('hidden');
+
+        } catch (err) {
+            console.error("Save description error:", err);
+            showPopup(err.message, 'error');
+        } finally {
+            saveBtn.disabled = false;
+        }
+    };
+}
+
+// ===============================
 // BOOKMARK TOGGLE LOGIC
 // ===============================
 
@@ -1167,6 +1246,7 @@ showBookDetails = async function (book, fromSection) {
   // call original
   originalShowBookDetails(book, fromSection);
   enableAddMorePages(book);
+  setupDescriptionEditor(book);
 
   const token = sessionStorage.getItem("token");
   const addBookmarkBtn = document.querySelector(".btn-add-bookmark");
@@ -1232,7 +1312,7 @@ if (nextToStep2) {
       document.querySelectorAll("#categoriesButtons button.active")
     ).map(btn => btn.dataset.genre);
 
-    if (!title || !author || !publisher || !year || !description || categories.length === 0) {
+    if (!title || !author || !publisher || !year || categories.length === 0) {
       showPopup("⚠️ Please fill out all required fields", "error");
       return;
     }
