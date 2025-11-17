@@ -434,6 +434,78 @@ document.querySelectorAll(".btn-archive").forEach((btn) => {
   }
 }
 
+// --- ✅ NEW: Archive Modal Logic ---
+if (cancelArchiveBtn) {
+  cancelArchiveBtn.addEventListener("click", () => {
+    archiveModal.classList.add("hidden");
+    targetArchiveBookId = null;
+  });
+}
+
+if (confirmArchiveBtn) {
+  confirmArchiveBtn.addEventListener("click", async () => {
+    if (!targetArchiveBookId) return;
+
+    const token = sessionStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_URL}/api/books/${targetArchiveBookId}/archive`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showPopup(`Book archived successfully`, "success");
+        await loadBooksForDeletion(); // Refresh the list
+      } else {
+        showPopup(`❌ ${data.error || "Failed to archive"}`, "error");
+      }
+    } catch (err) {
+      console.error("Archive error:", err);
+      showPopup("❌ Failed to archive book", "error");
+    } finally {
+      archiveModal.classList.add("hidden");
+      targetArchiveBookId = null;
+    }
+  });
+}
+
+// --- ✅ NEW: Permanent Delete Modal Logic ---
+if (cancelPermanentDeleteBtn) {
+  cancelPermanentDeleteBtn.addEventListener("click", () => {
+    bookPermanentDeleteModal.classList.add("hidden");
+    targetPermanentDeleteBookId = null;
+  });
+}
+
+if (confirmPermanentDeleteBtn) {
+  confirmPermanentDeleteBtn.addEventListener("click", async () => {
+    if (!targetPermanentDeleteBookId) return;
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/books/${targetPermanentDeleteBookId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) {
+         const data = await res.json();
+         throw new Error(data.error || "Failed to delete");
+      }
+
+      showPopup("Book permanently deleted", "success");
+      await loadArchivedBooks(); // Refresh the archive list
+
+    } catch (err) {
+      console.error("❌ Permanent delete failed:", err);
+      showPopup(`❌ ${err.message}`, "error");
+    } finally {
+      bookPermanentDeleteModal.classList.add("hidden");
+      targetPermanentDeleteBookId = null;
+    }
+  });
+}
+
   if (browseTab) {
     browseTab.addEventListener("click", (e) => {
       e.preventDefault();

@@ -58,6 +58,11 @@ const getStartedBtn = document.querySelector(".btn-login");
 const loginModal = document.getElementById("loginModal");
 const signupModal = document.getElementById("signupModal");
 
+// ✅ ADD THESE
+const otpModal = document.getElementById("otpModal");
+const otpBackToLoginLink = document.getElementById("otpBackToLoginLink");
+let userEmailForVerification = ""; // To store email between steps
+
 const forgotPasswordModal = document.getElementById("forgotPasswordModal");
 const forgotPasswordLink = document.getElementById("forgotPasswordLink");
 const backToLoginLink = document.getElementById("backToLoginLink");
@@ -114,8 +119,17 @@ if (loginModal && signupModal) {
         });
     }
 
+    // ✅ ADD THIS
+    if (otpBackToLoginLink) {
+        otpBackToLoginLink.addEventListener("click", (e) => {
+            e.preventDefault();
+            closeModal(otpModal);
+            openModal(loginModal);
+        });
+    }
+
     // Close modal when clicking outside container
-    [loginModal, signupModal, forgotPasswordModal].forEach((modal) => {
+    [loginModal, signupModal, forgotPasswordModal, otpModal].forEach((modal) =>{
         if (modal) {
             modal.addEventListener("click", (e) => {
                 const container = modal.querySelector(".login-container, .signup-container");
@@ -145,6 +159,12 @@ if (signupForm) {
         const confirmPassword = e.target[3].value;
         const collegeYear = e.target[4].value;
 
+// ✅ NEW: Student Email validation
+        const requiredDomain = "@perpetual.edu.ph";
+        if (!email.toLowerCase().endsWith(requiredDomain)) {
+            showPopup("❌ Signups are only for @perpetual.edu.ph student emails", "error");
+            return;
+        }
         // Password validation
         const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
 
@@ -174,25 +194,18 @@ if (signupForm) {
             const data = await res.json();
             console.log("Signup response:", data);
 
-            if (res.ok) {
-                // Success: show pending approval toasts
-                showPopup("Signup successful!", "success");
+if (res.ok) {
+                // ✅ NEW: Show OTP message
+                showPopup(data.message || "Signup successful! Check your email.", "success");
 
-                setTimeout(() => {
-                    showPopup("Your account request is pending admin approval.", "info");
-                }, 1500); // Keep delay for info popup
+                // Store email for verification step
+                userEmailForVerification = email; 
+                
+                // Update and open OTP modal
+                document.getElementById("otpEmailDisplay").textContent = email;
+                closeModal(signupModal);
+                openModal(otpModal);
 
-                // Save info (not logged in yet)
-                localStorage.setItem("username", username);
-                localStorage.setItem("email", email);
-                localStorage.setItem("collegeYear", collegeYear);
-                localStorage.setItem("role", "student"); // Default role
-
-                // Switch modals after short delay
-                setTimeout(() => {
-                    closeModal(signupModal);
-                    openModal(loginModal);
-                }, 3500);
             } else {
                 // Server returned an error
                 showPopup(data.error || "Signup failed", "error");
@@ -210,8 +223,16 @@ const loginForm = document.querySelector(".login-form");
 if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const email = e.target[0].value;
+        const email = e.target[0].value.toLowerCase();
         const password = e.target[1].value;
+
+// ✅ NEW: Allow both student and staff domains
+        const studentDomain = "@perpetual.edu.ph";
+        const staffDomain = "@gmail.com";
+        if (!email.endsWith(studentDomain) && !email.endsWith(staffDomain)) {
+            showPopup("❌ Please use a @perpetual.edu.ph or @gmail.com email", "error");
+            return;
+        }
 
         try {
             const res = await fetch(`${API_URL}/api/login`, {
@@ -259,13 +280,71 @@ if (loginForm) {
     });
 }
 
+// ✅ ADD THIS ENTIRE NEW BLOCK
+// OTP VERIFICATION FORM HANDLER
+const otpForm = document.querySelector(".otp-form");
+if (otpForm) {
+    otpForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const otp = document.getElementById("otpInput").value;
+        const btn = document.getElementById("verifyOtpBtn");
+        
+        if (!userEmailForVerification) {
+            showPopup("Error: Email not found. Please sign up again.", "error");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Verifying...";
+
+        try {
+            const res = await fetch(`${API_URL}/api/signup/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: userEmailForVerification, otp }),
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                showPopup(data.message, "success");
+                userEmailForVerification = ""; // Clear temp email
+                
+                // Switch to login modal
+                setTimeout(() => {
+                    closeModal(otpModal);
+                    openModal(loginModal);
+                }, 2000);
+            } else {
+                showPopup(data.error || "Verification failed", "error");
+            }
+
+        } catch (err) {
+            console.error("OTP verification error:", err);
+            showPopup("An error occurred. Please try again.", "error");
+        } finally {
+            btn.disabled = false;
+            btn.textContent = "Verify Account";
+        }
+    });
+}
+
 // ✅ ADD THIS ENTIRE BLOCK
 // FORGOT PASSWORD FORM HANDLER
 const forgotPasswordForm = document.querySelector(".forgot-password-form");
 if (forgotPasswordForm) {
-    forgotPasswordForm.addEventListener("submit", async (e) => {
+forgotPasswordForm.addEventListener("submit", async (e) => {
         e.preventDefault();
-        const email = document.getElementById("forgotEmail").value;
+        const email = document.getElementById("forgotEmail").value.toLowerCase(); // ✅ Make lowercase
+
+        // ✅ NEW: Allow both student and staff domains
+        const studentDomain = "@perpetual.edu.ph";
+        const staffDomain = "@gmail.com";
+        if (!email.endsWith(studentDomain) && !email.endsWith(staffDomain)) {
+            showPopup("❌ Please use a @perpetual.edu.ph or @gmail.com email", "error");
+            return;
+        }
+        
         const btn = document.getElementById("sendResetLinkBtn");
         btn.disabled = true;
         btn.textContent = "Sending...";

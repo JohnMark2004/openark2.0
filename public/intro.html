@@ -207,6 +207,27 @@
     </div>
   </div>
 
+  <div id="otpModal" class="modal hidden">
+    <div class="login-container">
+      <form class="otp-form">
+        <div class="login-header">
+          <img src="img/logo.png" alt="Logo" class="login-logo">
+          <h2>Check Your Email</h2>
+        </div>
+        <p class="form-description" id="otpMessage">
+          We've sent a 6-digit verification code to
+          <strong id="otpEmailDisplay">your.email@perpetual.edu.ph</strong>.
+          Please enter it below.
+        </p>
+        <input type="text" id="otpInput" placeholder="6-Digit Code" required maxlength="6" style="text-align: center; font-size: 1.2rem; letter-spacing: 0.5rem;">
+        <button class="button" type="submit" id="verifyOtpBtn">Verify Account</button>
+        <p class="login-link">
+          <a href="#" id="otpBackToLoginLink">Back to Log In</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
   <div id="popup" class="popup hidden"></div>
 
   <script src="https://unpkg.com/aos@next/dist/aos.js"></script>

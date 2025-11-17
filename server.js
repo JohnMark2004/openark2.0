@@ -16,7 +16,7 @@ const http = require("http");
 const { Server } = require("socket.io");
 const gTTS = require('gtts');
 const crypto = require('crypto');
-const { sendPendingEmail, sendApprovalEmail, sendPasswordResetEmail } = require("./emailService");
+const { sendPendingEmail, sendApprovalEmail, sendPasswordResetEmail, sendOtpEmail } = require("./emailService");
 // ✅ Gemini import MUST come before it's used
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -157,6 +157,9 @@ const userSchema = new mongoose.Schema({
   ],
   profilePic: { type: String, default: "assets/default-pfp.jpg" },
   active: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: false }, // ✅ ADD
+  otp: String,                                  // ✅ ADD
+  otpExpires: Date,                             // ✅ ADD
   resetPasswordToken: String,
   resetPasswordExpires: Date
 
@@ -599,12 +602,17 @@ app.post("/api/signup", async (req, res) => {
       collegeYear,
       role: "student",
     });
-        await newUser.save();
+// ✅ NEW: Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+    newUser.otp = otp;
+    newUser.otpExpires = Date.now() + 600000; // 10 minutes
+    
+    await newUser.save();
 
-                // ✅ *** ADD THIS BLOCK: Send Pending Email ***
-      sendPendingEmail(newUser.email, newUser.username).catch(err => {
-            console.error(`Failed to send pending email to ${newUser.email} via Gmail API:`, err);
-        });
+    // ✅ NEW: Send OTP Email
+    sendOtpEmail(newUser.email, newUser.username, otp).catch(err => {
+          console.error(`Failed to send OTP email to ${newUser.email} via Gmail API:`, err);
+      });
 
     // ✅ Log activity AFTER saving
     await Activity.create({
@@ -614,10 +622,47 @@ app.post("/api/signup", async (req, res) => {
     });
     await updateReport();
 // ✅ *** MODIFY THIS LINE: Update success message ***
-    res.json({ message: "Signup successful! Your account is pending approval." });
+    res.json({ message: "Signup successful! Please check your email for a verification code." });
   } catch (err) {
     console.error("❌ Signup error:", err);
     res.status(500).json({ error: "Signup failed" });
+  }
+});
+
+// ===============================
+// ✅ NEW: VERIFY OTP
+// ===============================
+app.post("/api/signup/verify", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      otp: otp,
+      otpExpires: { $gt: Date.now() } // Check if OTP is not expired
+    });
+
+    if (!user) {
+      return res.status(400).json({ error: "Invalid or expired OTP. Please try signing up again." });
+    }
+
+    // ✅ SUCCESS: Activate and verify the user
+    user.isVerified = true;
+    user.active = true; // <-- This removes the need for admin approval
+    user.otp = undefined;
+    user.otpExpires = undefined;
+    await user.save();
+
+    // ✅ Send the "Welcome" email (formerly 'approval' email)
+    sendApprovalEmail(user.email, user.username).catch(err => {
+      console.error(`Failed to send welcome email to ${user.email}:`, err);
+    });
+
+    res.json({ message: "Verification successful! You can now log in." });
+
+  } catch (err) {
+    console.error("❌ OTP Verification error:", err);
+    res.status(500).json({ error: "Verification failed. Please try again." });
   }
 });
 
@@ -828,6 +873,12 @@ if (!user) return res.status(401).json({ error: "Invalid credentials" });
 const validPass = await bcrypt.compare(password, user.password);
 if (!validPass) return res.status(401).json({ error: "Invalid credentials" });
 
+// ✅ NEW: Check verification status for students
+if (user.role === 'student' && !user.isVerified) {
+  return res.status(403).json({
+    error: "Your email is not verified. Please check your email for the OTP or sign up again.",
+  });
+}
 // 🔒 Check approval status
 if (!user.active) {
   return res.status(403).json({

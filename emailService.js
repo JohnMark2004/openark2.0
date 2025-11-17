@@ -498,5 +498,105 @@ async function sendPasswordResetEmail(email, name = "", resetLink) {
   return success;
 }
 
-module.exports = { sendPendingEmail, sendApprovalEmail, sendPasswordResetEmail };
+// ✅ ADD THIS ENTIRE NEW FUNCTION
+// --- sendOtpEmail function (using Gmail API) ---
+async function sendOtpEmail(email, name = "", otp) {
+  const greeting = name ? `Hi ${name},` : "Hi there,";
+  const subject = "Your OpenArk Verification Code";
+  const plainText = `${greeting}\n\nYour verification code for OpenArk is: ${otp}\n\nThis code will expire in 10 minutes.\n\nBest regards,\nThe OpenArk Team`;
+
+  // --- 🎨 HTML content for the OTP email ---
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Montserrat', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+        table { border-collapse: collapse; }
+        .container { background-color: #f3f4f6; padding: 40px 20px; width: 100%; }
+        .content-table { background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px; margin: 0 auto; }
+        .header { padding: 40px 40px 30px; text-align: center; background: linear-gradient(135deg, #9A3F3F 0%, #B84545 100%); } /* Maroon Header */
+        .header h1 { margin: 0; color: #ffffff; font-size: 24px; font-weight: 700; }
+        .body { padding: 40px; font-size: 15px; line-height: 1.6; text-align: center; }
+        .body p { margin: 0 0 20px; }
+        .otp-code {
+            font-size: 36px;
+            font-weight: 700;
+            color: #9A3F3F; /* Maroon */
+            letter-spacing: 4px;
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f9f6f0; /* Cream */
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .warning-box { background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 8px; margin: 24px 0; text-align: left; }
+        .warning-box p { margin: 0; color: #92400e; font-size: 14px; }
+        .footer { padding: 30px 40px; text-align: center; background-color: #f9fafb; border-top: 1px solid #e5e7eb; }
+        .footer p { margin: 0; color: #6b7280; font-size: 12px; }
+        @media (max-width: 640px) {
+            .container { padding: 20px 10px; }
+            .header { padding: 30px 20px; }
+            .body { padding: 30px 20px; font-size: 14px; }
+            .header h1 { font-size: 20px; }
+            .otp-code { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <table class="container" width="100%" cellpadding="0" cellspacing="0">
+        <tr>
+            <td align="center">
+                <table class="content-table" width="100%" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <td class="header">
+                            <h1>Verify Your Email</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="body">
+                            <p>${greeting}</p>
+                            <p>Here is your verification code for <strong>OpenArk</strong>. Please use it to complete your registration.</p>
+                            
+                            <div class="otp-code">${otp}</div>
+
+                            <div class="warning-box">
+                                <p>
+                                    <strong>This code is only valid for 10 minutes.</strong>
+                                </p>
+                            </div>
+
+                            <p style="margin-bottom: 0;">If you did not attempt to sign up, you can safely ignore this email.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="footer">
+                            <p>© ${new Date().getFullYear()} OpenArk. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+`;
+  // --- 🎨 End of OTP HTML ---
+
+  const mailOptions = {
+    to: email,
+    subject: subject,
+    text: plainText,
+    html: htmlContent,
+  };
+
+  // Pass "OTP_VERIFICATION" as the type for admin notification
+  const success = await sendMailWithGmailAPI(mailOptions, "OTP_VERIFICATION");
+
+  return success;
+}
+
+module.exports = { sendPendingEmail, sendApprovalEmail, sendPasswordResetEmail, sendOtpEmail };
 
