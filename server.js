@@ -177,6 +177,7 @@ const bookSchema = new mongoose.Schema({
   img: { type: String, default: "img/default-book.png" },
   description: { type: String, default: "" },
   pages: [pageSchema],
+  isArchived: { type: Boolean, default: false },
 }, { timestamps: true });
 
 const Book = mongoose.model("Book", bookSchema);
@@ -507,6 +508,59 @@ app.get("/api/books/:id", async (req, res) => {
   } catch (err) {
     console.error("❌ Fetch book by ID error:", err);
     res.status(500).json({ error: "Failed to load book" });
+  }
+});
+
+// ✅ ADD THIS NEW ROUTE: GET ALL ARCHIVED BOOKS (Admin/Librarian only)
+app.get("/api/books/archived", authenticateMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "librarian") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const books = await Book.find({ isArchived: true });
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch archived books" });
+  }
+});
+
+// ✅ ADD THIS NEW ROUTE: ARCHIVE A BOOK (Admin/Librarian only)
+app.patch("/api/books/:id/archive", authenticateMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "librarian") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const book = await Book.findByIdAndUpdate(req.params.id, { isArchived: true }, { new: true });
+    if (!book) return res.status(404).json({ error: "Book not found" });
+
+    await Activity.create({
+      user: req.user.role === "admin" ? "Admin" : "Librarian",
+      action: "Archived Book",
+      details: `Archived "${book.title}"`,
+    });
+    res.json({ message: "Book archived successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to archive book" });
+  }
+});
+
+// ✅ ADD THIS NEW ROUTE: RESTORE A BOOK (Admin/Librarian only)
+app.patch("/api/books/:id/restore", authenticateMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "librarian") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const book = await Book.findByIdAndUpdate(req.params.id, { isArchived: false }, { new: true });
+    if (!book) return res.status(404).json({ error: "Book not found" });
+
+    await Activity.create({
+      user: req.user.role === "admin" ? "Admin" : "Librarian",
+      action: "Restored Book",
+      details: `Restored "${book.title}"`,
+    });
+    res.json({ message: "Book restored successfully" });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to restore book" });
   }
 });
 
@@ -1113,7 +1167,7 @@ app.delete("/api/books/:id", async (req, res) => {
 
 app.get("/api/books", async (req, res) => {
   try {
-    const books = await Book.find();
+    const books = await Book.find({ isArchived: { $ne: true } });
     res.json(books);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch books" });
@@ -1407,9 +1461,10 @@ app.patch("/api/books/:bookId/pages/:pageIndex", async (req, res) => {
 app.get("/api/report-summary", async (req, res) => {
   try {
     const totalUsers = await User.countDocuments();
-    const totalBooks = await Book.countDocuments();
+    const totalBooks = await Book.countDocuments({ isArchived: { $ne: true } });
+    const totalArchivedBooks = await Book.countDocuments({ isArchived: true });
 
-    const books = await Book.find({}, "category title author");
+    const books = await Book.find({ isArchived: { $ne: true } }, "category title author");
     const categoryCount = {};
     books.forEach(b => {
       const cats = Array.isArray(b.category) ? b.category : [b.category];
@@ -1429,7 +1484,7 @@ app.get("/api/report-summary", async (req, res) => {
       topBook = `${top.title} (${top.views || top.readCount || 0} reads)`;
     }
 
-    res.json({ totalUsers, totalBooks, topCategory, topBook });
+    res.json({ totalUsers, totalBooks, totalArchivedBooks, topCategory, topBook });
   } catch (err) {
     console.error("❌ Report summary error:", err);
     res.status(500).json({ error: "Failed to load report summary" });

@@ -8,9 +8,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const userTab = document.getElementById("userTab");
   const booksTab = document.getElementById("booksTab");
   const reportsTab = document.getElementById("reportsTab");
+  const archiveTab = document.getElementById("archiveTab");
   const usersSection = document.getElementById("usersSection");
   const booksSection = document.getElementById("booksSection");
   const reportsSection = document.getElementById("reportsSection");
+  const archiveSection = document.getElementById("archiveSection");
   const userTableBody = document.getElementById("userTableBody");
   const popup = document.getElementById("popup");
   const totalUsers = document.getElementById("totalUsers");
@@ -29,12 +31,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const confirmPruneLogs = document.getElementById("confirmPruneLogs");
   const pruneDateConfirm = document.getElementById("pruneDateConfirm");
 
+  // ✅ ADD ALL THESE
+  const archiveTableBody = document.getElementById("archiveTableBody");
+  const archiveSearch = document.getElementById("archiveSearch");
+  const archivedBooks = document.getElementById("archivedBooks"); // Stat
+  
+  const archiveModal = document.getElementById("archiveModal");
+  const cancelArchive = document.getElementById("cancelArchive");
+  const confirmArchive = document.getElementById("confirmArchive");
+  
+  const bookPermanentDeleteModal = document.getElementById("bookPermanentDeleteModal");
+  const cancelPermanentDelete = document.getElementById("cancelPermanentDelete");
+  const confirmPermanentDelete = document.getElementById("confirmPermanentDelete");
+
   // --- Global State ---
   let allUsers = []; // ✅ For efficient filtering
   let allBooks = [];
+  let allArchivedBooks = [];
   let deletedBookCount = 0;
-  let targetUserId = null; // ✅ For delete modal
   let targetBookId = null; // ✅ For delete modal
+  let targetArchiveBookId = null;
   let allActivities = []; // Holds all fetched activities
   let sortedActivities = []; // Holds filtered and sorted activities
   let activityCurrentPage = 1;
@@ -64,15 +80,17 @@ document.addEventListener("DOMContentLoaded", () => {
   // ===============================
   // 🔘 TAB SWITCHING LOGIC
   // ===============================
-  userTab.addEventListener("click", (e) => {
+userTab.addEventListener("click", (e) => {
     e.preventDefault();
     userTab.classList.add("active");
     booksTab.classList.remove("active");
     reportsTab.classList.remove("active");
+    archiveTab.classList.remove("active"); // ✅ ADD
 
     usersSection.classList.remove("hidden");
     booksSection.classList.add("hidden");
     reportsSection.classList.add("hidden");
+    archiveSection.classList.add("hidden"); // ✅ ADD
   });
 
   booksTab.addEventListener("click", (e) => {
@@ -80,22 +98,41 @@ document.addEventListener("DOMContentLoaded", () => {
     booksTab.classList.add("active");
     userTab.classList.remove("active");
     reportsTab.classList.remove("active");
+    archiveTab.classList.remove("active"); // ✅ ADD
 
     usersSection.classList.add("hidden");
     booksSection.classList.remove("hidden");
     reportsSection.classList.add("hidden");
+    archiveSection.classList.add("hidden"); // ✅ ADD
     loadBooks();
   });
 
-  reportsTab.addEventListener("click", async (e) => {
+  // ✅ ADD THIS ENTIRE NEW BLOCK
+  archiveTab.addEventListener("click", (e) => {
+    e.preventDefault();
+    archiveTab.classList.add("active");
+    userTab.classList.remove("active");
+    booksTab.classList.remove("active");
+    reportsTab.classList.remove("active");
+
+    usersSection.classList.add("hidden");
+    booksSection.classList.add("hidden");
+    reportsSection.classList.add("hidden");
+    archiveSection.classList.remove("hidden");
+    loadArchivedBooks(); 
+  });
+
+reportsTab.addEventListener("click", async (e) => {
     e.preventDefault();
     userTab.classList.remove("active");
     booksTab.classList.remove("active");
-    reportsTab.classList.add("active");
+    reportsTab.classList.remove("active");
+    archiveTab.classList.remove("active"); // ✅ ADD
 
     usersSection.classList.add("hidden");
     booksSection.classList.add("hidden");
     reportsSection.classList.remove("hidden");
+    archiveSection.classList.add("hidden"); // ✅ ADD
     await loadReports();
   });
 
@@ -134,7 +171,6 @@ document.addEventListener("DOMContentLoaded", () => {
               ? `<button class="action-btn deactivate" data-id="${u._id}">Deactivate</button>`
               : `<button class="action-btn approve" data-id="${u._id}">Approve</button>`
           }
-          <button class="action-btn delete" data-id="${u._id}">Delete</button>
         </td>
       `;
       userTableBody.appendChild(tr);
@@ -153,13 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // Deactivate User
     document.querySelectorAll(".action-btn.deactivate").forEach((btn) => {
       btn.addEventListener("click", handleDeactivateUser);
-    });
-    // Delete User (opens modal)
-    document.querySelectorAll("#usersSection .action-btn.delete").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        targetUserId = btn.dataset.id;
-        document.getElementById("deleteModal").classList.add("show");
-      });
     });
   }
 
@@ -248,6 +277,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (!res.ok) throw new Error("Failed to load users");
       allUsers = await res.json(); // ✅ Store in global variable
+
+      // ✅ NEW: Sort by active status (pending first)
+      allUsers.sort((a, b) => a.active - b.active);
+
       filterAndRenderUsers(); // ✅ Render via filter
     } catch (err) {
       console.error("Error loading users:", err);
@@ -289,43 +322,9 @@ document.addEventListener("DOMContentLoaded", () => {
   statusFilter.addEventListener("change", filterAndRenderUsers);
 
   // ===============================
-  // ⛔️ USER DELETE MODAL (FIXED)
+  // ⛔️ USER DELETE MODAL (REMOVED)
   // ===============================
-  const deleteModal = document.getElementById("deleteModal");
-  const confirmDeleteBtn = document.getElementById("confirmDelete");
-  const cancelDeleteBtn = document.getElementById("cancelDelete");
-
-  // ✅ Listeners attached ONCE
-  cancelDeleteBtn.addEventListener("click", () => {
-    deleteModal.classList.remove("show");
-    targetUserId = null;
-  });
-
-  confirmDeleteBtn.addEventListener("click", async () => {
-    if (!targetUserId) return;
-    const token = sessionStorage.getItem("token");
-    confirmDeleteBtn.disabled = true;
-    confirmDeleteBtn.textContent = "Deleting...";
-
-    try {
-      const res = await fetch(`${API_URL}/api/users/${targetUserId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await res.json();
-      showPopup(data.message || "User deleted");
-      // ✅ Reload users list after delete
-      await loadUsers();
-    } catch (err) {
-      console.error("Delete failed:", err);
-      showPopup("Failed to delete user");
-    } finally {
-      deleteModal.classList.remove("show");
-      targetUserId = null;
-      confirmDeleteBtn.disabled = false;
-      confirmDeleteBtn.textContent = "Delete";
-    }
-  });
+  // (All logic for deleteModal, confirmDeleteBtn, and cancelDeleteBtn removed)
 
   // --- Logout Button ---
   document.getElementById("logoutBtn").addEventListener("click", async () => {
@@ -360,8 +359,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch(`${API_URL}/api/books`);
       const books = await res.json();
       allBooks = books;
+
+      await loadArchivedBooks(true);
+
       renderBooks(books);
-      updateBookStats(books);
+      updateBookStats();
       populateCategories(books);
     } catch (err) {
       console.error("Error loading books:", err);
@@ -388,7 +390,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <td>${b.year}</td>
         <td>
           <button class="action-btn view" data-id="${b._id}">View</button>
-          <button class="action-btn delete" data-id="${b._id}">Delete</button>
+          <button class="action-btn delete" data-id="${b._id}">Archive</button>
         </td>
       `;
       bookTableBody.appendChild(tr);
@@ -396,10 +398,14 @@ document.addEventListener("DOMContentLoaded", () => {
     attachBookEvents();
   }
 
-  function updateBookStats(books) {
-    totalBooks.textContent = books.length;
-    recentBooks.textContent = books.slice(-5).length; // Just shows 5
-    deletedBooks.textContent = deletedBookCount;
+  function updateBookStats() {
+totalBooks.textContent = allBooks.length;
+    // ✅ MODIFIED THIS LINE
+    archivedBooks.textContent = allArchivedBooks.length;
+    // ✅ MODIFIED THIS LINE (removed deletedBookCount)
+    recentBooks.textContent = allBooks
+      .sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5).length; // Shows count of 5 newest
   }
 
   function populateCategories(books) {
@@ -417,16 +423,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function attachBookEvents() {
+function attachBookEvents() {
     // View book
     document.querySelectorAll("#booksSection .action-btn.view").forEach((btn) => {
       btn.onclick = () => openBookModal(btn.dataset.id);
     });
-    // Delete book (opens modal)
-    document.querySelectorAll("#booksSection .action-btn.delete").forEach((btn) => {
+    // ✅ MODIFIED THIS BLOCK
+    // Archive book (opens modal)
+    document.querySelectorAll("#booksSection .action-btn.archive").forEach((btn) => {
       btn.onclick = () => {
-        targetBookId = btn.dataset.id;
-        document.getElementById("bookDeleteModal").classList.add("show");
+        targetArchiveBookId = btn.dataset.id; // Use the new variable
+        archiveModal.classList.add("show"); // Open the new archive modal
       };
     });
   }
@@ -454,22 +461,22 @@ document.addEventListener("DOMContentLoaded", () => {
     bookModal.classList.add("show");
   }
 
-  // --- Book Delete Modal (FIXED) ---
-  const bookDeleteModal = document.getElementById("bookDeleteModal");
-  const confirmBookDeleteBtn = document.getElementById("confirmBookDelete");
-  const cancelBookDeleteBtn = document.getElementById("cancelBookDelete");
+// --- Book Delete Modal (FIXED) ---
+  // ✅ RENAMED ALL THESE VARIABLES
+  const confirmPermanentDeleteBtn = document.getElementById("confirmPermanentDelete");
+  const cancelPermanentDeleteBtn = document.getElementById("cancelPermanentDelete");
 
   // ✅ Listeners attached ONCE
-  cancelBookDeleteBtn.addEventListener("click", () => {
-    bookDeleteModal.classList.remove("show");
+  cancelPermanentDeleteBtn.addEventListener("click", () => {
+    bookPermanentDeleteModal.classList.remove("show");
     targetBookId = null;
   });
 
-  confirmBookDeleteBtn.addEventListener("click", async () => {
+  confirmPermanentDeleteBtn.addEventListener("click", async () => {
     if (!targetBookId) return;
     const token = sessionStorage.getItem("token");
-    confirmBookDeleteBtn.disabled = true;
-    confirmBookDeleteBtn.textContent = "Deleting...";
+    confirmPermanentDeleteBtn.disabled = true;
+    confirmPermanentDeleteBtn.textContent = "Deleting...";
 
     try {
       const res = await fetch(`${API_URL}/api/books/${targetBookId}`, {
@@ -477,17 +484,18 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
-      showPopup(data.message || "Book deleted successfully");
-      deletedBookCount++;
-      await loadBooks(); // ✅ Reload books list
+      showPopup(data.message || "Book permanently deleted");
+      
+      // ✅ MODIFIED THIS LINE
+      await loadArchivedBooks(); // Reload the *archive* list
     } catch (err) {
       console.error("Delete book failed:", err);
       showPopup("Failed to delete book. Please try again.");
     } finally {
-      bookDeleteModal.classList.remove("show");
+      bookPermanentDeleteModal.classList.remove("show");
       targetBookId = null;
-      confirmBookDeleteBtn.disabled = false;
-      confirmBookDeleteBtn.textContent = "Delete";
+      confirmPermanentDeleteBtn.disabled = false;
+      confirmPermanentDeleteBtn.textContent = "Delete";
     }
   });
 
@@ -533,6 +541,12 @@ async function loadReports() {
       reportTotalUsers.textContent = report.totalUsers || 0;
       reportTotalBooks.textContent = report.totalBooks || 0;
       reportTopCategory.textContent = report.topCategory || "N/A";
+
+      // ✅ ADD THIS LINE (if you have stats on the reports page)
+      // If not, you can skip this, but it's good for consistency
+      if(document.getElementById("archivedBooks")) {
+         document.getElementById("archivedBooks").textContent = report.totalArchivedBooks || 0;
+      }
       
       // Activities
       const activityRes = await fetch(`${API_URL}/api/activity`, {
@@ -789,6 +803,134 @@ if (monthFilter) {
       dateToPrune = null;
       pruneDateInput.value = ""; // Clear the date input
     }
+  });
+
+  // ===============================
+  // 📚 ARCHIVE TAB LOGIC
+  // ===============================
+
+  // ✅ NEW: Logic for new Archive Modal
+  cancelArchive.addEventListener("click", () => {
+    archiveModal.classList.remove("show");
+    targetArchiveBookId = null;
+  });
+
+  confirmArchive.addEventListener("click", async () => {
+    if (!targetArchiveBookId) return;
+    const token = sessionStorage.getItem("token");
+    confirmArchive.disabled = true;
+
+    try {
+      const res = await fetch(`${API_URL}/api/books/${targetArchiveBookId}/archive`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to archive");
+
+      showPopup(data.message || "Book archived");
+      await loadBooks(); // This will reload both lists and update stats
+    } catch (err) {
+      console.error("Archive failed:", err);
+      showPopup("Failed to archive book.", "error");
+    } finally {
+      archiveModal.classList.remove("show");
+      targetArchiveBookId = null;
+      confirmArchive.disabled = false;
+    }
+  });
+
+
+  // ✅ NEW: Load all archived books
+  async function loadArchivedBooks(silent = false) {
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/books/archived`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to load archived books");
+      allArchivedBooks = await res.json();
+      
+      if (!silent) {
+        renderArchivedBooks(allArchivedBooks);
+      }
+    } catch (err) {
+      console.error("Error loading archived books:", err);
+      if (!silent) {
+        archiveTableBody.innerHTML =
+          "<tr><td colspan='5' style='text-align:center;opacity:0.7;'>Failed to load archive.</td></tr>";
+      }
+    }
+  }
+
+  // ✅ NEW: Render archived books to the new table
+  function renderArchivedBooks(books) {
+    archiveTableBody.innerHTML = "";
+    if (books.length === 0) {
+      archiveTableBody.innerHTML =
+        "<tr><td colspan='5' style='text-align:center;opacity:0.7;'>The archive is empty.</td></tr>";
+      return;
+    }
+    books.forEach((b) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td><img src="${b.img}" alt="${b.title}" style="width:45px;height:60px;border-radius:6px;object-fit:cover;"></td>
+        <td>${b.title}</td>
+        <td>${b.author}</td>
+        <td>${Array.isArray(b.category) ? b.category.join(", ") : b.category}</td>
+        <td>
+          <button class="action-btn restore" data-id="${b._id}">Restore</button>
+          <button class="action-btn delete" data-id="${b._id}">Delete</button>
+        </td>
+      `;
+      archiveTableBody.appendChild(tr);
+    });
+    attachArchiveBookEvents();
+  }
+
+  // ✅ NEW: Attach listeners for Restore and Permanent Delete
+  function attachArchiveBookEvents() {
+    // Restore button
+    document.querySelectorAll("#archiveSection .action-btn.restore").forEach((btn) => {
+      btn.onclick = async () => {
+        const id = btn.dataset.id;
+        const token = sessionStorage.getItem("token");
+        btn.disabled = true;
+        try {
+          const res = await fetch(`${API_URL}/api/books/${id}/restore`, {
+            method: "PATCH",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed");
+
+          showPopup(data.message || "Book restored");
+          await loadArchivedBooks(); // Reload this tab
+          // No need to call loadBooks(), stats will be updated next time user clicks tab
+        } catch (err) {
+          showPopup("Failed to restore book.", "error");
+          btn.disabled = false;
+        }
+      };
+    });
+    
+    // Permanent Delete button (opens modal)
+    document.querySelectorAll("#archiveSection .action-btn.delete").forEach((btn) => {
+      btn.onclick = () => {
+        targetBookId = btn.dataset.id; // Use the permanent delete variable
+        bookPermanentDeleteModal.classList.add("show");
+      };
+    });
+  }
+
+  // ✅ NEW: Search for archive tab
+  archiveSearch.addEventListener("input", () => {
+    const query = archiveSearch.value.toLowerCase();
+    const filtered = allArchivedBooks.filter((b) => {
+      return (b.title || "").toLowerCase().includes(query) ||
+             (b.author || "").toLowerCase().includes(query);
+    });
+    renderArchivedBooks(filtered);
   });
 
   // --- Initial Load ---

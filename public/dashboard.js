@@ -2213,9 +2213,19 @@ function filterBooks({
       ? (book.title || "").toLowerCase().includes(title)
       : true;
 
+    // --- This section uses OR logic ---
+    const fullPageText = (book.pages || [])
+      .map(p => p.text || "")
+      .join(" ")
+      .toLowerCase();
+    
+    const descriptionText = (book.description || "").toLowerCase();
+      
+    // This line means "true if keyword is in page text OR in description"
     const matchesKeyword = keyword
-      ? (book.description || "").toLowerCase().includes(keyword)
+      ? fullPageText.includes(keyword) || descriptionText.includes(keyword)
       : true;
+    // --- End of section ---
 
     const matchesAuthor = author
       ? (book.author || "").toLowerCase().includes(author)
