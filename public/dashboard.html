@@ -100,6 +100,22 @@
   </div>
 </section>
 
+
+<section id="archiveSection" class="hidden" data-aos="fade-up">
+  <h2>Book Archive</h2>
+  <p style="opacity: 0.7; margin-bottom: 1.5rem;">Books here are hidden from students. You can restore them or delete them permanently.</p>
+  
+  <div class="browse-controls">
+    <input type="text" id="archiveSearch" placeholder="Search archived books...">
+  </div>
+
+  <div id="loadingSpinnerArchive" class="spinner hidden"></div>
+  <div class="book-grid" id="archiveGrid">
+    <p style="opacity: 0.7;">Loading archived books...</p>
+  </div>
+</section>
+
+
     <section id="bookDetailsSection" class="hidden" data-aos="fade-up"> <div class="book-read-container">
         <button id="backToHomeBtn" class="btn btn-back">← Back to Library</button>
 
@@ -414,21 +430,6 @@
     </div>
   </div>
 </section>
-
-<section id="archiveSection" class="hidden" data-aos="fade-up">
-  <h2>Book Archive</h2>
-  <p style="opacity: 0.7; margin-bottom: 1.5rem;">Books here are hidden from students. You can restore them or delete them permanently.</p>
-  
-  <div class="browse-controls">
-    <input type="text" id="archiveSearch" placeholder="Search archived books...">
-  </div>
-
-  <div id="loadingSpinnerArchive" class="spinner hidden"></div>
-  <div class="book-grid" id="archiveGrid">
-    <p style="opacity: 0.7;">Loading archived books...</p>
-  </div>
-</section>
-
   </main>
 
 <div id="archiveModal" class="modal hidden">
