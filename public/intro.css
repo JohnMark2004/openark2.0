@@ -597,6 +597,7 @@
     .signup-form input,
     .forgot-password-form input,
     .reset-password-form input,
+    .otp-form input,
     .college-year {
       padding: 1rem;
       border: 2px solid rgba(154, 63, 63, 0.2);
@@ -999,4 +1000,14 @@
 body {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+/* ===============================
+   OTP Input Style
+   =============================== */
+#otpInput {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  letter-spacing: 0.5rem;
+  color: var(--maroon);
 }

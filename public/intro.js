@@ -160,9 +160,10 @@ if (signupForm) {
         const collegeYear = e.target[4].value;
 
 // ✅ NEW: Student Email validation
-        const requiredDomain = "@perpetual.edu.ph";
+// ✅ NEW: Gmail Email validation
+        const requiredDomain = "@gmail.com";
         if (!email.toLowerCase().endsWith(requiredDomain)) {
-            showPopup("❌ Signups are only for @perpetual.edu.ph student emails", "error");
+            showPopup("❌ Signups are only for @gmail.com accounts", "error");
             return;
         }
         // Password validation
@@ -226,11 +227,10 @@ if (loginForm) {
         const email = e.target[0].value.toLowerCase();
         const password = e.target[1].value;
 
-// ✅ NEW: Allow both student and staff domains
-        const studentDomain = "@perpetual.edu.ph";
-        const staffDomain = "@gmail.com";
-        if (!email.endsWith(studentDomain) && !email.endsWith(staffDomain)) {
-            showPopup("❌ Please use a @perpetual.edu.ph or @gmail.com email", "error");
+// ✅ NEW: Gmail validation
+        const requiredDomain = "@gmail.com";
+        if (!email.endsWith(requiredDomain)) {
+            showPopup("❌ Please use a @gmail.com email to log in", "error");
             return;
         }
 
@@ -337,11 +337,10 @@ forgotPasswordForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const email = document.getElementById("forgotEmail").value.toLowerCase(); // ✅ Make lowercase
 
-        // ✅ NEW: Allow both student and staff domains
-        const studentDomain = "@perpetual.edu.ph";
-        const staffDomain = "@gmail.com";
-        if (!email.endsWith(studentDomain) && !email.endsWith(staffDomain)) {
-            showPopup("❌ Please use a @perpetual.edu.ph or @gmail.com email", "error");
+// ✅ NEW: Gmail validation
+        const requiredDomain = "@gmail.com";
+        if (!email.endsWith(requiredDomain)) {
+            showPopup("❌ Please use a @gmail.com email", "error");
             return;
         }
         
