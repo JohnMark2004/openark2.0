@@ -389,8 +389,8 @@ reportsTab.addEventListener("click", async (e) => {
         <td>${b.publisher || "N/A"}</td>
         <td>${b.year}</td>
         <td>
-          <button class="action-btn view" data-id="${b._id}">View</button>
-          <button class="action-btn delete" data-id="${b._id}">Archive</button>
+<button class="action-btn view" data-id="${b._id}">View</button>
+          <button class="action-btn archive" data-id="${b._id}">Archive</button>
         </td>
       `;
       bookTableBody.appendChild(tr);

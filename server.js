@@ -497,6 +497,19 @@ app.patch("/api/books/:bookId/description", authenticateMiddleware, async (req, 
     }
 });
 
+// ✅ ADD THIS NEW ROUTE: GET ALL ARCHIVED BOOKS (Admin/Librarian only)
+app.get("/api/books/archived", authenticateMiddleware, async (req, res) => {
+  try {
+    if (req.user.role !== "admin" && req.user.role !== "librarian") {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+    const books = await Book.find({ isArchived: true });
+    res.json(books);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch archived books" });
+  }
+});
+
 // ===============================
 // Get Single Book by ID
 // ===============================
@@ -508,19 +521,6 @@ app.get("/api/books/:id", async (req, res) => {
   } catch (err) {
     console.error("❌ Fetch book by ID error:", err);
     res.status(500).json({ error: "Failed to load book" });
-  }
-});
-
-// ✅ ADD THIS NEW ROUTE: GET ALL ARCHIVED BOOKS (Admin/Librarian only)
-app.get("/api/books/archived", authenticateMiddleware, async (req, res) => {
-  try {
-    if (req.user.role !== "admin" && req.user.role !== "librarian") {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-    const books = await Book.find({ isArchived: true });
-    res.json(books);
-  } catch (err) {
-    res.status(500).json({ error: "Failed to fetch archived books" });
   }
 });
 
