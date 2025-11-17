@@ -2328,3 +2328,23 @@ body {
 #pruneLogsModal .modal-buttons .btn.btn-danger:hover {
   background: linear-gradient(135deg, #C0392B 0%, #A93226 100%);
 }
+
+/* ✅ ADD THESE STYLES AT THE END */
+
+/* Style for new Archive button (orange) */
+.btn.btn-archive {
+  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+  color: white;
+}
+.btn.btn-archive:hover {
+  background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+}
+
+/* Style for new Restore button (green) */
+.btn.btn-restore {
+  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+  color: white;
+}
+.btn.btn-restore:hover {
+  background: linear-gradient(135deg, #45a049 0%, #3d8b40 100%);
+}

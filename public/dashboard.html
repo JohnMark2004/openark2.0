@@ -23,6 +23,7 @@
   <div class="nav-dropdown-menu hidden">
     <div class="nav-option" data-value="organization">Book Creation (Add Book)</div>
     <div class="nav-option" data-value="project">Book Management (Books)</div>
+    <div class="nav-option" data-value="archive">Archive</div>
   </div>
 </div>
 
@@ -414,14 +415,38 @@
   </div>
 </section>
 
+<section id="archiveSection" class="hidden" data-aos="fade-up">
+  <h2>Book Archive</h2>
+  <p style="opacity: 0.7; margin-bottom: 1.5rem;">Books here are hidden from students. You can restore them or delete them permanently.</p>
+  
+  <div class="browse-controls">
+    <input type="text" id="archiveSearch" placeholder="Search archived books...">
+  </div>
+
+  <div id="loadingSpinnerArchive" class="spinner hidden"></div>
+  <div class="book-grid" id="archiveGrid">
+    <p style="opacity: 0.7;">Loading archived books...</p>
+  </div>
+</section>
+
   </main>
 
-<div id="deleteModal" class="modal hidden">
+<div id="archiveModal" class="modal hidden">
   <div class="modal-content">
-    <p id="deleteModalMessage">Are you sure you want to delete this book?</p>
+    <p id="archiveModalMessage">Are you sure you want to archive this book?</p>
     <div class="modal-actions">
-      <button id="confirmDeleteBtn" class="btn danger">Delete</button>
-      <button id="cancelDeleteBtn" class="btn">Cancel</button>
+      <button id="confirmArchiveBtn" class="btn danger" style="background: #f39c12;">Archive</button>
+      <button id="cancelArchiveBtn" class="btn">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div id="bookPermanentDeleteModal" class="modal hidden">
+  <div class="modal-content">
+    <p id="permanentDeleteModalMessage">Are you sure you want to <strong>permanently delete</strong> this book? This action cannot be undone.</p>
+    <div class="modal-actions">
+      <button id="confirmPermanentDeleteBtn" class="btn danger">Delete</button>
+      <button id="cancelPermanentDeleteBtn" class="btn">Cancel</button>
     </div>
   </div>
 </div>

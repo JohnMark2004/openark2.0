@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let bookToDelete = null;
   let bookData = {};
   let allBooks = []; // ✅ Add this near your other global variables
+  let allArchivedBooks = [];
+  let targetArchiveBookId = null;
+  let targetPermanentDeleteBookId = null;
 
 
   // --- Popup/Toast Notification Function ---
@@ -84,6 +87,20 @@ function hideLoader(id = "globalLoader") {
   const bookCreationSection = document.getElementById("bookCreationSection");
   const bookReaderSection = document.getElementById("bookReaderSection");
 
+  // ✅ ADD THIS BLOCK
+  const archiveSection = document.getElementById("archiveSection");
+  const archiveGrid = document.getElementById("archiveGrid");
+  const archiveSearch = document.getElementById("archiveSearch");
+  const loadingSpinnerArchive = document.getElementById("loadingSpinnerArchive");
+
+  const archiveModal = document.getElementById("archiveModal");
+  const confirmArchiveBtn = document.getElementById("confirmArchiveBtn");
+  const cancelArchiveBtn = document.getElementById("cancelArchiveBtn");
+
+  const bookPermanentDeleteModal = document.getElementById("bookPermanentDeleteModal");
+  const confirmPermanentDeleteBtn = document.getElementById("confirmPermanentDeleteBtn");
+  const cancelPermanentDeleteBtn = document.getElementById("cancelPermanentDeleteBtn");
+
   // --- Nav Tabs ---
   const homeTab = document.getElementById("homeTab");
 // --- Role-based Conversion Access ---
@@ -144,6 +161,22 @@ document.querySelectorAll(".nav-option").forEach(option => {
   // ✅ Load books with delete buttons
     // ✅ Load books with delete buttons
   await loadBooksForDeletion();  // ✅ Correct function name
+
+  // ✅ ADD THIS ELSE IF BLOCK
+    } else if (value === "archive") {
+      // Hide all other sections
+      conversionSection.classList.add("hidden");
+      homeSection.classList.add("hidden");
+      browseSection.classList.add("hidden");
+      bookDetailsSection.classList.add("hidden");
+      bookReaderSection.classList.add("hidden");
+      bookmarksSection.classList.add("hidden");
+      reportsSection.classList.add("hidden");
+      bookCreationSection.classList.add("hidden");
+
+      // Show archive
+      archiveSection.classList.remove("hidden");
+      await loadArchivedBooks();
 
 
   // ✅ Remove the "+ Add Book" card
@@ -365,7 +398,7 @@ async function loadBooksForDeletion() {
         <img src="${book.img}" alt="${book.title}">
         <h4>${book.title}</h4>
         <p class="genre-label">(${book.category[0] || "N/A"})</p>
-        <button class="btn btn-delete" data-id="${book._id}">Delete</button>
+        <button class="btn btn-archive" data-id="${book._id}">Archive</button>
       `;
 
       // ✅ Make entire card clickable (except the delete button)
@@ -377,58 +410,20 @@ async function loadBooksForDeletion() {
       container.appendChild(div);
     });
 
-// --- Delete button logic (with modal) ---
-document.querySelectorAll(".btn-delete").forEach((btn) => {
+// --- Archive button logic (with modal) ---
+document.querySelectorAll(".btn-archive").forEach((btn) => {
   btn.addEventListener("click", () => {
     const id = btn.dataset.id;
     const bookCard = btn.closest(".book");
     const title = bookCard.querySelector("h4")?.textContent || "this book";
 
-    // update modal text
-    document.getElementById("deleteModalMessage").textContent =
-      `Are you sure you want to delete “${title}”?`;
+    // Set the book ID to archive
+    targetArchiveBookId = id;
 
-    // show modal
-    const modal = document.getElementById("deleteModal");
-    modal.classList.remove("hidden");
-
-    const confirmBtn = document.getElementById("confirmDeleteBtn");
-    const cancelBtn = document.getElementById("cancelDeleteBtn");
-
-    // remove old event listeners (prevent duplicates)
-    const newConfirm = confirmBtn.cloneNode(true);
-    const newCancel = cancelBtn.cloneNode(true);
-    confirmBtn.parentNode.replaceChild(newConfirm, confirmBtn);
-    cancelBtn.parentNode.replaceChild(newCancel, cancelBtn);
-
-    // cancel action
-    newCancel.addEventListener("click", () => {
-      modal.classList.add("hidden");
-    });
-
-    // confirm delete
-    newConfirm.addEventListener("click", async () => {
-      const token = sessionStorage.getItem("token");
-      try {
-        const res = await fetch(`${API_URL}/api/books/${id}`, {
-          method: "DELETE",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          showPopup(`Deleted “${title}” successfully`, "success");
-          await loadBooksForDeletion();
-        } else {
-          showPopup(`❌ ${data.error || "Failed to delete"}`, "error");
-        }
-      } catch (err) {
-        console.error("Delete error:", err);
-        showPopup("❌ Failed to delete book", "error");
-      } finally {
-        modal.classList.add("hidden");
-      }
-    });
+    // Update modal text and show it
+    document.getElementById("archiveModalMessage").textContent =
+      `Are you sure you want to archive "${title}"?`;
+    archiveModal.classList.remove("hidden");
   });
 });
 
@@ -877,50 +872,77 @@ div.querySelector(".delete-btn").addEventListener("click", (e) => {
 const cancelDeleteBtn = document.getElementById("cancelDeleteBtn");
 const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
 
-if (cancelDeleteBtn) {
-  cancelDeleteBtn.addEventListener("click", () => {
-    bookToDelete = null;
-    document.getElementById("deleteModal").classList.add("hidden");
+// --- ✅ NEW: Archive Modal Logic ---
+if (cancelArchiveBtn) {
+  cancelArchiveBtn.addEventListener("click", () => {
+    archiveModal.classList.add("hidden");
+    targetArchiveBookId = null;
   });
 }
 
-if (confirmDeleteBtn) {
-  confirmDeleteBtn.addEventListener("click", async () => {
-    if (!bookToDelete) return;
+if (confirmArchiveBtn) {
+  confirmArchiveBtn.addEventListener("click", async () => {
+    if (!targetArchiveBookId) return;
+
+    const token = sessionStorage.getItem("token");
+    try {
+      const res = await fetch(`${API_URL}/api/books/${targetArchiveBookId}/archive`, {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        showPopup(`Book archived successfully`, "success");
+        await loadBooksForDeletion(); // Refresh the list
+      } else {
+        showPopup(`❌ ${data.error || "Failed to archive"}`, "error");
+      }
+    } catch (err) {
+      console.error("Archive error:", err);
+      showPopup("❌ Failed to archive book", "error");
+    } finally {
+      archiveModal.classList.add("hidden");
+      targetArchiveBookId = null;
+    }
+  });
+}
+
+// --- ✅ NEW: Permanent Delete Modal Logic ---
+if (cancelPermanentDeleteBtn) {
+  cancelPermanentDeleteBtn.addEventListener("click", () => {
+    bookPermanentDeleteModal.classList.add("hidden");
+    targetPermanentDeleteBookId = null;
+  });
+}
+
+if (confirmPermanentDeleteBtn) {
+  confirmPermanentDeleteBtn.addEventListener("click", async () => {
+    if (!targetPermanentDeleteBookId) return;
     try {
       const token = sessionStorage.getItem("token");
-      const bookId = bookToDelete._id;
-      if (!bookId) throw new Error("No valid _id found for book");
-
-      const res = await fetch(`${API_URL}/api/books/${bookId}`, {
+      const res = await fetch(`${API_URL}/api/books/${targetPermanentDeleteBookId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) {
-        const errText = await res.text();
-        // throw new Error(errText || "Failed to delete book");
+         const data = await res.json();
+         throw new Error(data.error || "Failed to delete");
       }
 
-      await res.json().catch(() => {});
-      showPopup("Book deleted successfully", "success");
-
-      // refresh after delete
-      await loadConversionBooks();
-      await loadBooks();
-      await loadBrowseBooks();
+      showPopup("Book permanently deleted", "success");
+      await loadArchivedBooks(); // Refresh the archive list
 
     } catch (err) {
-      console.error("❌ Delete failed:", err);
-      showPopup("❌ Failed to delete book", "error");
+      console.error("❌ Permanent delete failed:", err);
+      showPopup(`❌ ${err.message}`, "error");
     } finally {
-      bookToDelete = null;
-      document.getElementById("deleteModal").classList.add("hidden");
+      bookPermanentDeleteModal.classList.add("hidden");
+      targetPermanentDeleteBookId = null;
     }
   });
 }
-
-
         // Add Book button
         const addBookBtn = document.getElementById("addBookBtn");
         if (addBookBtn) {
@@ -2606,5 +2628,105 @@ if (browseTab) {
     });
 
   } // End of if (role === "librarian") block
+
+// ===============================
+  // 📚 ARCHIVE TAB LOGIC
+  // ===============================
+
+  async function loadArchivedBooks() {
+    showLoader("loadingSpinnerArchive");
+    archiveGrid.innerHTML = "";
+    try {
+      const token = sessionStorage.getItem("token");
+      const res = await fetch(`${API_URL}/api/books/archived`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to fetch archived books");
+      
+      allArchivedBooks = await res.json();
+      renderArchivedBooks(allArchivedBooks);
+
+    } catch (err) {
+      console.error("Error loading archived books:", err);
+      archiveGrid.innerHTML = `<p style="opacity:0.7;">Failed to load archived books.</p>`;
+    }
+    hideLoader("loadingSpinnerArchive");
+  }
+
+  function renderArchivedBooks(books) {
+    archiveGrid.innerHTML = "";
+    if (books.length === 0) {
+      archiveGrid.innerHTML = `<p style="opacity:0.7;">The archive is empty.</p>`;
+      return;
+    }
+
+    books.forEach((book) => {
+      const div = document.createElement("div");
+      div.className = "book";
+      const firstGenre = Array.isArray(book.category)
+        ? book.category[0]
+        : (book.category?.split(",")[0] || "Unknown");
+
+      div.innerHTML = `
+        <img src="${book.img}" alt="${book.title}">
+        <h4>${book.title}</h4>
+        <p class="genre-label">${firstGenre.trim()}</p>
+        <button class="btn btn-restore" data-id="${book._id}">Restore</button>
+        <button class="btn btn-delete" data-id="${book._id}" style="margin-top: 5px;">Delete</button>
+      `;
+      archiveGrid.appendChild(div);
+    });
+
+    attachArchiveBookEvents();
+  }
+
+  function attachArchiveBookEvents() {
+    // Restore button
+    archiveGrid.querySelectorAll(".btn-restore").forEach((btn) => {
+      btn.onclick = async (e) => {
+        const id = e.target.dataset.id;
+        const token = sessionStorage.getItem("token");
+        e.target.disabled = true;
+        try {
+          const res = await fetch(`${API_URL}/api/books/${id}/restore`, {
+            method: "PATCH",
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed");
+
+          showPopup(data.message || "Book restored", "success");
+          await loadArchivedBooks(); // Refresh this tab
+        } catch (err) {
+          showPopup("Failed to restore book.", "error");
+          e.target.disabled = false;
+        }
+      };
+    });
+    
+    // Permanent Delete button (opens modal)
+    archiveGrid.querySelectorAll(".btn-delete").forEach((btn) => {
+      btn.onclick = (e) => {
+        const id = e.target.dataset.id;
+        const title = e.target.closest(".book").querySelector("h4").textContent;
+        
+        targetPermanentDeleteBookId = id; // Use the permanent delete variable
+        document.getElementById("permanentDeleteModalMessage").textContent = 
+          `Are you sure you want to permanently delete "${title}"? This cannot be undone.`;
+        bookPermanentDeleteModal.classList.remove("hidden");
+      };
+    });
+  }
+
+  if(archiveSearch) {
+    archiveSearch.addEventListener("input", () => {
+      const query = archiveSearch.value.toLowerCase();
+      const filtered = allArchivedBooks.filter((b) => {
+        return (b.title || "").toLowerCase().includes(query) ||
+               (b.author || "").toLowerCase().includes(query);
+      });
+      renderArchivedBooks(filtered);
+    });
+  }
 
 });
