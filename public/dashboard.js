@@ -2550,7 +2550,6 @@ if (browseTab) {
         <h4>${book.title}</h4>
         <p class="genre-label">${firstGenre.trim()}</p>
         <button class="btn btn-restore" data-id="${book._id}">Restore</button>
-        <button class="btn btn-delete" data-id="${book._id}" style="margin-top: 5px;">Delete</button>
       `;
       archiveGrid.appendChild(div);
     });

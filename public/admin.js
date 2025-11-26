@@ -880,7 +880,6 @@ if (monthFilter) {
         <td>${Array.isArray(b.category) ? b.category.join(", ") : b.category}</td>
         <td>
           <button class="action-btn restore" data-id="${b._id}">Restore</button>
-          <button class="action-btn delete" data-id="${b._id}">Delete</button>
         </td>
       `;
       archiveTableBody.appendChild(tr);
