@@ -146,7 +146,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String, unique: true },
   password: String,
   collegeYear: String,
-  role: { type: String, enum: ["student", "librarian", "admin"], default: "student" },
+  role: { type: String, enum: ["student", "librarian", "admin", "employee"], default: "student" },
   bookmarks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Book" }],
     continueReading: [
     {
@@ -588,19 +588,24 @@ const upload = multer({ storage });
 // ===============================
 app.post("/api/signup", async (req, res) => {
   try {
-    const { username, email, password, collegeYear } = req.body;
+    // 1. Accept 'role' from the frontend
+    const { username, email, password, collegeYear, role } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) return res.status(400).json({ error: "Email already registered" });
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    // 2. Validate role (Security check)
+    // If the frontend sends "employee", use it. Otherwise, default to "student".
+    const validRole = (role === "employee") ? "employee" : "student";
+
     const newUser = new User({
       username,
       email,
       password: hashedPassword,
       collegeYear,
-      role: "student",
+      role: validRole, // Save the correct role
     });
 // ✅ NEW: Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP

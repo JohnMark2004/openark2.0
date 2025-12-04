@@ -178,14 +178,15 @@
           <input type="password" placeholder="Confirm Password" id="signupConfirmPassword" required>
           <img src="img/eye-password-hide-svgrepo-com.svg" class="toggle-password" data-target="signupConfirmPassword" alt="Show Password">
         </div>
-        <select class="college-year" required>
-          <option value="" disabled selected>Select Year Level</option>
-          <option value="senior-high">Senior High</option>
-          <option value="freshman">College Freshman (1st year)</option>
-          <option value="sophomore">College Sophomore (2nd year)</option>
-          <option value="junior">College Junior (3rd year)</option>
-          <option value="senior">College Senior (4th year)</option>
-        </select>
+        <select id="signupPatronType" class="college-year" required>
+  <option value="" disabled selected>Select Patron Type</option>
+  <option value="senior-high">Senior High</option>
+  <option value="freshman">College Freshman (1st year)</option>
+  <option value="sophomore">College Sophomore (2nd year)</option>
+  <option value="junior">College Junior (3rd year)</option>
+  <option value="senior">College Senior (4th year)</option>
+  <option value="employee">Employee</option>
+</select>
         <button class="button" type="submit">Sign Up</button>
         <p class="login-link">Already have an account? <a href="#">Log In</a></p>
       </form>

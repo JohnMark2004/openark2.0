@@ -153,11 +153,26 @@ if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
         e.preventDefault();
 
-        const username = e.target[0].value.trim();
-        const email = e.target[1].value.trim();
-        const password = e.target[2].value;
-        const confirmPassword = e.target[3].value;
-        const collegeYear = e.target[4].value;
+// 1. Get Inputs using specific IDs/Selectors (Safer than index)
+        const username = e.target.querySelector('input[placeholder="Username"]').value.trim();
+        const email = e.target.querySelector('input[type="email"]').value.trim();
+        const password = document.getElementById("signupPassword").value;
+        const confirmPassword = document.getElementById("signupConfirmPassword").value;
+
+        // 2. Patron Type Logic (Employee vs Student)
+        const patronSelect = document.getElementById("signupPatronType");
+        const patronValue = patronSelect ? patronSelect.value : "";
+
+        let role = "student";
+        let collegeYear = "N/A";
+
+        if (patronValue === "employee") {
+            role = "employee";
+            collegeYear = "N/A";
+        } else {
+            role = "student";
+            collegeYear = patronValue; // e.g., "freshman", "senior"
+        }
 
 // ✅ NEW: Student Email validation
 // ✅ NEW: Gmail Email validation
@@ -189,7 +204,7 @@ if (signupForm) {
             const res = await fetch(`${API_URL}/api/signup`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, email, password, collegeYear }),
+            body: JSON.stringify({ username, email, password, collegeYear, role }),
             });
 
             const data = await res.json();
