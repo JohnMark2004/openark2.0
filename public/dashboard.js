@@ -153,6 +153,7 @@ document.querySelectorAll(".nav-option").forEach(option => {
   bookReaderSection.classList.add("hidden");
   bookmarksSection.classList.add("hidden");
   reportsSection.classList.add("hidden");
+  if (archiveSection) archiveSection.classList.add("hidden");
 
   // ✅ Show the container
   const conversionBooks = document.getElementById("conversionBooks");
@@ -358,6 +359,7 @@ function openAddBookForm() {
   document.getElementById("bookReaderSection").classList.add("hidden");
   document.getElementById("bookCreationSection").classList.remove("hidden");
   document.getElementById("reportsSection")?.classList.add("hidden");
+  document.getElementById("archiveSection")?.classList.add("hidden");
 
   // ✅ Remove this line (no such element anymore)
   // document.getElementById("conversionDropdown").value = "";
@@ -517,6 +519,7 @@ if (confirmPermanentDeleteBtn) {
       bookReaderSection.classList.add("hidden");
       bookmarksSection.classList.add("hidden");
       reportsSection.classList.add("hidden");
+      if (archiveSection) archiveSection.classList.add("hidden");
       loadBrowseBooks();
     });
   }
@@ -1701,6 +1704,7 @@ if (bookmarksTab) {
     bookCreationSection.classList.add("hidden");
     bookReaderSection.classList.add("hidden");
     reportsSection.classList.add("hidden");
+    if (archiveSection) archiveSection.classList.add("hidden");
 
     // Show bookmarks
     bookmarksSection.classList.remove("hidden");
@@ -2186,25 +2190,6 @@ function renderBrowseBooks(books) {
   });
 }
 
-
-
-  // --- Init ---
-if (browseTab) {
-  browseTab.addEventListener("click", (e) => {
-    e.preventDefault();
-    browseSection.classList.remove("hidden");
-    homeSection.classList.add("hidden");
-    conversionSection.classList.add("hidden");
-    bookDetailsSection.classList.add("hidden");
-    bookCreationSection.classList.add("hidden");
-    bookReaderSection.classList.add("hidden");
-    bookmarksSection.classList.add("hidden");
-    reportsSection.classList.add("hidden");
-
-    loadBrowseBooks();   // ✅ load books
-  });
-}
-
   loadBooks();
   loadContinueReading();
   updateCommentFormVisibility();
@@ -2255,6 +2240,9 @@ if (browseTab) {
       bookCreationSection.classList.add("hidden");
       bookReaderSection.classList.add("hidden");
       bookmarksSection.classList.add("hidden");
+
+      // ✅ ADD THIS
+  if (archiveSection) archiveSection.classList.add("hidden");
 
       // Show reports
       reportsSection.classList.remove("hidden");
