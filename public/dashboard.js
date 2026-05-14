@@ -1,13 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
   let bookToDelete = null;
   let bookData = {};
-  let allBooks = []; // ✅ Add this near your other global variables
+  let allBooks = [];
   let allArchivedBooks = [];
   let targetArchiveBookId = null;
   let targetPermanentDeleteBookId = null;
 
 
-  // --- Popup/Toast Notification Function ---
   function showPopup(message, type = "success") {
     const popup = document.getElementById("popup");
     if (!popup) return;
@@ -15,29 +14,23 @@ document.addEventListener("DOMContentLoaded", () => {
     popup.className = `popup ${type} show`;
     setTimeout(() => popup.classList.remove("show"), 3000);
   }
-  // ✅ ADD THIS BLOCK
-  // --- Show Welcome Message on Login ---
   if (sessionStorage.getItem("justLoggedIn") === "true") {
     const username = localStorage.getItem("username") || "User";
     showPopup(`Welcome ${username} to OpenArk!`, "success");
-    sessionStorage.removeItem("justLoggedIn"); // Clear the flag
+    sessionStorage.removeItem("justLoggedIn");
   }
 
-  // API BASE URL
-  // ✅ Auto-detect local vs deployed environment
 const API_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:5000"
     : "https://openark2-0.onrender.com";
 
 
-  // --- Auth Check ---
   if (!sessionStorage.getItem("token")) {
     window.location.href = "intro.html";
     return;
   }
 
-  // ----- WebSocket Setup -----
 const socket = io(API_URL.replace("/api", ""), {
   transports: ["websocket"],
 });
@@ -737,7 +730,7 @@ try {
   }
 }
 
-// 🎞️ BOOK SLIDESHOW (Home Banner) — smooth + spam-proof
+// BOOK SLIDESHOW (Home Banner) — smooth + spam-proof
 async function loadBookSlideshow() {
   showLoader("loadingSpinnerSlide");
   try {
@@ -785,7 +778,7 @@ async function loadBookSlideshow() {
     slideshow.style.transition = "transform 0.6s ease";
 
     function goToSlide(index) {
-      if (isTransitioning) return; // 🚫 prevent spam clicks
+      if (isTransitioning) return;
       isTransitioning = true;
       current = index;
       slideshow.style.transition = "transform 0.6s ease";
@@ -947,7 +940,7 @@ function showBookDetails(book, fromSection) {
 
   document.getElementById("detailCover").src = book.img;
   document.getElementById("detailTitle").textContent = book.title;
-  document.getElementById("detailTitle").dataset.bookId = book._id;  // ✅ critical line
+  document.getElementById("detailTitle").dataset.bookId = book._id;
   document.getElementById("detailTitleBreadcrumb").textContent = book.title;
   document.getElementById("detailAuthor").innerHTML = `
     Author: <strong>${book.author}</strong>
@@ -968,22 +961,17 @@ function showBookDetails(book, fromSection) {
   window.currentBook = book;
 }
 
-// ===============================
-// LIBRARIAN: ADD MORE PAGES (Simplified - Uses Backend OCR)
-// ===============================
 const addMorePagesBtn = document.getElementById("addMorePagesBtn");
 
 function enableAddMorePages(book) {
   if (!addMorePagesBtn || !book || !book._id) return;
 
-  // Only librarians can see this button
   if (role === "librarian") {
     addMorePagesBtn.classList.remove("hidden");
 
-    // Remove previous listener to prevent stacking if function is called multiple times
-    addMorePagesBtn.onclick = null; // Clear previous handler
+    addMorePagesBtn.onclick = null;
 
-    addMorePagesBtn.onclick = () => { // Assign new handler
+    addMorePagesBtn.onclick = () => {
       const fileInput = document.createElement("input");
       fileInput.type = "file";
       fileInput.accept = "image/*";
@@ -993,19 +981,17 @@ function enableAddMorePages(book) {
         const files = Array.from(fileInput.files);
         if (files.length === 0) return;
 
-        // Show immediate feedback
         showPopup(`⏳ Uploading ${files.length} page(s) for OCR...`, "info");
-        addMorePagesBtn.disabled = true; // Disable button during upload
+        addMorePagesBtn.disabled = true;
 
         const formData = new FormData();
         files.forEach(f => formData.append("pages", f));
-        // NO need to send pageTexts - backend will do the OCR
 
         const token = sessionStorage.getItem("token");
         try {
           const res = await fetch(`${API_URL}/api/books/${book._id}/add-pages`, {
             method: "POST",
-            headers: { Authorization: `Bearer ${token}` }, // Content-Type is set automatically for FormData
+            headers: { Authorization: `Bearer ${token}` },
             body: formData,
           });
 
@@ -1013,15 +999,12 @@ function enableAddMorePages(book) {
           if (res.ok) {
             showPopup(`${files.length} page(s) added successfully!`, "success");
 
-            // Update page count in UI immediately
             if (!currentBook.pages) currentBook.pages = [];
-             // Ensure currentBook is updated if 'book' param might be stale
              currentBook.pages.push(...(data.pages || []));
             document.getElementById("detailChapters").textContent =
               `${currentBook.pages.length} Pages`;
 
           } else {
-             // Extract backend error, including specific Gemini failures
              let errorMessage = data.error || "Failed to add pages";
              if (data.details && data.details.includes("OCR failed")) {
                  errorMessage += ". OCR processing failed on the server.";
@@ -1032,21 +1015,18 @@ function enableAddMorePages(book) {
             console.error("❌ Add pages upload/OCR failed:", err);
             showPopup("❌ Network error or server issue adding pages.", "error");
         } finally {
-            addMorePagesBtn.disabled = false; // Re-enable button
+            addMorePagesBtn.disabled = false;
         }
-      }); // End fileInput change listener
+      });
 
-      fileInput.click(); // Trigger file selection
-    }; // End addMorePagesBtn onclick assignment
+      fileInput.click();
+    };
 
   } else {
     addMorePagesBtn.classList.add("hidden");
   }
 }
 
-// ===============================
-// ✅ LIBRARIAN: IN-LINE DESCRIPTION EDITOR
-// ===============================
 function setupDescriptionEditor(book) {
     const role = localStorage.getItem("role");
     const editBtn = document.getElementById("editDescriptionBtn");
@@ -1056,7 +1036,6 @@ function setupDescriptionEditor(book) {
     const saveBtn = document.getElementById("saveDescriptionBtn");
     const cancelBtn = document.getElementById("cancelEditDescriptionBtn");
 
-    // Hide everything by default, show based on role
     editForm.classList.add('hidden');
     descriptionP.classList.remove('hidden');
 
@@ -1064,31 +1043,27 @@ function setupDescriptionEditor(book) {
         editBtn.classList.remove('hidden');
     } else {
         editBtn.classList.add('hidden');
-        return; // Stop here if not a librarian
+        return;
     }
 
-    // --- Event Listeners ---
 
-    // EDIT button: Show the form
     editBtn.onclick = () => {
-        textarea.value = descriptionP.textContent; // Pre-fill with current text
+        textarea.value = descriptionP.textContent;
         descriptionP.classList.add('hidden');
         editForm.classList.remove('hidden');
         editBtn.classList.add('hidden');
     };
 
-    // CANCEL button: Hide form and restore text view
     cancelBtn.onclick = () => {
         descriptionP.classList.remove('hidden');
         editForm.classList.add('hidden');
         editBtn.classList.remove('hidden');
     };
 
-    // SAVE button: Send update to server
     saveBtn.onclick = async () => {
         const newDescription = textarea.value;
         const token = sessionStorage.getItem("token");
-        saveBtn.disabled = true; // Prevent double-clicks
+        saveBtn.disabled = true;
 
         try {
             const res = await fetch(`${API_URL}/api/books/${book._id}/description`, {
@@ -1106,10 +1081,9 @@ function setupDescriptionEditor(book) {
             }
 
             showPopup('Description updated successfully!', 'success');
-            descriptionP.textContent = newDescription; // Update UI text
-            window.currentBook.description = newDescription; // Update temp state
+            descriptionP.textContent = newDescription;
+            window.currentBook.description = newDescription;
 
-            // Restore view
             descriptionP.classList.remove('hidden');
             editForm.classList.add('hidden');
             editBtn.classList.remove('hidden');
@@ -1123,11 +1097,7 @@ function setupDescriptionEditor(book) {
     };
 }
 
-// ===============================
-// BOOKMARK TOGGLE LOGIC
-// ===============================
 
-// helper to fetch current bookmarks
 async function getBookmarks() {
   try {
     const token = sessionStorage.getItem("token");
@@ -1143,10 +1113,8 @@ async function getBookmarks() {
   }
 }
 
-// override existing showBookDetails to include button toggle
 const originalShowBookDetails = showBookDetails;
 showBookDetails = async function (book, fromSection) {
-  // call original
   originalShowBookDetails(book, fromSection);
   enableAddMorePages(book);
   setupDescriptionEditor(book);
@@ -1155,17 +1123,14 @@ showBookDetails = async function (book, fromSection) {
   const addBookmarkBtn = document.querySelector(".btn-add-bookmark");
   if (!addBookmarkBtn) return;
 
-  // check current bookmarks
   const bookmarks = await getBookmarks();
   let isBookmarked = bookmarks.some((b) => b._id === book._id);
 
-  // update button label + style
   addBookmarkBtn.textContent = isBookmarked
     ? "REMOVE BOOKMARK"
     : "+ ADD TO BOOKMARK";
   addBookmarkBtn.classList.toggle("bookmarked", isBookmarked);
 
-  // add click toggle
   addBookmarkBtn.onclick = async () => {
     try {
       const method = isBookmarked ? "DELETE" : "POST";
@@ -1181,7 +1146,6 @@ showBookDetails = async function (book, fromSection) {
       const data = await res.json();
       showPopup(data.message, "success");
 
-      // flip state
       isBookmarked = !isBookmarked;
       addBookmarkBtn.textContent = isBookmarked
         ? "REMOVE BOOKMARK"
@@ -1194,7 +1158,6 @@ showBookDetails = async function (book, fromSection) {
   };
 };
 
-  // --- Book Creation Wizard ---
   const bookMetaForm = document.getElementById("bookMetaForm");
   const nextToStep2 = document.getElementById("nextToStep2");
   const backToStep1 = document.getElementById("backToStep1");
@@ -1261,15 +1224,13 @@ if (nextToStep2) {
 
 if (publishBookBtn) {
   publishBookBtn.addEventListener("click", async () => {
-    const spinner = document.getElementById("ocrSpinner"); // ✅ reuse Step 2 loader
+    const spinner = document.getElementById("ocrSpinner");
     try {
-      // ✅ Show spinner + disable button
       if (spinner) spinner.classList.remove("hidden");
       publishBookBtn.disabled = true;
 
       const fd = new FormData();
 
-      // --- Required fields ---
       fd.append("title", bookData.title || "");
       fd.append("author", bookData.author || "");
       fd.append("publisher", bookData.publisher || "");
@@ -1281,12 +1242,10 @@ if (publishBookBtn) {
       }
       fd.append("description", bookData.description || "");
 
-      // --- Cover file ---
       if (bookData.coverFile) {
         fd.append("cover", bookData.coverFile);
       }
 
-      // --- Page files ---
       if (bookData.pageFiles && bookData.pageFiles.length > 0) {
         const texts = [];
         bookData.pageFiles.forEach((p) => {
@@ -1314,21 +1273,17 @@ if (publishBookBtn) {
 
       showPopup("Book published successfully");
 
-      // ✅ Hide creation form
       bookCreationSection.classList.add("hidden");
 
-      // ✅ Show the books list again
       conversionSection.classList.remove("hidden");
       document.getElementById("conversionBooks").classList.remove("hidden");
 
-      // ✅ Reset forms
       bookData = {};
       document.getElementById("bookMetaForm").reset();
       document.getElementById("coverFileName").textContent = "No file chosen";
       document.getElementById("pageFileName").textContent = "No file chosen";
       document.getElementById("pageList").innerHTML = "";
 
-      // ✅ Refresh UI
       await loadBooksForDeletion();
       await loadBooks();
       await loadBrowseBooks();
@@ -1337,23 +1292,20 @@ if (publishBookBtn) {
       console.error("❌ Publish failed:", err);
       showPopup("❌ Failed to publish book", "error");
     } finally {
-      // ✅ Hide spinner + re-enable button
       if (spinner) spinner.classList.add("hidden");
       publishBookBtn.disabled = false;
     }
   });
 }
 
-  // --- Back buttons ---
 document.getElementById("backToHomeBtn").addEventListener("click", () => {
     document.querySelectorAll(".ppt-outline-section").forEach(el => el.remove());
   bookDetailsSection.classList.add("hidden");
 
-  // ✅ return to last section (Browse or Home)
   if (window.lastSection) {
     window.lastSection.classList.remove("hidden");
   } else {
-    homeSection.classList.remove("hidden"); // fallback
+    homeSection.classList.remove("hidden");
   }
 });
 
@@ -1365,19 +1317,16 @@ document.getElementById("backToHomeBtn").addEventListener("click", () => {
 
 document.getElementById("backToConversion").addEventListener("click", () => {
     document.querySelectorAll(".ppt-outline-section").forEach(el => el.remove());
-  // Hide whatever was open
   bookCreationSection.classList.add("hidden");
   browseSection.classList.add("hidden");
   bookDetailsSection.classList.add("hidden");
   bookReaderSection.classList.add("hidden");
   conversionSection.classList.add("hidden");
 
-  // ✅ Always return to Home
   homeSection.classList.remove("hidden");
 });
 
 
-// --- Reader ---
 const readBookBtn = document.getElementById("readBookBtn");
 if (readBookBtn) {
   readBookBtn.addEventListener("click", () => {
@@ -1391,10 +1340,8 @@ if (readBookBtn) {
 
     const readerContent = document.getElementById("readerContent");
     readerContent.innerHTML = "";
-// Clean previous outline section (if still there)
 document.querySelectorAll(".ppt-outline-section").forEach(el => el.remove());
 
-// Insert new one
 readerContent.insertAdjacentElement("afterend", outlineSection);
 
     const role = localStorage.getItem("role") || "student";
@@ -1444,7 +1391,6 @@ document.querySelectorAll(".tts-btn").forEach(btn => {
         return;
       }
 
-// 🧠 Stop any currently playing audio before starting a new one
 if (window.activeTTS && !window.activeTTS.paused) {
   window.activeTTS.pause();
 }
@@ -1455,7 +1401,6 @@ audio.play();
 showPopup("🔊 Reading aloud!");
 
 
-      // 🎛️ Create control buttons (Pause / Restart)
       let controlsDiv = document.getElementById(`tts-controls-${idx}`);
       if (!controlsDiv) {
         controlsDiv = document.createElement("div");
@@ -1469,7 +1414,6 @@ btn.insertAdjacentElement("afterend", controlsDiv);
 
       }
 
-      // 🧭 Pause button
       const pauseBtn = controlsDiv.querySelector(".tts-pause-btn");
       pauseBtn.onclick = () => {
         if (audio.paused) {
@@ -1481,7 +1425,6 @@ btn.insertAdjacentElement("afterend", controlsDiv);
         }
       };
 
-      // 🔄 Restart button
       const restartBtn = controlsDiv.querySelector(".tts-restart-btn");
       restartBtn.onclick = () => {
         audio.currentTime = 0;
@@ -1489,7 +1432,6 @@ btn.insertAdjacentElement("afterend", controlsDiv);
         pauseBtn.textContent = "⏸ Pause";
       };
 
-      // 🎧 Auto-reset buttons when finished
       audio.addEventListener("ended", () => {
         pauseBtn.textContent = "▶ Play Again";
       });
@@ -1501,7 +1443,6 @@ btn.insertAdjacentElement("afterend", controlsDiv);
   });
 });
 
-      // 🧾 Librarian: Edit Page feature
       if (role === "librarian") {
         document.querySelectorAll(".edit-page-btn").forEach(btn => {
           btn.addEventListener("click", async () => {
@@ -1557,9 +1498,6 @@ btn.insertAdjacentElement("afterend", controlsDiv);
   });
 }
 
-// ===============================
-// 🧠 Gemini PPT Outline Feature
-// ===============================
 const outlineSection = document.createElement("div");
 outlineSection.className = "ppt-outline-section";
 outlineSection.innerHTML = `
@@ -1577,7 +1515,6 @@ outlineSection.innerHTML = `
 
 readerContent.insertAdjacentElement("afterend", outlineSection);
 
-// 🎯 Event: Generate Outline
 document.getElementById("generateOutlineBtn").addEventListener("click", async () => {
   const outlineBtn = document.getElementById("generateOutlineBtn");
   const outlineLoader = document.getElementById("outlineLoader");
@@ -1588,7 +1525,6 @@ document.getElementById("generateOutlineBtn").addEventListener("click", async ()
   outlineResult.innerHTML = "";
 
   try {
-    // Combine all OCR text from book pages
     const fullText = (window.currentBook.pages || [])
       .map(p => p.text || "")
       .join("\n\n");
@@ -1624,10 +1560,8 @@ if (res.ok && data.outline) {
         </div>
       `;
 
-      // --- Add listener for Copy Button ---
       document.getElementById("copyOutlineBtn").addEventListener("click", () => {
         try {
-          // Use data.outline to get the raw, unformatted text
           navigator.clipboard.writeText(data.outline);
           showPopup("✅ Outline copied to clipboard!", "success");
         } catch (copyErr) {
@@ -1636,10 +1570,8 @@ if (res.ok && data.outline) {
         }
       });
 
-      // --- Add listener for PDF Button ---
       document.getElementById("downloadOutlinePdfBtn").addEventListener("click", () => {
         try {
-          // Check if jsPDF library is loaded
           if (typeof window.jspdf === 'undefined') {
             showPopup("❌ PDF library (jsPDF) is not loaded.", "error");
             console.error("jsPDF is not loaded. Make sure the script tag is in dashboard.html");
@@ -1650,20 +1582,15 @@ if (res.ok && data.outline) {
           const doc = new jsPDF();
           const bookTitle = window.currentBook?.title || "Book Outline";
           
-          // Set font style
           doc.setFont("helvetica", "normal");
 
-          // Add Title
           doc.setFontSize(18);
           doc.text(`PPT Outline: ${bookTitle}`, 10, 15);
 
-          // Add Outline Text
           doc.setFontSize(10);
-          // 'splitTextToSize' handles automatic line wrapping for long text
-          const lines = doc.splitTextToSize(data.outline, 180); // 180mm width
-          doc.text(lines, 10, 30); // Start text at y=30
+          const lines = doc.splitTextToSize(data.outline, 180);
+          doc.text(lines, 10, 30);
           
-          // Save the PDF
           doc.save(`OpenArk_Outline_${bookTitle.replace(/\s+/g, '_')}.pdf`);
           showPopup("✅ Downloading PDF...", "success");
 
@@ -1686,7 +1613,6 @@ if (res.ok && data.outline) {
 });
 
 
-// ✅ Move these to the TOP of the block, before you use them anywhere
 const bookmarksTab = document.getElementById("bookmarksTab");
 const bookmarksSection = document.getElementById("bookmarksSection");
 const bookmarksGrid = document.getElementById("bookmarksGrid");
@@ -1696,7 +1622,6 @@ if (bookmarksTab) {
   bookmarksTab.addEventListener("click", async (e) => {
     e.preventDefault();
 
-    // Hide all other sections
     homeSection.classList.add("hidden");
     browseSection.classList.add("hidden");
     conversionSection.classList.add("hidden");
@@ -1706,7 +1631,6 @@ if (bookmarksTab) {
     reportsSection.classList.add("hidden");
     if (archiveSection) archiveSection.classList.add("hidden");
 
-    // Show bookmarks
     bookmarksSection.classList.remove("hidden");
 
     await loadBookmarks();
@@ -1765,7 +1689,6 @@ if (saveProfilePicBtn) {
 }
 
 
-// ---------- Comments feature ----------
 const commentsListEl = document.getElementById("commentsList");
 const commentFormEl = document.getElementById("commentForm");
 const commentLoginPrompt = document.getElementById("commentLoginPrompt");
@@ -1807,7 +1730,6 @@ async function loadCommentsForBook(bookId) {
 
       const actions = document.createElement("div");
 
-      // show delete only if current user is author or current role is librarian
       const meId = localStorage.getItem("userId") || null;
       const myRole = localStorage.getItem("role") || "student";
       if (myRole === "librarian" || (c.author._id && meId && c.author._id === meId)) {
@@ -1816,17 +1738,14 @@ async function loadCommentsForBook(bookId) {
         delBtn.className = "delete-btn";
         delBtn.style = "font-size:0.8rem;padding:0.25rem 0.6rem;border-radius:8px;";
         delBtn.addEventListener("click", async () => {
-// Open delete confirmation modal
 const commentToDelete = c;
 document.getElementById("deleteCommentMessage").textContent =
   `Are you sure you want to delete this comment by "${c.author.username}"?`;
 document.getElementById("deleteCommentModal").classList.remove("hidden");
 
-// Handle confirm
 const confirmBtn = document.getElementById("confirmDeleteCommentBtn");
 const cancelBtn = document.getElementById("cancelDeleteCommentBtn");
 
-// Remove old listeners to prevent stacking
 confirmBtn.replaceWith(confirmBtn.cloneNode(true));
 cancelBtn.replaceWith(cancelBtn.cloneNode(true));
 
@@ -1883,7 +1802,6 @@ newConfirmBtn.addEventListener("click", async () => {
 
 function formatPHDate(dateStrOrObj) {
   const d = new Date(dateStrOrObj);
-  // Format: Oct 9, 2025, 3:45 PM (Asia/Manila)
   try {
     return new Intl.DateTimeFormat("en-PH", {
       timeZone: "Asia/Manila",
@@ -1895,27 +1813,22 @@ function formatPHDate(dateStrOrObj) {
       hour12: true,
     }).format(d);
   } catch (e) {
-    // fallback
     return d.toLocaleString();
   }
 }
 
-// Show/hide comment form depending on auth
 function updateCommentFormVisibility() {
   const token = sessionStorage.getItem("token");
   if (token) {
     commentFormEl.style.display = "block";
     commentLoginPrompt.style.display = "none";
     commenterPfpSmall.src = localStorage.getItem("pfp") || "assets/default-pfp.png";
-    // store user id if server returns it on login — otherwise, you can set it in localStorage at login time
-    // localStorage.setItem("userId", "<user-id-from-server>"); // ensure this is set at login
   } else {
     commentFormEl.style.display = "none";
     commentLoginPrompt.style.display = "block";
   }
 }
 
-// Post comment
 postCommentBtn.addEventListener("click", async () => {
   const token = sessionStorage.getItem("token");
   if (!token) {
@@ -1949,18 +1862,16 @@ postCommentBtn.addEventListener("click", async () => {
   }
 });
 
-// Hook showBookDetails to load comments and join room
 const originalShowBookDetails2 = showBookDetails;
 showBookDetails = async function(book, fromSection) {
   originalShowBookDetails2(book, fromSection);
   updateCommentFormVisibility();
   if (book && book._id) {
     loadCommentsForBook(book._id);
-    socket.emit("joinBookRoom", book._id); // join the live room
+    socket.emit("joinBookRoom", book._id);
   }
 };
 
-// ----- Realtime comment updates -----
 socket.on("commentUpdate", (data) => {
   const currentBook = document.getElementById("detailTitle").dataset.bookId;
   if (!currentBook) return;
@@ -1971,19 +1882,13 @@ socket.on("commentUpdate", (data) => {
     loadCommentsForBook(currentBook);
   }
 });
-// hook: call updateCommentFormVisibility once on load
 updateCommentFormVisibility();
 
-// IMPORTANT: ensure loadCommentsForBook(bookId) is called when opening book details.
-// In your showBookDetails override you call originalShowBookDetails(book,...).
-// After that call (or within it) call loadCommentsForBook(book._id) and updateCommentFormVisibility().
-// Example: (if you already override showBookDetails) add:
 
 if (role === "librarian" && conversionSection) {
   conversionSection.style.display = "";
 }
 
-// --- Load bookmarks ---
 async function loadBookmarks() {
   showLoader("loadingSpinnerBookmarks");
   try {
@@ -2036,7 +1941,6 @@ if (viewAllBookmarksBtn) {
   viewAllBookmarksBtn.addEventListener("click", (e) => {
     e.preventDefault();
 
-    // hide all other sections
     bookmarksSection.classList.add("hidden");
     homeSection.classList.add("hidden");
     conversionSection.classList.add("hidden");
@@ -2044,7 +1948,6 @@ if (viewAllBookmarksBtn) {
     bookCreationSection.classList.add("hidden");
     bookReaderSection.classList.add("hidden");
 
-    // show browse
     browseSection.classList.remove("hidden");
     loadBrowseBooks();
   });
@@ -2059,11 +1962,9 @@ if (viewAllBtn) {
     home.classList.add("hidden");
     browse.classList.remove("hidden");
 
-    // Optional: set nav active state
     document.getElementById("browseTab")?.classList.add("active");
     document.getElementById("homeTab")?.classList.remove("active");
 
-    // Load content
     loadBrowseBooks();
   });
 }
@@ -2089,7 +1990,6 @@ const yearSearch = document.getElementById("yearSearch");
   }
 });
 
-// ✅ NEW: Central function to gather all filter values
 function gatherAllFilterValuesAndRun() {
   const title = browseSearch?.value.trim().toLowerCase() || "";
   const keyword = keywordSearch?.value.trim().toLowerCase() || "";
@@ -2117,7 +2017,6 @@ function filterBooks({
       ? (book.title || "").toLowerCase().includes(title)
       : true;
 
-    // --- This section uses OR logic ---
     const fullPageText = (book.pages || [])
       .map(p => p.text || "")
       .join(" ")
@@ -2125,11 +2024,9 @@ function filterBooks({
     
     const descriptionText = (book.description || "").toLowerCase();
       
-    // This line means "true if keyword is in page text OR in description"
     const matchesKeyword = keyword
       ? fullPageText.includes(keyword) || descriptionText.includes(keyword)
       : true;
-    // --- End of section ---
 
     const matchesAuthor = author
       ? (book.author || "").toLowerCase().includes(author)
@@ -2194,13 +2091,8 @@ function renderBrowseBooks(books) {
   loadContinueReading();
   updateCommentFormVisibility();
 
-  // ✅ ADD THIS ENTIRE BLOCK (All Report Logic)
-  // ===================================================================
-  // 📊 LIBRARIAN-ONLY REPORTS TAB LOGIC (Copied from admin.js)
-  // ===================================================================
   if (role === "librarian" && reportsTab) {
 
-    // --- Element References ---
     const reportsSection = document.getElementById("reportsSection");
     const activityTableBody = document.getElementById("activityTableBody");
     const activitySort = document.getElementById("activitySort");
@@ -2221,18 +2113,15 @@ function renderBrowseBooks(books) {
     const exportPDF = document.getElementById("exportPDF");
     const exportExcel = document.getElementById("exportExcel");
 
-    // --- Global State ---
     let allActivities = [];
     let sortedActivities = [];
     let activityCurrentPage = 1;
     const activityItemsPerPage = 10;
     let dateToPrune = null;
 
-    // --- Tab Switching ---
     reportsTab.addEventListener("click", async (e) => {
       e.preventDefault();
       
-      // Hide all other sections
       homeSection.classList.add("hidden");
       conversionSection.classList.add("hidden");
       browseSection.classList.add("hidden");
@@ -2241,19 +2130,15 @@ function renderBrowseBooks(books) {
       bookReaderSection.classList.add("hidden");
       bookmarksSection.classList.add("hidden");
 
-      // ✅ ADD THIS
   if (archiveSection) archiveSection.classList.add("hidden");
 
-      // Show reports
       reportsSection.classList.remove("hidden");
       await loadReports();
     });
 
-    // --- Load Reports Function ---
     async function loadReports() {
       try {
         const token = sessionStorage.getItem("token");
-        // Summary
         const reportRes = await fetch(`${API_URL}/api/report-summary`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -2262,7 +2147,6 @@ function renderBrowseBooks(books) {
         if (reportTotalBooks) reportTotalBooks.textContent = report.totalBooks || 0;
         if (reportTopCategory) reportTopCategory.textContent = report.topCategory || "N/A";
         
-        // Activities
         const activityRes = await fetch(`${API_URL}/api/activity`, {
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -2276,7 +2160,6 @@ function renderBrowseBooks(books) {
       }
     }
 
-    // --- Process & Render Activities ---
     function processAndRenderActivities() {
       const monthValue = monthFilter.value;
       let filtered = [...allActivities];
@@ -2298,7 +2181,7 @@ function renderBrowseBooks(books) {
         case "action":
           filtered.sort((a, b) => (a.action || "").localeCompare(b.action || ""));
           break;
-        default: // "newest"
+        default:
           filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
       }
       
@@ -2306,7 +2189,6 @@ function renderBrowseBooks(books) {
       renderActivitiesPage();
     }
 
-    // --- Update Pagination ---
     function updatePaginationUI() {
       const totalItems = sortedActivities.length;
       const totalPages = Math.ceil(totalItems / activityItemsPerPage);
@@ -2326,7 +2208,6 @@ function renderBrowseBooks(books) {
       }
     }
     
-    // --- Render Page ---
     function renderActivitiesPage() {
       if (!Array.isArray(sortedActivities) || sortedActivities.length === 0) {
         if (activityTableBody) activityTableBody.innerHTML = `<tr><td colspan='4' style='text-align:center;'>No recent activity found.</td></tr>`;
@@ -2353,7 +2234,6 @@ function renderBrowseBooks(books) {
       updatePaginationUI();
     }
 
-    // --- Pagination Listeners ---
     if (activityNextBtn) activityNextBtn.addEventListener("click", () => {
       activityCurrentPage++;
       renderActivitiesPage();
@@ -2374,7 +2254,6 @@ function renderBrowseBooks(books) {
       processAndRenderActivities();
     });
 
-    // --- Export Listeners ---
     if (exportPNG) {
       exportPNG.addEventListener("click", async () => {
         const table = document.querySelector("#reportsSection table.user-table");
@@ -2392,19 +2271,17 @@ function renderBrowseBooks(books) {
         const table = document.querySelector("#reportsSection table.user-table");
         if (!table) return showPopup("No activity table found!", "error");
         
-        // Use window.jspdf
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF("p", "mm", "a4");
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(16);
         pdf.text("Recent Activity Report", pdf.internal.pageSize.getWidth() / 2, 20, { align: "center" });
         
-        // Use jsPDF-AutoTable
         pdf.autoTable({
           html: table,
           startY: 30,
           theme: 'grid',
-          headStyles: { fillColor: [154, 63, 63] } // OpenArk Maroon
+          headStyles: { fillColor: [154, 63, 63] }
         });
         
         pdf.save("Recent_Activity_Report.pdf");
@@ -2420,7 +2297,6 @@ function renderBrowseBooks(books) {
       });
     }
 
-// --- Prune Logs Listeners ---
     if (pruneLogsBtn) pruneLogsBtn.addEventListener("click", () => {
       const selectedDate = pruneDateInput.value;
       if (!selectedDate) {
@@ -2428,19 +2304,10 @@ function renderBrowseBooks(books) {
         return;
       }
       
-      // -------------------
-      // ▼▼▼ START OF FIX 2.A ▼▼▼
-      // -------------------
-      // OLD: dateToPrune = new Date(selectedDate);
-      dateToPrune = selectedDate; // ✅ Store the string "YYYY-MM-DD"
+      dateToPrune = selectedDate;
       
       if (pruneDateConfirm) {
-        // OLD: pruneDateConfirm.textContent = dateToPrune.toLocaleDateString(undefined, {
-        // ✅ Wrap in new Date() just for local display
         pruneDateConfirm.textContent = new Date(dateToPrune).toLocaleDateString(undefined, {
-      // -------------------
-      // ▲▲▲ END OF FIX 2.A ▲▲▲
-      // -------------------
           year: 'numeric',
           month: 'long',
           day: 'numeric',
@@ -2449,7 +2316,7 @@ function renderBrowseBooks(books) {
       if (pruneLogsModal) pruneLogsModal.classList.remove("hidden");
     });
 
-    if (cancelPruneLogs) { /* ... no change ... */ }
+    if (cancelPruneLogs) { }
 
     if (confirmPruneLogs) confirmPruneLogs.addEventListener("click", async () => {
       if (!dateToPrune) return;
@@ -2465,21 +2332,14 @@ function renderBrowseBooks(books) {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          // -------------------
-          // ▼▼▼ START OF FIX 2.B ▼▼▼
-          // -------------------
-          // OLD: body: JSON.stringify({ beforeDate: dateToPrune.toISOString() }),
-          body: JSON.stringify({ beforeDate: dateToPrune }), // ✅ Send the raw string
-          // -------------------
-          // ▲▲▲ END OF FIX 2.B ▲▲▲
-          // -------------------
+          body: JSON.stringify({ beforeDate: dateToPrune }),
         });
 
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || "Failed to delete logs");
 
         showPopup(data.message || "Logs deleted successfully!", "success");
-        await loadReports(); // Refresh the activity list
+        await loadReports();
 
       } catch (err) {
         console.error("Prune logs error:", err);
@@ -2493,11 +2353,8 @@ function renderBrowseBooks(books) {
       }
     });
 
-  } // End of if (role === "librarian") block
+  }
 
-// ===============================
-  // 📚 ARCHIVE TAB LOGIC
-  // ===============================
 
   async function loadArchivedBooks() {
     showLoader("loadingSpinnerArchive");
@@ -2546,7 +2403,6 @@ function renderBrowseBooks(books) {
   }
 
   function attachArchiveBookEvents() {
-    // Restore button
     archiveGrid.querySelectorAll(".btn-restore").forEach((btn) => {
       btn.onclick = async (e) => {
         const id = e.target.dataset.id;
@@ -2561,7 +2417,7 @@ function renderBrowseBooks(books) {
           if (!res.ok) throw new Error(data.error || "Failed");
 
           showPopup(data.message || "Book restored", "success");
-          await loadArchivedBooks(); // Refresh this tab
+          await loadArchivedBooks();
         } catch (err) {
           showPopup("Failed to restore book.", "error");
           e.target.disabled = false;
@@ -2569,13 +2425,12 @@ function renderBrowseBooks(books) {
       };
     });
     
-    // Permanent Delete button (opens modal)
     archiveGrid.querySelectorAll(".btn-delete").forEach((btn) => {
       btn.onclick = (e) => {
         const id = e.target.dataset.id;
         const title = e.target.closest(".book").querySelector("h4").textContent;
         
-        targetPermanentDeleteBookId = id; // Use the permanent delete variable
+        targetPermanentDeleteBookId = id;
         document.getElementById("permanentDeleteModalMessage").textContent = 
           `Are you sure you want to permanently delete "${title}"? This cannot be undone.`;
         bookPermanentDeleteModal.classList.remove("hidden");
